@@ -1,0 +1,15 @@
+[submodule "repos/stremio-core"]
+	path = repos/stremio-core
+	url = https://github.com/Stremio/stremio-core.git
+[submodule "repos/old-vnyl"]
+	path = repos/old-vnyl
+	url = https://github.com/rrevanth/old-vnyl.git
+[submodule "repos/expo-ui"]
+	path = repos/expo-ui
+	url = https://github.com/betomoedano/expo-ui-playground.git
+[submodule "repos/stremio-addon-sdk"]
+	path = repos/stremio-addon-sdk
+	url = https://github.com/Stremio/stremio-addon-sdk.git
+[submodule "repos/nuvio"]
+	path = repos/nuvio
+	url = https://github.com/tapframe/NuvioStreaming.git
