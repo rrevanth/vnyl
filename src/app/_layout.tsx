@@ -1,5 +1,5 @@
 import React from 'react'
-import { Stack } from 'expo-router'
+import { Tabs } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { AppErrorBoundary, AppLoadingScreen } from '@/src/presentation/shared/components'
@@ -32,10 +32,16 @@ const RootLayoutContent: React.FC = () => {
   // App is initialized, show the main navigation
   return (
     <>
-      <Stack
+      <Tabs
         screenOptions={{
           headerShown: false,
-          animation: 'slide_from_right'
+          tabBarActiveTintColor: '#007AFF',
+          tabBarInactiveTintColor: '#8E8E93',
+          tabBarStyle: {
+            backgroundColor: '#000000',
+            borderTopColor: '#1C1C1E',
+            borderTopWidth: 1,
+          },
         }}
       />
       <StatusBar style="light" backgroundColor="#000000" />

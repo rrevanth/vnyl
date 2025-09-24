@@ -1,2 +1,2 @@
-// Theme Exports
-// Placeholder - theme will be added here
+export * from './theme-factory'
+export * from './theme-context'
