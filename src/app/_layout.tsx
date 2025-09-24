@@ -3,7 +3,8 @@ import { Tabs } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { AppErrorBoundary, AppLoadingScreen } from '@/src/presentation/shared/components'
-import { AppInitializationProvider, useAppInitialization } from '@/src/presentation/shared/providers'
+import { AppInitializationProvider, useAppInitialization, UserPreferencesProvider } from '@/src/presentation/shared/providers'
+import { ThemeProvider } from '@/src/presentation/shared/theme/theme-context'
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync()
@@ -52,9 +53,13 @@ const RootLayoutContent: React.FC = () => {
 export default function RootLayout() {
   return (
     <AppErrorBoundary>
-      <AppInitializationProvider>
-        <RootLayoutContent />
-      </AppInitializationProvider>
+      <ThemeProvider initialMode="dark">
+        <AppInitializationProvider>
+          <UserPreferencesProvider>
+            <RootLayoutContent />
+          </UserPreferencesProvider>
+        </AppInitializationProvider>
+      </ThemeProvider>
     </AppErrorBoundary>
   )
 }
