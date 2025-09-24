@@ -11,6 +11,7 @@ export interface SettingRowProps {
   onPress?: () => void
   renderRight?: () => React.ReactNode
   showChevron?: boolean
+  disabled?: boolean
 }
 
 export const SettingRow: React.FC<SettingRowProps> = observer(({
@@ -18,21 +19,22 @@ export const SettingRow: React.FC<SettingRowProps> = observer(({
   description,
   onPress,
   renderRight,
-  showChevron = false
+  showChevron = false,
+  disabled = false
 }) => {
   const theme = useTheme()
-  const styles = createStyles(theme)
+  const styles = createStyles(theme, disabled)
 
-  const Component = onPress ? Pressable : View
+  const Component = onPress && !disabled ? Pressable : View
 
   return (
     <Component
       style={({ pressed }) => [
         styles.container,
-        onPress && pressed && styles.pressed
+        onPress && !disabled && pressed && styles.pressed
       ]}
-      onPress={onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
+      onPress={disabled ? undefined : onPress}
+      accessibilityRole={onPress && !disabled ? 'button' : undefined}
       accessibilityLabel={title}
     >
       <View style={styles.content}>
@@ -54,11 +56,12 @@ export const SettingRow: React.FC<SettingRowProps> = observer(({
   )
 })
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, disabled?: boolean) => StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background.secondary,
     borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.xs
+    marginBottom: theme.spacing.xs,
+    opacity: disabled ? 0.5 : 1
   },
   pressed: {
     opacity: 0.7

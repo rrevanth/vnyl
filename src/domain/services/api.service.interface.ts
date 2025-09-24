@@ -2,6 +2,7 @@ export interface ApiConfig {
   baseURL: string
   timeout: number
   headers: Record<string, string>
+  params?: Record<string, unknown>
 }
 
 export interface ApiResponse<T = unknown> {

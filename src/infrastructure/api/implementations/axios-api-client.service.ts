@@ -5,23 +5,27 @@ export class AxiosApiClient implements IApiClient {
   private client: AxiosInstance
   private defaultConfig: ApiConfig
 
-  constructor(config: ApiConfig, private readonly logger: ILoggingService) {
+  constructor(
+    config: ApiConfig,
+    private readonly logger: ILoggingService
+  ) {
     this.defaultConfig = { ...config }
     this.client = axios.create(config)
     this.setupInterceptors()
-    this.logger.info('API client initialized', { baseURL: config.baseURL, timeout: config.timeout })
+    this.logger.info('Generic API client initialized', {
+      baseURL: config.baseURL,
+      timeout: config.timeout
+    })
   }
 
   private setupInterceptors(): void {
     this.client.interceptors.request.use(
       (config) => {
-        const authHeader = config.headers?.Authorization
-        if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
-          const error = new Error('Bearer token required for API requests')
-          this.logger.error('API request missing Bearer token', error, { url: config.url })
-          throw error
-        }
-        this.logger.debug(`API request: ${config.method?.toUpperCase()} ${config.url}`)
+        // Log request details
+        this.logger.debug(`API request: ${config.method?.toUpperCase()} ${config.url}`, undefined, {
+          hasAuth: !!config.headers?.Authorization,
+          headers: Object.keys(config.headers || {})
+        })
         return config
       },
       (error) => {

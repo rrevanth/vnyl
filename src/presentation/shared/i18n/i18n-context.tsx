@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { getLocales } from 'expo-localization'
-import { useStorage } from '@/src/infrastructure/di'
+import { useGetOrCreateUserUseCase, useUpdateUserLocaleUseCase } from '@/src/infrastructure/di'
 import type { Locale, I18nContextValue, TranslationKey } from './types'
 import { en, es } from './locales'
 
@@ -39,18 +39,20 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
   children,
   fallbackLocale = 'en'
 }) => {
-  const storageService = useStorage()
+  const getOrCreateUserUseCase = useGetOrCreateUserUseCase()
+  const updateUserLocaleUseCase = useUpdateUserLocaleUseCase()
 
-  // Initialize locale from storage or device settings
+  // Initialize locale from user preferences or device settings
   useEffect(() => {
     const initializeLocale = async () => {
       try {
-        // Try to get saved locale from storage
-        const savedLocale = await storageService.getItem('app-locale') as Locale | null
+        // Try to get user preferences first
+        const user = await getOrCreateUserUseCase.execute()
+        const userLocale = user.preferences.locale
 
-        if (savedLocale && translations[savedLocale]) {
-          i18nState.locale.set(savedLocale)
-          i18nState.translations.set(translations[savedLocale])
+        if (userLocale && translations[userLocale]) {
+          i18nState.locale.set(userLocale)
+          i18nState.translations.set(translations[userLocale])
           return
         }
 
@@ -65,8 +67,8 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
         i18nState.locale.set(localeToUse)
         i18nState.translations.set(translations[localeToUse])
 
-        // Save the detected/fallback locale
-        await storageService.setItem('app-locale', localeToUse)
+        // Update user preferences with detected locale
+        await updateUserLocaleUseCase.execute(localeToUse)
       } catch {
         // Fallback to default if everything fails
         i18nState.locale.set(fallbackLocale)
@@ -75,7 +77,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
     }
 
     initializeLocale()
-  }, [storageService, fallbackLocale])
+  }, [getOrCreateUserUseCase, updateUserLocaleUseCase, fallbackLocale])
 
   const setLocale = useCallback(async (locale: Locale) => {
     try {
@@ -85,11 +87,11 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
 
       i18nState.locale.set(locale)
       i18nState.translations.set(translations[locale])
-      await storageService.setItem('app-locale', locale)
+      await updateUserLocaleUseCase.execute(locale)
     } catch {
-      // Handle storage error gracefully - no logging needed in UI layer
+      // Handle error gracefully - UI layer doesn't need detailed error handling
     }
-  }, [storageService])
+  }, [updateUserLocaleUseCase])
 
   const t = useCallback((key: string): string => {
     const currentTranslations = i18nState.translations.peek()

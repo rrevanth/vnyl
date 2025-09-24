@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
-import { useStorage } from '@/src/infrastructure/di'
+import { useGetOrCreateUserUseCase, useUpdateUserThemeUseCase } from '@/src/infrastructure/di'
 import type { Theme, ThemeMode, ThemeContextValue } from './types'
+import type { ThemePreference } from '@/src/domain/entities'
 import { createTheme } from './theme-factory'
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -16,6 +17,20 @@ const themeState = observable<{
   theme: createTheme('light')
 })
 
+// Helper function to convert ThemePreference to ThemeMode
+const themePreferenceToMode = (preference: ThemePreference): ThemeMode => {
+  if (preference === 'system') {
+    // Default to light for now - can be enhanced with proper system detection
+    return 'light'
+  }
+  return preference as ThemeMode
+}
+
+// Helper function to convert ThemeMode to ThemePreference
+const themeModeToPreference = (mode: ThemeMode): ThemePreference => {
+  return mode as ThemePreference // 'light' | 'dark' are compatible
+}
+
 interface ThemeProviderProps {
   children: React.ReactNode
   initialMode?: ThemeMode
@@ -25,36 +40,40 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
   children,
   initialMode = 'light'
 }) => {
-  const storageService = useStorage()
+  const getOrCreateUserUseCase = useGetOrCreateUserUseCase()
+  const updateUserThemeUseCase = useUpdateUserThemeUseCase()
 
-  // Initialize theme from storage
+  // Initialize theme from user preferences
   useEffect(() => {
     const initializeTheme = async () => {
       try {
-        const savedMode = await storageService.getItem('theme-mode') as ThemeMode | null
-        const mode = savedMode ?? initialMode
+        const user = await getOrCreateUserUseCase.execute()
+        const mode = themePreferenceToMode(user.preferences.theme)
 
         themeState.mode.set(mode)
         themeState.theme.set(createTheme(mode))
       } catch {
-        // Fallback to initial mode if storage fails
+        // Fallback to initial mode if user service fails
         themeState.mode.set(initialMode)
         themeState.theme.set(createTheme(initialMode))
       }
     }
 
     initializeTheme()
-  }, [storageService, initialMode])
+  }, [getOrCreateUserUseCase, initialMode])
 
   const setThemeMode = useCallback(async (mode: ThemeMode) => {
     try {
       themeState.mode.set(mode)
       themeState.theme.set(createTheme(mode))
-      await storageService.setItem('theme-mode', mode)
+
+      // Update user preferences
+      const themePreference = themeModeToPreference(mode)
+      await updateUserThemeUseCase.execute(themePreference)
     } catch {
-      // Handle storage error gracefully - no logging needed in UI layer
+      // Handle error gracefully - UI layer doesn't need detailed error handling
     }
-  }, [storageService])
+  }, [updateUserThemeUseCase])
 
   const toggleTheme = useCallback(() => {
     const newMode = themeState.mode.peek() === 'light' ? 'dark' : 'light'

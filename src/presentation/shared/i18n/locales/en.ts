@@ -39,6 +39,125 @@ export const en: TranslationKey = {
     }
   },
 
+  providers: {
+    title: 'Providers',
+    comingSoon: 'Coming Soon',
+    status: {
+      configured: 'Configured',
+      notConfigured: 'Not Configured'
+    },
+    sections: {
+      database: 'Media Database',
+      streaming: 'Streaming Services',
+      tracking: 'Tracking Services',
+      info: 'Information'
+    },
+    info: {
+      title: 'About Providers',
+      description: 'Configure external services to enhance your media experience'
+    },
+    tmdb: {
+      title: 'TMDB Settings',
+      header: {
+        title: 'API Status',
+        status: {
+          bearerConfigured: 'Bearer Token Active',
+          apiKeyConfigured: 'API Key Active',
+          defaultKeyActive: 'Default Key Active',
+          notConfigured: 'Authentication Required'
+        }
+      },
+      form: {
+        title: 'Configuration',
+        bearerToken: 'Bearer Token (Read Access Token)',
+        bearerTokenPlaceholder: 'Enter your TMDB Bearer token',
+        apiKey: 'API Key',
+        apiKeyPlaceholder: 'Enter your TMDB API key',
+        language: 'Language',
+        region: 'Region',
+        includeAdult: 'Include Adult Content',
+        includeAdultDescription: 'Include adult content in search results'
+      },
+      status: {
+        title: 'Configuration Status',
+        authentication: 'Authentication',
+        apiKey: 'API Key',
+        bearerToken: 'Bearer Token',
+        configured: 'Configured',
+        notConfigured: 'Not Configured',
+        apiKeyConfigured: 'API Key Configured',
+        bearerTokenConfigured: 'Bearer Token Configured'
+      },
+      config: {
+        title: 'API Configuration',
+        info: {
+          title: 'Authentication Options',
+          description: 'Use either Bearer Token (recommended) or API Key. Bearer Token provides better security and rate limits.'
+        },
+        apiKey: 'API Key',
+        apiKeyPlaceholder: 'Enter your TMDB API key',
+        bearerToken: 'Bearer Token (Read Access Token)',
+        bearerTokenPlaceholder: 'Enter your TMDB Bearer token',
+        defaultApiKey: {
+          title: 'Using Default API Key',
+          description: 'Currently using default API key from environment: {key}'
+        }
+      },
+      preferences: {
+        title: 'Preferences',
+        language: 'Language',
+        region: 'Region',
+        includeAdult: 'Include Adult Content',
+        includeAdultDescription: 'Include adult content in search results'
+      },
+      language: {
+        title: 'Select Language'
+      },
+      region: {
+        title: 'Select Region'
+      },
+      actions: {
+        save: 'Save Configuration',
+        testConnection: 'Test Connection',
+        validateAndSave: 'Validate & Save',
+        reset: 'Reset to Defaults'
+      },
+      success: {
+        title: 'Success',
+        message: 'TMDB configuration saved successfully'
+      },
+      error: {
+        title: 'Configuration Error',
+        message: 'Failed to save TMDB configuration. Please check your settings and try again.'
+      },
+      validateSave: {
+        success: {
+          title: 'Configuration Validated',
+          message: 'TMDB configuration validated and saved successfully'
+        },
+        error: {
+          title: 'Validation Failed',
+          message: 'Failed to validate TMDB configuration. Please check your credentials and try again.'
+        }
+      },
+      test: {
+        success: {
+          title: 'Connection Successful',
+          message: 'Successfully connected to TMDB API'
+        },
+        error: {
+          title: 'Connection Failed',
+          message: 'Failed to connect to TMDB API. Please check your credentials.'
+        }
+      },
+      reset: {
+        title: 'Reset Configuration',
+        message: 'This will reset all TMDB settings to default values. Are you sure?',
+        confirm: 'Reset'
+      }
+    }
+  },
+
   media: {
     title: 'Title',
     description: 'Description',

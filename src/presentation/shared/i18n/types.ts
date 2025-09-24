@@ -42,6 +42,126 @@ export interface TranslationKey {
     }
   }
 
+  // Providers
+  providers: {
+    title: string
+    comingSoon: string
+    status: {
+      configured: string
+      notConfigured: string
+    }
+    sections: {
+      database: string
+      streaming: string
+      tracking: string
+      info: string
+    }
+    info: {
+      title: string
+      description: string
+    }
+    tmdb: {
+      title: string
+      header: {
+        title: string
+        status: {
+          bearerConfigured: string
+          apiKeyConfigured: string
+          defaultKeyActive: string
+          notConfigured: string
+        }
+      }
+      form: {
+        title: string
+        bearerToken: string
+        bearerTokenPlaceholder: string
+        apiKey: string
+        apiKeyPlaceholder: string
+        language: string
+        region: string
+        includeAdult: string
+        includeAdultDescription: string
+      }
+      status: {
+        title: string
+        authentication: string
+        apiKey: string
+        bearerToken: string
+        configured: string
+        notConfigured: string
+        apiKeyConfigured: string
+        bearerTokenConfigured: string
+      }
+      config: {
+        title: string
+        info: {
+          title: string
+          description: string
+        }
+        apiKey: string
+        apiKeyPlaceholder: string
+        bearerToken: string
+        bearerTokenPlaceholder: string
+        defaultApiKey: {
+          title: string
+          description: string
+        }
+      }
+      preferences: {
+        title: string
+        language: string
+        region: string
+        includeAdult: string
+        includeAdultDescription: string
+      }
+      language: {
+        title: string
+      }
+      region: {
+        title: string
+      }
+      actions: {
+        save: string
+        testConnection: string
+        validateAndSave: string
+        reset: string
+      }
+      success: {
+        title: string
+        message: string
+      }
+      error: {
+        title: string
+        message: string
+      }
+      validateSave: {
+        success: {
+          title: string
+          message: string
+        }
+        error: {
+          title: string
+          message: string
+        }
+      }
+      test: {
+        success: {
+          title: string
+          message: string
+        }
+        error: {
+          title: string
+          message: string
+        }
+      }
+      reset: {
+        title: string
+        message: string
+        confirm: string
+      }
+    }
+  }
+
   // Media
   media: {
     title: string

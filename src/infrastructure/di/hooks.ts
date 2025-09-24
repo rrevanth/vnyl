@@ -1,9 +1,17 @@
 import { useCallback } from 'react'
 import { container } from './setup'
 import { TOKENS, ServiceToken } from './tokens'
-import { ILoggingService, IStorageService, IApiClient, IConfigClient } from '@/src/domain/services'
+import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
-import { GetOrCreateUserUseCase, UpdateUserPreferencesUseCase, ResetUserPreferencesUseCase } from '@/src/domain/usecases'
+import {
+  GetOrCreateUserUseCase,
+  UpdateUserPreferencesUseCase,
+  ResetUserPreferencesUseCase,
+  UpdateUserThemeUseCase,
+  UpdateUserLocaleUseCase,
+  UpdateTMDBConfigUseCase
+} from '@/src/domain/usecases'
+import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 
 export const useDI = () => {
   const resolve = useCallback(<T>(token: ServiceToken): T => {
@@ -13,6 +21,7 @@ export const useDI = () => {
   return { resolve }
 }
 
+// Infrastructure Service Hooks
 export const useLogging = (): ILoggingService => {
   const { resolve } = useDI()
   return resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
@@ -31,6 +40,17 @@ export const useApiClient = (): IApiClient => {
 export const useConfigClient = (): IConfigClient => {
   const { resolve } = useDI()
   return resolve<IConfigClient>(TOKENS.CONFIG_CLIENT)
+}
+
+export const useUserPreferenceService = (): IUserPreferenceService => {
+  const { resolve } = useDI()
+  return resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
+}
+
+// TMDB Service Hook
+export const useTMDBApiClient = (): TMDBApiClient => {
+  const { resolve } = useDI()
+  return resolve<TMDBApiClient>(TOKENS.TMDB_API_CLIENT)
 }
 
 // User Service Hooks
@@ -52,4 +72,54 @@ export const useUpdateUserPreferencesUseCase = (): UpdateUserPreferencesUseCase 
 export const useResetUserPreferencesUseCase = (): ResetUserPreferencesUseCase => {
   const { resolve } = useDI()
   return resolve<ResetUserPreferencesUseCase>(TOKENS.RESET_USER_PREFERENCES_USE_CASE)
+}
+
+export const useUpdateUserThemeUseCase = (): UpdateUserThemeUseCase => {
+  const { resolve } = useDI()
+  return resolve<UpdateUserThemeUseCase>(TOKENS.UPDATE_USER_THEME_USE_CASE)
+}
+
+export const useUpdateUserLocaleUseCase = (): UpdateUserLocaleUseCase => {
+  const { resolve } = useDI()
+  return resolve<UpdateUserLocaleUseCase>(TOKENS.UPDATE_USER_LOCALE_USE_CASE)
+}
+
+export const useUpdateTMDBConfigUseCase = (): UpdateTMDBConfigUseCase => {
+  const { resolve } = useDI()
+  return resolve<UpdateTMDBConfigUseCase>(TOKENS.UPDATE_TMDB_CONFIG_USE_CASE)
+}
+
+// Convenience Preference Hooks
+export const useTMDBConfig = () => {
+  const userPreferenceService = useUserPreferenceService()
+  return {
+    getTMDBConfig: () => userPreferenceService.getTMDBConfig(),
+    getTMDBApiKey: () => userPreferenceService.getTMDBApiKey(),
+    getTMDBBearerToken: () => userPreferenceService.getTMDBBearerToken(),
+    getTMDBLanguage: () => userPreferenceService.getTMDBLanguage(),
+    getTMDBRegion: () => userPreferenceService.getTMDBRegion(),
+    getTMDBIncludeAdult: () => userPreferenceService.getTMDBIncludeAdult(),
+    isTMDBConfigured: () => userPreferenceService.isTMDBConfigured(),
+    hasTMDBConfig: () => userPreferenceService.hasTMDBConfig()
+  }
+}
+
+export const useStreamingPreferences = () => {
+  const userPreferenceService = useUserPreferenceService()
+  return {
+    getStreamPreferences: () => userPreferenceService.getStreamPreferences(),
+    getRegionSettings: () => userPreferenceService.getRegionSettings()
+  }
+}
+
+export const useUserPreferences = () => {
+  const userPreferenceService = useUserPreferenceService()
+  return {
+    getPreferences: () => userPreferenceService.getPreferences(),
+    getTheme: () => userPreferenceService.getTheme(),
+    getLocale: () => userPreferenceService.getLocale(),
+    getHomeScreenLayout: () => userPreferenceService.getHomeScreenLayout(),
+    refreshCache: () => userPreferenceService.refreshCache(),
+    isReady: () => userPreferenceService.isReady()
+  }
 }

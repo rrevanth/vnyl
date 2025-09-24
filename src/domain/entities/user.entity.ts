@@ -1,3 +1,7 @@
+import type { Locale } from '@/src/presentation/shared/i18n'
+import type { TMDBConfig } from './provider-configs.entity'
+import { DEFAULT_TMDB_CONFIG } from './provider-configs.entity'
+
 export interface User {
   userId: string
   createdAt: string
@@ -16,8 +20,8 @@ export interface UserMetadata {
 
 export interface UserPreferences {
   theme: ThemePreference
-  apiKeys: ApiKeyPreferences
-  authTokens: AuthTokenPreferences
+  locale: Locale
+  tmdbConfig: TMDBConfig
   streamPreferences: StreamPreferences
   providerPreferences: ProviderPreferences
   homeScreenLayout: HomeScreenLayoutPreference
@@ -25,19 +29,6 @@ export interface UserPreferences {
 }
 
 export type ThemePreference = 'light' | 'dark' | 'system'
-
-export interface ApiKeyPreferences {
-  tmdb?: string
-  spotify?: string
-  lastfm?: string
-  [key: string]: string | undefined
-}
-
-export interface AuthTokenPreferences {
-  accessToken?: string
-  refreshToken?: string
-  tokenExpiry?: string
-}
 
 export interface StreamPreferences {
   quality: StreamQuality
@@ -67,8 +58,8 @@ export type NotificationType = 'new_releases' | 'recommendations' | 'updates' | 
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   theme: 'system',
-  apiKeys: {},
-  authTokens: {},
+  locale: 'en',
+  tmdbConfig: DEFAULT_TMDB_CONFIG,
   streamPreferences: {
     quality: 'auto',
     autoplay: true,

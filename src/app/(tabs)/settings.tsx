@@ -2,9 +2,13 @@ import React from 'react'
 import { View, ScrollView, StyleSheet, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { observer } from '@legendapp/state/react'
+import { useRouter } from 'expo-router'
 import { useTheme, useThemeMode, useThemeActions } from '@/src/presentation/shared/theme'
 import { useTranslation, useLocale, useLocaleActions } from '@/src/presentation/shared/i18n'
+import { useDI } from '@/src/presentation/shared/providers'
 import { SettingRow, Toggle, SectionHeader, Button } from '@/src/presentation/components'
+import { TOKENS } from '@/src/infrastructure/di/tokens'
+import { IUserPreferenceService } from '@/src/domain/services'
 import type { Theme, ThemeMode } from '@/src/presentation/shared/theme'
 import type { Locale } from '@/src/presentation/shared/i18n'
 
@@ -15,7 +19,12 @@ export default observer(function SettingsScreen() {
   const { t } = useTranslation()
   const locale = useLocale()
   const { setLocale } = useLocaleActions()
+  const router = useRouter()
   const styles = createStyles(theme)
+
+  // DI Services
+  const { resolve } = useDI()
+  const userPreferenceService = resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
 
   const handleLanguageChange = () => {
     Alert.alert(
@@ -40,6 +49,10 @@ export default observer(function SettingsScreen() {
     )
   }
 
+  const handleProvidersPress = () => {
+    router.push('/settings/providers')
+  }
+
   const getLanguageDisplayName = (currentLocale: Locale): string => {
     switch (currentLocale) {
       case 'en':
@@ -60,6 +73,21 @@ export default observer(function SettingsScreen() {
       default:
         return t('settings.theme.light')
     }
+  }
+
+  const getProviderStatus = (): string => {
+    const isTMDBConfigured = userPreferenceService.isTMDBConfigured()
+
+    if (isTMDBConfigured) {
+      return t('providers.status.configured')
+    }
+
+    return t('providers.status.notConfigured')
+  }
+
+  const getProviderStatusColor = () => {
+    const isTMDBConfigured = userPreferenceService.isTMDBConfigured()
+    return isTMDBConfigured ? theme.colors.status.success : theme.colors.status.error
   }
 
   return (
@@ -95,6 +123,23 @@ export default observer(function SettingsScreen() {
           description={getLanguageDisplayName(locale)}
           onPress={handleLanguageChange}
           showChevron
+        />
+
+        {/* Providers Section */}
+        <SectionHeader
+          title={t('providers.title')}
+        />
+
+        <SettingRow
+          title={t('providers.title')}
+          description={getProviderStatus()}
+          onPress={handleProvidersPress}
+          showChevron
+          renderRight={() => (
+            <View style={[styles.statusIndicator, {
+              backgroundColor: getProviderStatusColor()
+            }]} />
+          )}
         />
 
         {/* About Section */}
@@ -148,6 +193,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
     padding: theme.spacing.md,
     paddingBottom: theme.spacing.xxl
+  },
+  statusIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginLeft: theme.spacing.sm
   },
   developmentSection: {
     marginTop: theme.spacing.xl,

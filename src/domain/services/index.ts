@@ -1,3 +1,5 @@
 export * from './logging.service.interface'
 export * from './storage.service.interface'
 export * from './api.service.interface'
+export * from './user-preference.service.interface'
+export * from './environment.service.interface'

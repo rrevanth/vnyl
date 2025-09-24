@@ -14,10 +14,11 @@ export const AppProviders: React.FC<AppProvidersProps> = observer(({ children })
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Initialize DI container and all services
-        initializeApp()
+        // Initialize DI container and all services with user creation
+        await initializeApp()
         setIsInitialized(true)
       } catch (error) {
+        // Fallback to console during initialization since logger might not be ready
         console.error('Failed to initialize app:', error)
         // Still allow app to load even if initialization fails partially
         setIsInitialized(true)
