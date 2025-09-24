@@ -1,94 +1,28 @@
-import React from 'react'
-import { Tabs } from 'expo-router'
-import { Platform, Text } from 'react-native'
+import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs"
+import { observer } from '@legendapp/state/react'
+import { useTranslation } from '@/src/presentation/shared/i18n'
 
-export default function TabsLayout() {
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
-        tabBarStyle: {
-          backgroundColor: '#000000',
-          borderTopColor: '#1C1C1E',
-          borderTopWidth: 1,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          height: Platform.OS === 'ios' ? 85 : 60,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-          marginTop: 4,
-        },
-        tabBarIconStyle: {
-          marginBottom: 2,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="house" color={color} />
-          ),
-          tabBarAccessibilityLabel: 'Home tab',
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="magnifyingglass" color={color} />
-          ),
-          tabBarAccessibilityLabel: 'Search tab',
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          title: 'Library',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="books.vertical" color={color} />
-          ),
-          tabBarAccessibilityLabel: 'Library tab',
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="gearshape" color={color} />
-          ),
-          tabBarAccessibilityLabel: 'Settings tab',
-        }}
-      />
-    </Tabs>
-  )
-}
-
-// Simple icon component using native symbols
-interface TabBarIconProps {
-  name: string
-  color: string
-}
-
-const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color }) => {
-  // Using emoji icons for cross-platform compatibility
-  // These will work consistently across iOS and Android
-  const iconMap: Record<string, string> = {
-    house: '🏠',
-    magnifyingglass: '🔍',
-    'books.vertical': '📚',
-    gearshape: '⚙️',
-  }
+export default observer(function TabLayout() {
+  const { t } = useTranslation()
 
   return (
-    <Text style={{ fontSize: 24, color }}>
-      {iconMap[name] || '❓'}
-    </Text>
+    <NativeTabs>
+      <NativeTabs.Trigger name="index">
+        <Label>{t('navigation.home')}</Label>
+        <Icon sf="house.fill" drawable="home" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="search">
+        <Label>{t('navigation.search')}</Label>
+        <Icon sf="magnifyingglass" drawable="search" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="library">
+        <Label>{t('navigation.library')}</Label>
+        <Icon sf="books.vertical.fill" drawable="library" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings">
+        <Label>{t('navigation.settings')}</Label>
+        <Icon sf="gear" drawable="settings" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   )
-}
+})
