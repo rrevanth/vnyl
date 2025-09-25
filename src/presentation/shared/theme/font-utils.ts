@@ -8,36 +8,58 @@ export const createTextStyle = (
   typography: Theme['typography'][keyof Theme['typography']],
   additionalStyles: TextStyle = {}
 ): TextStyle => {
+  const fontFamily = getFontFamilyName(typography.fontFamily, typography.fontWeight)
+
   return {
     fontSize: typography.fontSize,
     lineHeight: typography.lineHeight,
-    fontWeight: typography.fontWeight as TextStyle['fontWeight'],
-    fontFamily: typography.fontFamily,
+    fontWeight: fontFamily ? undefined : typography.fontWeight as TextStyle['fontWeight'], // Don't use fontWeight with custom fonts
+    fontFamily,
     ...additionalStyles
   }
 }
 
 /**
  * Helper function to get the proper font family name for React Native
- * Handles the mapping between user preference and actual font name
+ * Handles the mapping between user preference and actual font name with weight
  */
-export const getFontFamilyName = (fontFamily?: string): string | undefined => {
+export const getFontFamilyName = (fontFamily?: string, fontWeight?: string): string | undefined => {
   if (!fontFamily || fontFamily === 'system') {
     return undefined // Use system default
   }
 
-  // For iOS, some font names need special handling
+  // For system font
+  if (fontFamily === 'System') {
+    return undefined // Let iOS use system font
+  }
+
+  // Map font family and weight to exact font names loaded by expo-font
+  const weight = fontWeight || '400'
+
   switch (fontFamily) {
-    case 'System':
-      return undefined // Let iOS use system font
     case 'Inter':
-      return 'Inter' // Will work if font is loaded
+      if (weight === '700' || weight === 'bold') return 'Inter-Bold'
+      if (weight === '600' || weight === 'semibold') return 'Inter-SemiBold'
+      if (weight === '500' || weight === 'medium') return 'Inter-Medium'
+      return 'Inter-Regular'
+
     case 'Roboto':
-      return 'Roboto' // Will work if font is loaded
+      if (weight === '700' || weight === 'bold') return 'Roboto-Bold'
+      if (weight === '500' || weight === 'medium') return 'Roboto-Medium'
+      return 'Roboto-Regular'
+
     case 'Poppins':
-      return 'Poppins' // Will work if font is loaded
+      if (weight === '700' || weight === 'bold') return 'Poppins-Bold'
+      if (weight === '600' || weight === 'semibold') return 'Poppins-SemiBold'
+      if (weight === '500' || weight === 'medium') return 'Poppins-Medium'
+      return 'Poppins-Regular'
+
     case 'OpenSans':
-      return 'OpenSans' // Will work if font is loaded
+      if (weight === '700' || weight === 'bold') return 'OpenSans-Bold'
+      if (weight === '600' || weight === 'semibold') return 'OpenSans-SemiBold'
+      if (weight === '500' || weight === 'medium') return 'OpenSans-Medium'
+      return 'OpenSans-Regular'
+
     default:
       return fontFamily
   }

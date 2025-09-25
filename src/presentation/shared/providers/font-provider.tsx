@@ -2,6 +2,34 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useFonts } from 'expo-font'
 import * as SplashScreen from 'expo-splash-screen'
 
+// Import fonts from @expo-google-fonts packages
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold
+} from '@expo-google-fonts/inter'
+
+import {
+  Roboto_400Regular,
+  Roboto_500Medium,
+  Roboto_700Bold
+} from '@expo-google-fonts/roboto'
+
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold
+} from '@expo-google-fonts/poppins'
+
+import {
+  OpenSans_400Regular,
+  OpenSans_500Medium,
+  OpenSans_600SemiBold,
+  OpenSans_700Bold
+} from '@expo-google-fonts/open-sans'
+
 interface FontContextValue {
   fontsLoaded: boolean
   fontError: Error | null
@@ -21,19 +49,30 @@ interface FontProviderProps {
 export const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
   const [fontError, setFontError] = useState<Error | null>(null)
 
-  // Load custom fonts
+  // Load custom fonts from @expo-google-fonts packages
   const [fontsLoaded, fontLoadError] = useFonts({
-    // For now, we'll use system fonts and add custom fonts later
-    // 'Inter-Regular': require('../../../../assets/fonts/Inter-Regular.ttf'),
-    // 'Inter-Medium': require('../../../../assets/fonts/Inter-Medium.ttf'),
-    // 'Inter-SemiBold': require('../../../../assets/fonts/Inter-SemiBold.ttf'),
-    // 'Inter-Bold': require('../../../../assets/fonts/Inter-Bold.ttf'),
+    // Inter font family
+    'Inter-Regular': Inter_400Regular,
+    'Inter-Medium': Inter_500Medium,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
 
-    // 'Roboto-Regular': require('../../../../assets/fonts/Roboto-Regular.ttf'),
-    // 'Roboto-Medium': require('../../../../assets/fonts/Roboto-Medium.ttf'),
-    // 'Roboto-Bold': require('../../../../assets/fonts/Roboto-Bold.ttf'),
+    // Roboto font family
+    'Roboto-Regular': Roboto_400Regular,
+    'Roboto-Medium': Roboto_500Medium,
+    'Roboto-Bold': Roboto_700Bold,
 
-    // For now, let's just ensure the provider works with system fonts
+    // Poppins font family
+    'Poppins-Regular': Poppins_400Regular,
+    'Poppins-Medium': Poppins_500Medium,
+    'Poppins-SemiBold': Poppins_600SemiBold,
+    'Poppins-Bold': Poppins_700Bold,
+
+    // Open Sans font family
+    'OpenSans-Regular': OpenSans_400Regular,
+    'OpenSans-Medium': OpenSans_500Medium,
+    'OpenSans-SemiBold': OpenSans_600SemiBold,
+    'OpenSans-Bold': OpenSans_700Bold,
   })
 
   useEffect(() => {
@@ -51,7 +90,7 @@ export const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
   return (
     <FontContext.Provider
       value={{
-        fontsLoaded: true, // Set to true for now since we're using system fonts
+        fontsLoaded,
         fontError
       }}
     >
