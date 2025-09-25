@@ -127,8 +127,8 @@ const createStyles = (theme: Theme): ColorPickerStyles => ({
   },
   checkmarkText: {
     color: theme.colors.text.inverse,
-    fontSize: 10,
+    fontSize: theme.typography.caption.fontSize * 0.8,
     fontWeight: 'bold' as TextStyle['fontWeight'],
-    lineHeight: 12
+    lineHeight: theme.typography.caption.lineHeight * 0.8
   }
 })

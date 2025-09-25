@@ -80,6 +80,51 @@ export interface TranslationKey {
       preview_body: string
       preview_caption: string
     }
+    providers: {
+      title: string
+      description: string
+      status: {
+        configured: string
+        notConfigured: string
+      }
+      sections: {
+        database: string
+        streaming: string
+        tracking: string
+        info: string
+      }
+      info: {
+        title: string
+        description: string
+      }
+      tmdb: {
+        title: string
+        description: string
+        using_defaults: string
+        using_custom_config: string
+        defaults_description: string
+        custom_config_description: string
+        authentication: string
+        authentication_description: string
+        bearer_token: string
+        bearer_token_placeholder: string
+        bearer_token_description: string
+        api_key: string
+        api_key_placeholder: string
+        api_key_description: string
+        configuration: string
+        configuration_description: string
+        language: string
+        language_description: string
+        include_adult: string
+        include_adult_description: string
+        validation_error_title: string
+        validation_error_message: string
+        save_success_title: string
+        save_success_message: string
+        save_error_message: string
+      }
+    }
     about: {
       title: string
       description: string
@@ -106,27 +151,6 @@ export interface TranslationKey {
     medium: string
     large: string
     extra_large: string
-  }
-
-  // Providers
-  providers: {
-    title: string
-    description: string
-    comingSoon: string
-    status: {
-      configured: string
-      notConfigured: string
-    }
-    sections: {
-      database: string
-      streaming: string
-      tracking: string
-      info: string
-    }
-    info: {
-      title: string
-      description: string
-    }
   }
 
   // Media

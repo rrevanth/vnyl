@@ -191,7 +191,7 @@ const createStyles = (theme: Theme): SettingsSliderStyles => ({
     opacity: 0.3
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: theme.typography.body.fontSize,
     fontWeight: '600' as TextStyle['fontWeight'],
     color: theme.colors.text.primary
   },

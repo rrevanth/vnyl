@@ -131,7 +131,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     marginBottom: theme.spacing.xs
   },
   debugText: {
-    fontSize: theme.typography.caption.fontSize,
+    fontSize: theme.typography?.caption?.fontSize || theme.typography.body.fontSize,
     color: theme.colors.text.secondary,
     fontFamily: 'monospace'
   }

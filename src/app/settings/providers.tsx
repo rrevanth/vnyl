@@ -8,7 +8,7 @@ import { useTranslation } from '@/src/presentation/shared/i18n'
 import { NavigationHeader, SettingsCard } from '@/src/presentation/components'
 import type { Theme } from '@/src/presentation/shared/theme'
 
-export default observer(function SettingsScreen() {
+export default observer(function ProvidersSettingsScreen() {
   const theme = useTheme()
   const { t } = useTranslation()
   const router = useRouter()
@@ -16,31 +16,20 @@ export default observer(function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <NavigationHeader title={t('settings.title')} />
+      <NavigationHeader
+        title={t('settings.providers.title')}
+        showBackButton
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <SettingsCard
-          title={t('settings.theme.title')}
-          description={t('settings.theme.description')}
-          icon="color-palette-outline"
-          onPress={() => router.push('/settings/theme')}
-        />
-
-        <SettingsCard
-          title={t('settings.display.title')}
-          description={t('settings.display.description')}
-          icon="text"
-          onPress={() => router.push('/settings/display')}
-        />
-
-        <SettingsCard
-          title={t('settings.providers.title')}
-          description={t('settings.providers.description')}
+          title={t('settings.providers.tmdb.title')}
+          description={t('settings.providers.tmdb.description')}
           icon="server-outline"
-          onPress={() => router.push('/settings/providers')}
+          onPress={() => router.push('/settings/providers/tmdb')}
         />
       </ScrollView>
     </SafeAreaView>

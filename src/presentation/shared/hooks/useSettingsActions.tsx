@@ -3,6 +3,7 @@ import { useUserPreferences } from '@/src/presentation/shared/providers/user-pre
 import { useUpdateUserPreferencesUseCase } from '@/src/infrastructure/di'
 import { SettingsLogger } from '@/src/presentation/shared/utils/settings-logger'
 import type { ThemePreference, DisplaySettings, FontSize, UserPreferences } from '@/src/domain/entities'
+import { DEFAULT_USER_PREFERENCES } from '@/src/domain/entities'
 
 export const useSettingsActions = () => {
   const userPreferencesContext = useUserPreferences()
@@ -104,6 +105,31 @@ export const useSettingsActions = () => {
     )
   }, [userPreferencesContext.displaySettings, updatePreferences])
 
+  // Provider settings actions
+  const updateProviderSettings = useCallback(async (providerUpdate: Partial<UserPreferences['providerSettings']>) => {
+    const currentProviderSettings = userPreferencesContext.preferences.providerSettings || DEFAULT_USER_PREFERENCES.providerSettings
+    const updatedProviderSettings = {
+      ...currentProviderSettings,
+      ...providerUpdate
+    }
+    await updatePreferences(
+      { providerSettings: updatedProviderSettings },
+      'provider settings update',
+      providerUpdate
+    )
+  }, [userPreferencesContext.preferences.providerSettings, updatePreferences])
+
+  const updateTMDBSettings = useCallback(async (tmdbUpdate: Partial<UserPreferences['providerSettings']['tmdbSettings']>) => {
+    const currentTMDBSettings = userPreferencesContext.preferences.providerSettings?.tmdbSettings || DEFAULT_USER_PREFERENCES.providerSettings.tmdbSettings
+    const updatedTMDBSettings = {
+      ...currentTMDBSettings,
+      ...tmdbUpdate
+    }
+    await updateProviderSettings({
+      tmdbSettings: updatedTMDBSettings
+    })
+  }, [userPreferencesContext.preferences.providerSettings?.tmdbSettings, updateProviderSettings])
+
   // Generic update functions for reusability
   const updateThemePreference = useCallback(async (themeUpdate: Partial<ThemePreference>) => {
     const updatedTheme: ThemePreference = {
@@ -138,6 +164,10 @@ export const useSettingsActions = () => {
     updateLineHeight,
     updateCompactMode,
 
+    // Provider settings actions
+    updateProviderSettings,
+    updateTMDBSettings,
+
     // Generic update functions for advanced usage
     updateThemePreference,
     updateDisplaySettings,
@@ -145,6 +175,7 @@ export const useSettingsActions = () => {
 
     // Current values (for convenience)
     themePreference: userPreferencesContext.themePreference,
-    displaySettings: userPreferencesContext.displaySettings
+    displaySettings: userPreferencesContext.displaySettings,
+    preferences: userPreferencesContext.preferences
   }
 }

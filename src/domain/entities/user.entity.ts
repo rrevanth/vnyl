@@ -24,6 +24,7 @@ export interface UserPreferences {
   displaySettings: DisplaySettings
   streamPreferences: StreamPreferences
   providerPreferences: ProviderPreferences
+  providerSettings: ProviderSettings
   homeScreenLayout: HomeScreenLayoutPreference
   notificationSettings: NotificationPreferences
 }
@@ -61,6 +62,17 @@ export interface ProviderPreferences {
   enabledProviders: Record<string, boolean>
 }
 
+export interface ProviderSettings {
+  tmdbSettings: TMDBSettings
+}
+
+export interface TMDBSettings {
+  bearerToken?: string
+  apiKey?: string
+  language: string
+  includeAdult: boolean
+}
+
 export type HomeScreenLayoutPreference = 'grid' | 'list' | 'carousel'
 
 export interface NotificationPreferences {
@@ -94,6 +106,12 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
     preferredProviders: [],
     regionSettings: 'US',
     enabledProviders: {}
+  },
+  providerSettings: {
+    tmdbSettings: {
+      language: 'en-US',
+      includeAdult: false
+    }
   },
   homeScreenLayout: 'grid',
   notificationSettings: {

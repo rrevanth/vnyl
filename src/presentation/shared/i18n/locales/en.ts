@@ -77,6 +77,51 @@ export const en: TranslationKey = {
       preview_body: 'This is how regular paragraph text will appear with your current display settings. You can adjust the font size, line height, and spacing to make it more comfortable to read.',
       preview_caption: 'This is smaller caption text that appears in various places throughout the app.'
     },
+    providers: {
+      title: 'Providers',
+      description: 'Configure API services',
+      status: {
+        configured: 'Configured',
+        notConfigured: 'Not Configured'
+      },
+      sections: {
+        database: 'Database',
+        streaming: 'Streaming',
+        tracking: 'Tracking',
+        info: 'Information'
+      },
+      info: {
+        title: 'Information',
+        description: 'Provider information and documentation'
+      },
+      tmdb: {
+        title: 'TMDB (The Movie Database)',
+        description: 'Movie and TV show metadata',
+        using_defaults: 'Using Default Configuration',
+        using_custom_config: 'Using Custom Configuration',
+        defaults_description: 'Using built-in API keys and default settings. Configure custom settings below to use your own API keys.',
+        custom_config_description: 'Using your custom API configuration. All requests will use your provided API keys.',
+        authentication: 'Authentication',
+        authentication_description: 'Configure your TMDB API credentials. You need either a Bearer Token or API Key.',
+        bearer_token: 'Bearer Token',
+        bearer_token_placeholder: 'Enter your TMDB Bearer Token',
+        bearer_token_description: 'Preferred method. Get from TMDB API settings.',
+        api_key: 'API Key',
+        api_key_placeholder: 'Enter your TMDB API Key',
+        api_key_description: 'Alternative to Bearer Token. Get from TMDB API settings.',
+        configuration: 'Configuration',
+        configuration_description: 'Customize TMDB API behavior and content preferences.',
+        language: 'Language',
+        language_description: 'Language for movie and TV show metadata',
+        include_adult: 'Include Adult Content',
+        include_adult_description: 'Show adult/mature content in search results',
+        validation_error_title: 'Validation Error',
+        validation_error_message: 'Please provide either a Bearer Token or API Key.',
+        save_success_title: 'Settings Saved',
+        save_success_message: 'Your TMDB configuration has been saved successfully.',
+        save_error_message: 'Failed to save TMDB settings. Please try again.'
+      }
+    },
     about: {
       title: 'About',
       description: 'App information',
@@ -101,26 +146,6 @@ export const en: TranslationKey = {
     medium: 'Medium',
     large: 'Large',
     extra_large: 'Extra Large'
-  },
-
-  providers: {
-    title: 'Providers',
-    description: 'External service configuration',
-    comingSoon: 'Coming Soon',
-    status: {
-      configured: 'Configured',
-      notConfigured: 'Not Configured'
-    },
-    sections: {
-      database: 'Media Database',
-      streaming: 'Streaming Services',
-      tracking: 'Tracking Services',
-      info: 'Information'
-    },
-    info: {
-      title: 'About Providers',
-      description: 'Configure external services to enhance your media experience'
-    }
   },
 
   media: {

@@ -65,7 +65,11 @@ export class UserRepository implements IUserRepository {
         userId: storedUser.metadata.userId,
         createdAt: storedUser.metadata.createdAt,
         updatedAt: storedUser.metadata.updatedAt,
-        preferences: storedUser.preferences,
+        preferences: {
+          ...storedUser.preferences,
+          // Migration: Add providerSettings if it doesn't exist
+          providerSettings: storedUser.preferences.providerSettings || DEFAULT_USER_PREFERENCES.providerSettings
+        },
         metadata: {
           schemaVersion: storedUser.metadata.schemaVersion
         }
