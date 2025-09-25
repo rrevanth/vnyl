@@ -5,10 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
-import { NavigationHeader, SegmentedControl, SettingsSlider, SettingsToggle } from '@/src/presentation/components'
+import { NavigationHeader, Select, SettingsSlider, SettingsToggle } from '@/src/presentation/components'
 import { useSettingsActions } from '@/src/presentation/shared/hooks/useSettingsActions'
 import { FONT_SIZE_OPTIONS, FONT_FAMILIES } from '@/src/presentation/shared/constants/settings'
 import type { Theme } from '@/src/presentation/shared/theme'
+import type { FontSize } from '@/src/domain/entities'
 
 export default observer(function DisplaySettingsScreen() {
   const theme = useTheme()
@@ -23,11 +24,25 @@ export default observer(function DisplaySettingsScreen() {
     updateCompactMode
   } = useSettingsActions()
 
-  // Create font family options for SegmentedControl (first 4 for better fit)
-  const fontFamilyOptions = FONT_FAMILIES.slice(0, 4).map(font => ({
-    label: font.name === 'System Default' ? 'System' : font.name,
+  // Prepare options for Select components
+  const fontSizeSelectOptions = FONT_SIZE_OPTIONS.map(size => ({
+    label: size.label,
+    value: size.value
+  }))
+
+  const fontFamilySelectOptions = FONT_FAMILIES.map(font => ({
+    label: font.name,
     value: font.value
   }))
+
+  // Type-safe wrapper functions for Select components
+  const handleFontSizeChange = (value: string) => {
+    updateFontSize(value as FontSize)
+  }
+
+  const handleFontFamilyChange = (value: string) => {
+    updateFontFamily(value)
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -49,27 +64,19 @@ export default observer(function DisplaySettingsScreen() {
             {t('settings.display.typography_description')}
           </Text>
 
-          <View style={styles.settingContainer}>
-            <Text style={styles.settingLabel}>
-              {t('settings.display.font_size')}
-            </Text>
-            <SegmentedControl
-              options={FONT_SIZE_OPTIONS}
-              selectedValue={displaySettings.fontSize}
-              onValueChange={updateFontSize}
-            />
-          </View>
+          <Select
+            label={t('settings.display.font_size')}
+            options={fontSizeSelectOptions}
+            selectedValue={displaySettings.fontSize}
+            onValueChange={handleFontSizeChange}
+          />
 
-          <View style={styles.settingContainer}>
-            <Text style={styles.settingLabel}>
-              {t('settings.display.font_family')}
-            </Text>
-            <SegmentedControl
-              options={fontFamilyOptions}
-              selectedValue={displaySettings.fontFamily || 'system'}
-              onValueChange={updateFontFamily}
-            />
-          </View>
+          <Select
+            label={t('settings.display.font_family')}
+            options={fontFamilySelectOptions}
+            selectedValue={displaySettings.fontFamily || 'system'}
+            onValueChange={handleFontFamilyChange}
+          />
         </View>
 
         <View style={styles.section}>
@@ -147,8 +154,6 @@ interface DisplaySettingsStyles {
   section: ViewStyle
   sectionTitle: TextStyle
   sectionDescription: TextStyle
-  settingContainer: ViewStyle
-  settingLabel: TextStyle
   settingSpacing: ViewStyle
   previewContainer: ViewStyle
   previewCard: ViewStyle
@@ -183,18 +188,6 @@ const createStyles = (theme: Theme): DisplaySettingsStyles => StyleSheet.create(
     color: theme.colors.text.secondary,
     lineHeight: theme.typography.caption.lineHeight,
     marginBottom: theme.spacing.md
-  },
-  settingContainer: {
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm
-  },
-  settingLabel: {
-    fontSize: theme.typography.body.fontSize,
-    fontWeight: '500' as TextStyle['fontWeight'],
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm
   },
   settingSpacing: {
     height: theme.spacing.sm

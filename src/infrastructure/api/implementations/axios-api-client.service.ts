@@ -1,56 +1,105 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, isAxiosError } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, isAxiosError, InternalAxiosRequestConfig } from 'axios'
 import { IApiClient, ApiConfig, ApiResponse, ApiError, ILoggingService } from '@/src/domain/services'
+
+export interface RequestInterceptor {
+  onFulfilled?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>
+  onRejected?: (error: unknown) => unknown
+}
+
+export interface ResponseInterceptor {
+  onFulfilled?: (response: AxiosResponse) => AxiosResponse | Promise<AxiosResponse>
+  onRejected?: (error: unknown) => unknown
+}
+
+export interface AxiosClientOptions {
+  requestInterceptors?: RequestInterceptor[]
+  responseInterceptors?: ResponseInterceptor[]
+  enableDefaultLogging?: boolean
+}
 
 export class AxiosApiClient implements IApiClient {
   private client: AxiosInstance
   private defaultConfig: ApiConfig
+  private options: AxiosClientOptions
 
   constructor(
     config: ApiConfig,
-    private readonly logger: ILoggingService
+    private readonly logger: ILoggingService,
+    options: AxiosClientOptions = {}
   ) {
     this.defaultConfig = { ...config }
+    this.options = {
+      enableDefaultLogging: true,
+      ...options
+    }
     this.client = axios.create(config)
     this.setupInterceptors()
     this.logger.info('Generic API client initialized', {
       baseURL: config.baseURL,
-      timeout: config.timeout
+      timeout: config.timeout,
+      hasCustomInterceptors: (options.requestInterceptors?.length || 0) + (options.responseInterceptors?.length || 0) > 0
     })
   }
 
   private setupInterceptors(): void {
-    this.client.interceptors.request.use(
-      (config) => {
-        // Log request details
-        this.logger.debug(`API request: ${config.method?.toUpperCase()} ${config.url}`, undefined, {
-          hasAuth: !!config.headers?.Authorization,
-          headers: Object.keys(config.headers || {})
-        })
-        return config
-      },
-      (error) => {
-        this.logger.error('API request interceptor error', error instanceof Error ? error : new Error(String(error)))
-        return Promise.reject(this.handleError(error))
-      }
-    )
+    // Set up default request interceptor (if logging is enabled)
+    if (this.options.enableDefaultLogging) {
+      this.client.interceptors.request.use(
+        (config) => {
+          // Log request details
+          this.logger.debug(`API request: ${config.method?.toUpperCase()} ${config.url}`, undefined, {
+            hasAuth: !!config.headers?.Authorization,
+            headers: Object.keys(config.headers || {})
+          })
+          return config
+        },
+        (error) => {
+          this.logger.error('API request interceptor error', error instanceof Error ? error : new Error(String(error)))
+          return Promise.reject(this.handleError(error))
+        }
+      )
+    }
 
-    this.client.interceptors.response.use(
-      (response) => {
-        this.logger.debug(`API response: ${response.status} ${response.statusText}`, undefined, {
-          url: response.config.url,
-          status: response.status
-        })
-        return response
-      },
-      (error) => {
-        const apiError = this.handleError(error)
-        this.logger.error('API response error', error instanceof Error ? error : new Error(String(error)), {
-          status: apiError.status,
-          code: apiError.code
-        })
-        return Promise.reject(apiError)
+    // Set up custom request interceptors
+    if (this.options.requestInterceptors) {
+      for (const interceptor of this.options.requestInterceptors) {
+        this.client.interceptors.request.use(
+          interceptor.onFulfilled,
+          interceptor.onRejected
+        )
       }
-    )
+    }
+
+    // Set up default response interceptor (if logging is enabled)
+    if (this.options.enableDefaultLogging) {
+      this.client.interceptors.response.use(
+        (response) => {
+          this.logger.debug(`API response: ${response.status} ${response.statusText}`, undefined, {
+            url: response.config.url,
+            status: response.status
+          })
+          return response
+        },
+        (error) => {
+          const apiError = this.handleError(error)
+          this.logger.error('API response error', error instanceof Error ? error : new Error(String(error)), {
+            status: apiError.status,
+            code: apiError.code
+          })
+          return Promise.reject(apiError)
+        }
+      )
+    }
+
+    // Set up custom response interceptors
+    if (this.options.responseInterceptors) {
+      for (const interceptor of this.options.responseInterceptors) {
+        this.client.interceptors.response.use(
+          interceptor.onFulfilled,
+          interceptor.onRejected
+        )
+      }
+    }
   }
 
   private handleError(error: unknown): ApiError {

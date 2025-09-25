@@ -7,6 +7,10 @@ export const TOKENS = {
   USER_PREFERENCE_SERVICE: Symbol('IUserPreferenceService'),
   ENVIRONMENT_SERVICE: Symbol('IEnvironmentService'),
 
+  // TMDB Services
+  TMDB_CONFIG_SERVICE: Symbol('ITMDBConfigService'),
+  TMDB_API_CLIENT: Symbol('ITMDBApiClient'),
+
   // API Configuration
   API_CONFIG: Symbol('ApiConfig'),
 

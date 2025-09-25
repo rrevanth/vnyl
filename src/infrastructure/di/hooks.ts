@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { container } from './setup'
 import { TOKENS, ServiceToken } from './tokens'
-import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService } from '@/src/domain/services'
+import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService, ITMDBConfigService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
 import {
   GetOrCreateUserUseCase,
@@ -10,6 +10,7 @@ import {
   UpdateUserThemeUseCase,
   UpdateUserLocaleUseCase
 } from '@/src/domain/usecases'
+import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 
 export const useDI = () => {
   const resolve = useCallback(<T>(token: ServiceToken): T => {
@@ -50,6 +51,17 @@ export const useConfigClient = (): IConfigClient => {
 export const useUserPreferenceService = (): IUserPreferenceService => {
   const { resolve } = useDI()
   return resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
+}
+
+// TMDB Service Hooks
+export const useTMDBConfigService = (): ITMDBConfigService => {
+  const { resolve } = useDI()
+  return resolve<ITMDBConfigService>(TOKENS.TMDB_CONFIG_SERVICE)
+}
+
+export const useTMDBApiClient = (): TMDBApiClient => {
+  const { resolve } = useDI()
+  return resolve<TMDBApiClient>(TOKENS.TMDB_API_CLIENT)
 }
 
 // User Service Hooks
@@ -102,5 +114,35 @@ export const useUserPreferences = () => {
     getHomeScreenLayout: () => userPreferenceService.getHomeScreenLayout(),
     refreshCache: () => userPreferenceService.refreshCache(),
     isReady: () => userPreferenceService.isReady()
+  }
+}
+
+// TMDB Convenience Hooks
+export const useTMDBServices = () => {
+  const configService = useTMDBConfigService()
+  const apiClient = useTMDBApiClient()
+
+  return {
+    // Configuration methods
+    hasValidCredentials: () => configService.hasValidCredentials(),
+    getAuthenticationMethod: () => configService.getAuthenticationMethod(),
+    getEffectiveLanguage: () => configService.getEffectiveLanguage(),
+    shouldIncludeAdult: () => configService.shouldIncludeAdult(),
+    refreshConfiguration: () => {
+      configService.refreshConfiguration()
+      apiClient.refreshConfiguration()
+    },
+
+    // API client methods
+    apiClient,
+    get: <T = unknown>(url: string, config?: any) => apiClient.get<T>(url, config),
+    post: <T = unknown>(url: string, data?: unknown, config?: any) => apiClient.post<T>(url, data, config),
+    put: <T = unknown>(url: string, data?: unknown, config?: any) => apiClient.put<T>(url, data, config),
+    patch: <T = unknown>(url: string, data?: unknown, config?: any) => apiClient.patch<T>(url, data, config),
+    delete: <T = unknown>(url: string, config?: any) => apiClient.delete<T>(url, config),
+
+    // Helper methods
+    isConfigured: () => configService.hasValidCredentials(),
+    getConfig: () => configService.getEffectiveTMDBConfig()
   }
 }
