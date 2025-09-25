@@ -1,9 +1,13 @@
 import { scale, moderateScale } from 'react-native-size-matters'
 import type { Theme, ThemeMode, ThemeColors, ThemeSpacing, ThemeTypography, ThemeRadius, ThemeShadows, ThemeTransition } from './types'
+import type { DisplaySettings, FontSize, ThemePreference } from '@/src/domain/entities'
 
 // Custom color tokens for VNYL app
-const createColors = (mode: ThemeMode): ThemeColors => {
+const createColors = (mode: ThemeMode, accentColor = '#007AFF'): ThemeColors => {
   const isLight = mode === 'light'
+
+  // Generate pressed state for accent color (20% darker)
+  const accentPressed = adjustColorBrightness(accentColor, -20)
 
   return {
     background: {
@@ -23,12 +27,12 @@ const createColors = (mode: ThemeMode): ThemeColors => {
     border: {
       primary: isLight ? '#D2D2D7' : '#38383A',
       secondary: isLight ? '#E5E5EA' : '#48484A',
-      focus: '#007AFF',
+      focus: accentColor,
       error: '#FF453A'
     },
     interactive: {
-      primary: '#007AFF',
-      primaryPressed: '#0056CC',
+      primary: accentColor,
+      primaryPressed: accentPressed,
       secondary: '#5856D6',
       secondaryPressed: '#4B4ACF',
       tertiary: isLight ? '#F2F2F7' : '#2C2C2E',
@@ -38,7 +42,7 @@ const createColors = (mode: ThemeMode): ThemeColors => {
       success: '#34C759',
       warning: '#FF9F0A',
       error: '#FF453A',
-      info: '#007AFF'
+      info: accentColor
     },
     overlay: {
       backdrop: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.7)',
@@ -47,56 +51,100 @@ const createColors = (mode: ThemeMode): ThemeColors => {
   }
 }
 
-const spacing: ThemeSpacing = {
-  xs: scale(4),
-  sm: scale(8),
-  md: scale(16),
-  lg: scale(24),
-  xl: scale(32),
-  xxl: scale(48),
-  xxxl: scale(64)
+// Helper function to adjust color brightness
+const adjustColorBrightness = (color: string, percent: number): string => {
+  // Remove # if present
+  const hex = color.replace('#', '')
+
+  // Convert to RGB
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
+
+  // Adjust brightness
+  const adjustedR = Math.max(0, Math.min(255, r + (r * percent) / 100))
+  const adjustedG = Math.max(0, Math.min(255, g + (g * percent) / 100))
+  const adjustedB = Math.max(0, Math.min(255, b + (b * percent) / 100))
+
+  // Convert back to hex
+  const toHex = (n: number) => Math.round(n).toString(16).padStart(2, '0')
+  return `#${toHex(adjustedR)}${toHex(adjustedG)}${toHex(adjustedB)}`
 }
 
-const typography: ThemeTypography = {
-  display: {
-    fontSize: moderateScale(34),
-    lineHeight: moderateScale(41),
-    fontWeight: '700' as const
-  },
-  heading1: {
-    fontSize: moderateScale(28),
-    lineHeight: moderateScale(34),
-    fontWeight: '600' as const
-  },
-  heading2: {
-    fontSize: moderateScale(24),
-    lineHeight: moderateScale(30),
-    fontWeight: '600' as const
-  },
-  heading3: {
-    fontSize: moderateScale(20),
-    lineHeight: moderateScale(25),
-    fontWeight: '600' as const
-  },
-  body: {
-    fontSize: moderateScale(17),
-    lineHeight: moderateScale(22),
-    fontWeight: '400' as const
-  },
-  bodySmall: {
-    fontSize: moderateScale(15),
-    lineHeight: moderateScale(20),
-    fontWeight: '400' as const
-  },
-  caption: {
-    fontSize: moderateScale(13),
-    lineHeight: moderateScale(18),
-    fontWeight: '400' as const
-  },
-  button: {
-    fontSize: moderateScale(17),
-    lineHeight: moderateScale(22),
-    fontWeight: '600' as const
+// Font size multipliers based on user preference
+const getFontSizeMultiplier = (fontSize: FontSize): number => {
+  switch (fontSize) {
+    case 'xs': return 0.8
+    case 'sm': return 0.9
+    case 'md': return 1.0
+    case 'lg': return 1.1
+    case 'xl': return 1.2
+    case 'xxl': return 1.3
+    default: return 1.0
+  }
+}
+
+// Create typography with display settings
+const createTypography = (displaySettings?: DisplaySettings): ThemeTypography => {
+  const fontMultiplier = displaySettings ? getFontSizeMultiplier(displaySettings.fontSize) : 1.0
+  const baseLineHeight = displaySettings?.lineHeight || 1.3
+
+  return {
+    display: {
+      fontSize: moderateScale(34 * fontMultiplier),
+      lineHeight: moderateScale(34 * fontMultiplier * baseLineHeight),
+      fontWeight: '700' as const
+    },
+    heading1: {
+      fontSize: moderateScale(28 * fontMultiplier),
+      lineHeight: moderateScale(28 * fontMultiplier * baseLineHeight),
+      fontWeight: '600' as const
+    },
+    heading2: {
+      fontSize: moderateScale(24 * fontMultiplier),
+      lineHeight: moderateScale(24 * fontMultiplier * baseLineHeight),
+      fontWeight: '600' as const
+    },
+    heading3: {
+      fontSize: moderateScale(20 * fontMultiplier),
+      lineHeight: moderateScale(20 * fontMultiplier * baseLineHeight),
+      fontWeight: '600' as const
+    },
+    body: {
+      fontSize: moderateScale(17 * fontMultiplier),
+      lineHeight: moderateScale(17 * fontMultiplier * baseLineHeight),
+      fontWeight: '400' as const
+    },
+    bodySmall: {
+      fontSize: moderateScale(15 * fontMultiplier),
+      lineHeight: moderateScale(15 * fontMultiplier * baseLineHeight),
+      fontWeight: '400' as const
+    },
+    caption: {
+      fontSize: moderateScale(13 * fontMultiplier),
+      lineHeight: moderateScale(13 * fontMultiplier * baseLineHeight),
+      fontWeight: '400' as const
+    },
+    button: {
+      fontSize: moderateScale(17 * fontMultiplier),
+      lineHeight: moderateScale(17 * fontMultiplier * baseLineHeight),
+      fontWeight: '600' as const
+    }
+  }
+}
+
+// Create spacing with display settings
+const createSpacing = (displaySettings?: DisplaySettings): ThemeSpacing => {
+  const compactMultiplier = displaySettings?.compactMode ? 0.8 : 1.0
+
+  return {
+    xs: scale(4 * compactMultiplier),
+    sm: scale(8 * compactMultiplier),
+    md: scale(16 * compactMultiplier),
+    lg: scale(24 * compactMultiplier),
+    xl: scale(32 * compactMultiplier),
+    xxl: scale(48 * compactMultiplier),
+    xxxl: scale(64 * compactMultiplier)
   }
 }
 
@@ -163,15 +211,22 @@ const transition: ThemeTransition = {
   }
 }
 
-export const createTheme = (mode: ThemeMode): Theme => ({
+export const createTheme = (
+  mode: ThemeMode,
+  displaySettings?: DisplaySettings,
+  themePreference?: ThemePreference
+): Theme => ({
   mode,
-  colors: createColors(mode),
-  spacing,
-  typography,
+  colors: createColors(mode, themePreference?.accentColor),
+  spacing: createSpacing(displaySettings),
+  typography: createTypography(displaySettings),
   radius,
   shadows,
   transition
 })
+
+// Backwards compatibility - keep the original function for simple theme creation
+export const createSimpleTheme = (mode: ThemeMode): Theme => createTheme(mode)
 
 // Pre-defined themes
 export const lightTheme = createTheme('light')

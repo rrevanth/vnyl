@@ -2,6 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { useGetOrCreateUserUseCase, useUpdateUserThemeUseCase } from '@/src/infrastructure/di'
+import { getUserPreferencesObservable } from '@/src/presentation/shared/providers/user-preferences-provider'
 import type { Theme, ThemeMode, ThemeContextValue } from './types'
 import type { ThemePreference } from '@/src/domain/entities'
 import { createTheme } from './theme-factory'
@@ -31,16 +32,20 @@ const servicesState = observable<{
 
 // Helper function to convert ThemePreference to ThemeMode
 const themePreferenceToMode = (preference: ThemePreference): ThemeMode => {
-  if (preference === 'system') {
+  if (preference.mode === 'system') {
     // Default to light for now - can be enhanced with proper system detection
     return 'light'
   }
-  return preference as ThemeMode
+  return preference.mode as ThemeMode
 }
 
 // Helper function to convert ThemeMode to ThemePreference
 const themeModeToPreference = (mode: ThemeMode): ThemePreference => {
-  return mode as ThemePreference // 'light' | 'dark' are compatible
+  return {
+    mode: mode as ThemePreference['mode'],
+    highContrast: false,
+    adaptToContent: true
+  }
 }
 
 interface ThemeProviderProps {
@@ -91,7 +96,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
         const mode = themePreferenceToMode(user.preferences.theme)
 
         themeState.mode.set(mode)
-        themeState.theme.set(createTheme(mode))
+        themeState.theme.set(createTheme(mode, user.preferences.displaySettings, user.preferences.theme))
       } catch {
         // Fallback to initial mode if user service fails
         themeState.mode.set(initialMode)
@@ -102,16 +107,53 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
     initializeTheme()
   }, [initialMode])
 
+  // Listen for user preferences changes and update theme automatically
+  useEffect(() => {
+    const userPreferencesObservable = getUserPreferencesObservable()
+
+    const unsubscribe = userPreferencesObservable.onChange(() => {
+      const currentPreferences = userPreferencesObservable.get()
+      const currentMode = themeState.mode.get()
+
+      // Get the theme mode from preferences, but prioritize current mode if it's different
+      const preferredMode = themePreferenceToMode(currentPreferences.theme)
+      const modeToUse = currentMode !== preferredMode ? preferredMode : currentMode
+
+      // Recreate theme with updated preferences (especially accent color)
+      const newTheme = createTheme(modeToUse, currentPreferences.displaySettings, currentPreferences.theme)
+
+      themeState.mode.set(modeToUse)
+      themeState.theme.set(newTheme)
+    })
+
+    return unsubscribe
+  }, [])
+
   const setThemeMode = useCallback(async (mode: ThemeMode) => {
     try {
       themeState.mode.set(mode)
-      themeState.theme.set(createTheme(mode))
+
+      // Try to get current user preferences for creating theme with all settings
+      const getUserUseCase = servicesState.getUserUseCase.get()
+      let displaySettings, themePreference
+
+      if (getUserUseCase) {
+        try {
+          const user = await getUserUseCase.execute()
+          displaySettings = user.preferences.displaySettings
+          themePreference = { ...user.preferences.theme, mode: mode as any }
+        } catch {
+          // Use default if user fetch fails
+        }
+      }
+
+      themeState.theme.set(createTheme(mode, displaySettings, themePreference))
 
       // Update user preferences only if service is available
       const updateThemeUseCase = servicesState.updateThemeUseCase.get()
       if (updateThemeUseCase) {
-        const themePreference = themeModeToPreference(mode)
-        await updateThemeUseCase.execute(themePreference)
+        const updatedThemePreference = themeModeToPreference(mode)
+        await updateThemeUseCase.execute(updatedThemePreference)
       }
     } catch {
       // Handle error gracefully - UI layer doesn't need detailed error handling

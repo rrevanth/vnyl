@@ -4,9 +4,10 @@ import type {
   ProviderPreferences,
   NotificationPreferences,
   ThemePreference,
+  LocalePreferences,
+  DisplaySettings,
   HomeScreenLayoutPreference
 } from '@/src/domain/entities'
-import type { Locale } from '@/src/presentation/shared/i18n'
 
 /**
  * Service interface for accessing user preferences with caching and reactive updates
@@ -29,12 +30,15 @@ export interface IUserPreferenceService {
   getStreamPreferences(): StreamPreferences
   getProviderPreferences(): ProviderPreferences
   getNotificationPreferences(): NotificationPreferences
+  getThemePreferences(): ThemePreference
+  getLocalePreferences(): LocalePreferences
+  getDisplaySettings(): DisplaySettings
 
   /**
    * Get individual preference values with fallbacks
    */
   getTheme(): ThemePreference
-  getLocale(): Locale
+  getLocale(): LocalePreferences
   getRegionSettings(): string
   getHomeScreenLayout(): HomeScreenLayoutPreference
 

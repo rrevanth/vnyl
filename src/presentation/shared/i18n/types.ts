@@ -28,23 +28,72 @@ export interface TranslationKey {
     title: string
     theme: {
       title: string
-      light: string
-      dark: string
+      description: string
+      dark_mode: string
+      light_mode: string
+      system_mode: string
+      accent_color: string
+      high_contrast: string
+      adapt_to_content: string
+      appearance: string
     }
     language: {
       title: string
       english: string
       spanish: string
     }
+    locale: {
+      title: string
+      description: string
+      language: string
+      region: string
+      date_format: string
+      time_format: string
+      currency: string
+    }
+    display: {
+      title: string
+      description: string
+      font_size: string
+      font_family: string
+      line_height: string
+      compact_mode: string
+      animation_scale: string
+      typography: string
+      layout: string
+    }
     about: {
       title: string
+      description: string
       version: string
+      build: string
+      license: string
+      privacy_policy: string
+      terms_of_service: string
     }
+  }
+
+  // Colors
+  colors: {
+    blue: string
+    green: string
+    purple: string
+    red: string
+    orange: string
+  }
+
+  // Sizes
+  sizes: {
+    small: string
+    medium: string
+    large: string
+    extra_large: string
   }
 
   // Providers
   providers: {
     title: string
+    description: string
     comingSoon: string
     status: {
       configured: string

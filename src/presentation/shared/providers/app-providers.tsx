@@ -4,6 +4,7 @@ import { observer } from '@legendapp/state/react'
 import { ThemeProvider } from '@/src/presentation/shared/theme'
 import { I18nProvider } from '@/src/presentation/shared/i18n'
 import { AppErrorBoundary } from '@/src/presentation/shared/error-boundary'
+import { UserPreferencesProvider } from './user-preferences-provider'
 import { initializeApp } from '@/src/infrastructure/app-container'
 
 interface AppProvidersProps {
@@ -45,11 +46,13 @@ export const AppProviders: React.FC<AppProvidersProps> = observer(({ children })
 
   return (
     <AppErrorBoundary>
-      <ThemeProvider initialMode="light">
-        <I18nProvider fallbackLocale="en">
-          {children}
-        </I18nProvider>
-      </ThemeProvider>
+      <UserPreferencesProvider>
+        <ThemeProvider initialMode="light">
+          <I18nProvider fallbackLocale="en">
+            {children}
+          </I18nProvider>
+        </ThemeProvider>
+      </UserPreferencesProvider>
     </AppErrorBoundary>
   )
 })

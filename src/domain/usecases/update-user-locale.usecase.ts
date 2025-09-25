@@ -1,7 +1,6 @@
-import { User } from '@/src/domain/entities'
+import { User, LocalePreferences } from '@/src/domain/entities'
 import { IUserRepository } from '@/src/domain/repositories'
 import { ILoggingService } from '@/src/domain/services'
-import type { Locale } from '@/src/presentation/shared/i18n'
 
 export class UpdateUserLocaleUseCase {
   constructor(
@@ -9,7 +8,7 @@ export class UpdateUserLocaleUseCase {
     private readonly logger: ILoggingService
   ) {}
 
-  async execute(locale: Locale): Promise<User> {
+  async execute(locale: LocalePreferences): Promise<User> {
     try {
       this.logger.debug('Updating user locale preference', undefined, { locale })
 
@@ -17,7 +16,8 @@ export class UpdateUserLocaleUseCase {
 
       this.logger.info('User locale preference updated successfully', {
         userId: updatedUser.userId,
-        locale
+        language: locale.language,
+        region: locale.region
       })
 
       return updatedUser

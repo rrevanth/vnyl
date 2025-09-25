@@ -4,12 +4,13 @@ import type {
   ProviderPreferences,
   NotificationPreferences,
   ThemePreference,
+  LocalePreferences,
+  DisplaySettings,
   HomeScreenLayoutPreference
 } from '@/src/domain/entities'
 import { DEFAULT_USER_PREFERENCES } from '@/src/domain/entities'
 import type { IUserPreferenceService, ILoggingService, IEnvironmentService } from '@/src/domain/services'
 import type { IUserRepository } from '@/src/domain/repositories'
-import type { Locale } from '@/src/presentation/shared/i18n'
 
 /**
  * User preference service with caching for performance
@@ -120,14 +121,27 @@ export class UserPreferenceService implements IUserPreferenceService {
     return preferences.notificationSettings ?? DEFAULT_USER_PREFERENCES.notificationSettings
   }
 
-  getTheme(): ThemePreference {
+  getThemePreferences(): ThemePreference {
     const preferences = this.getPreferences()
     return preferences?.theme ?? DEFAULT_USER_PREFERENCES.theme
   }
 
-  getLocale(): Locale {
+  getLocalePreferences(): LocalePreferences {
     const preferences = this.getPreferences()
     return preferences?.locale ?? DEFAULT_USER_PREFERENCES.locale
+  }
+
+  getDisplaySettings(): DisplaySettings {
+    const preferences = this.getPreferences()
+    return preferences?.displaySettings ?? DEFAULT_USER_PREFERENCES.displaySettings
+  }
+
+  getTheme(): ThemePreference {
+    return this.getThemePreferences()
+  }
+
+  getLocale(): LocalePreferences {
+    return this.getLocalePreferences()
   }
 
   getRegionSettings(): string {

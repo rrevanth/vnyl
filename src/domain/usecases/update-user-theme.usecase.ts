@@ -16,7 +16,8 @@ export class UpdateUserThemeUseCase {
 
       this.logger.info('User theme preference updated successfully', {
         userId: updatedUser.userId,
-        theme
+        themeMode: theme.mode,
+        highContrast: theme.highContrast
       })
 
       return updatedUser

@@ -25,22 +25,69 @@ export const es: TranslationKey = {
     title: 'Configuración',
     theme: {
       title: 'Tema',
-      light: 'Claro',
-      dark: 'Oscuro'
+      description: 'Personalizar apariencia',
+      dark_mode: 'Modo Oscuro',
+      light_mode: 'Modo Claro',
+      system_mode: 'Sistema',
+      accent_color: 'Color de Acento',
+      high_contrast: 'Alto Contraste',
+      adapt_to_content: 'Adaptar al Contenido',
+      appearance: 'Apariencia'
     },
     language: {
       title: 'Idioma',
       english: 'Inglés',
       spanish: 'Español'
     },
+    locale: {
+      title: 'Idioma y Región',
+      description: 'Idioma y formato',
+      language: 'Idioma',
+      region: 'Región',
+      date_format: 'Formato de Fecha',
+      time_format: 'Formato de Hora',
+      currency: 'Moneda'
+    },
+    display: {
+      title: 'Pantalla',
+      description: 'Tipografía y diseño',
+      font_size: 'Tamaño de Fuente',
+      font_family: 'Familia de Fuente',
+      line_height: 'Altura de Línea',
+      compact_mode: 'Modo Compacto',
+      animation_scale: 'Escala de Animación',
+      typography: 'Tipografía',
+      layout: 'Diseño'
+    },
     about: {
       title: 'Acerca de',
-      version: 'Versión'
+      description: 'Información de la aplicación',
+      version: 'Versión',
+      build: 'Compilación',
+      license: 'Licencia',
+      privacy_policy: 'Política de Privacidad',
+      terms_of_service: 'Términos de Servicio'
     }
+  },
+
+  colors: {
+    blue: 'Azul',
+    green: 'Verde',
+    purple: 'Púrpura',
+    red: 'Rojo',
+    orange: 'Naranja'
+  },
+
+  sizes: {
+    small: 'Pequeño',
+    medium: 'Mediano',
+    large: 'Grande',
+    extra_large: 'Extra Grande'
   },
 
   providers: {
     title: 'Proveedores',
+    description: 'Configuración de servicios externos',
     comingSoon: 'Próximamente',
     status: {
       configured: 'Configurado',

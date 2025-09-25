@@ -48,7 +48,8 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
       try {
         // Try to get user preferences first
         const user = await getOrCreateUserUseCase.execute()
-        const userLocale = user.preferences.locale
+        const userLocalePreferences = user.preferences.locale
+        const userLocale = userLocalePreferences.language
 
         if (userLocale && translations[userLocale]) {
           i18nState.locale.set(userLocale)
@@ -68,7 +69,14 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
         i18nState.translations.set(translations[localeToUse])
 
         // Update user preferences with detected locale
-        await updateUserLocaleUseCase.execute(localeToUse)
+        const newLocalePreferences = {
+          language: localeToUse,
+          region: deviceLocales[0]?.regionCode || 'US',
+          dateFormat: 'iso' as const,
+          timeFormat: '12h' as const,
+          currency: 'USD'
+        }
+        await updateUserLocaleUseCase.execute(newLocalePreferences)
       } catch {
         // Fallback to default if everything fails
         i18nState.locale.set(fallbackLocale)
@@ -87,7 +95,16 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
 
       i18nState.locale.set(locale)
       i18nState.translations.set(translations[locale])
-      await updateUserLocaleUseCase.execute(locale)
+
+      // Create full locale preferences object
+      const newLocalePreferences = {
+        language: locale,
+        region: 'US', // Default region - can be enhanced later
+        dateFormat: 'iso' as const,
+        timeFormat: '12h' as const,
+        currency: 'USD'
+      }
+      await updateUserLocaleUseCase.execute(newLocalePreferences)
     } catch {
       // Handle error gracefully - UI layer doesn't need detailed error handling
     }

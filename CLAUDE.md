@@ -597,6 +597,66 @@ const createCardStyles = (theme: Theme, variant: string) => StyleSheet.create({
 - **Centralized Translations**: Located at `src/presentation/shared/i18n/`
 - **UseTranslation Hook**: Always use `useTranslation` for text
 - **Key Structure**: Organize by feature and component hierarchy
+- **Snake Case Keys**: All translation keys use snake_case convention
+
+```typescript
+// ✅ REQUIRED - Snake case for translation keys
+const { t } = useTranslation()
+title={t('settings.theme.dark_mode')}
+description={t('settings.display.font_size')}
+label={t('settings.locale.time_format')}
+
+// ❌ FORBIDDEN - camelCase for translation keys
+title={t('settings.theme.darkMode')}
+description={t('settings.display.fontSize')}
+```
+
+### Naming Conventions
+
+- **Files & Components**: Standard React Native conventions (PascalCase for components, camelCase for variables/functions)
+- **Translation Keys**: snake_case for all i18n keys (`dark_mode`, `font_size`, `time_format`)
+- **Theme Tokens**: Use built-in theme structure, extend with snake_case if needed
+- **Variables & Functions**: camelCase (`darkMode`, `fontSize`, `toggleDarkMode`)
+- **Directories & Files**: PascalCase for components (`SettingsCard.tsx`), camelCase for utilities
+
+```typescript
+// ✅ REQUIRED - Standard React Native naming conventions
+const SettingsCard: React.FC<SettingsCardProps> = ({ title, onPress }) => {
+  const [darkMode, setDarkMode] = useState(false)
+  const toggleDarkMode = useCallback(() => setDarkMode(!darkMode), [darkMode])
+
+  return (
+    <Pressable onPress={onPress}>
+      <Text>{t('settings.theme.dark_mode')}</Text>
+    </Pressable>
+  )
+}
+
+// ✅ REQUIRED - Snake case ONLY for translation keys
+const translations = {
+  settings: {
+    theme: {
+      dark_mode: 'Dark Mode',
+      accent_color: 'Accent Color',
+      high_contrast: 'High Contrast'
+    },
+    display: {
+      font_size: 'Font Size',
+      line_height: 'Line Height',
+      compact_mode: 'Compact Mode'
+    }
+  }
+}
+
+// ✅ REQUIRED - Built-in theme tokens (already properly structured)
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: theme.colors.background.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md
+  }
+})
+```
 
 ### State Management
 
@@ -673,7 +733,7 @@ const createCardStyles = (theme: Theme, variant: string) => StyleSheet.create({
 2. **Create styles with StyleSheet.create()** for optimal performance
 3. **Use theme factory pattern** for consistent styling and theming
 4. **Implement component variants** through props and theme values
-5. **Use `useTranslation`** for all text with proper i18n keys
+5. **Use `useTranslation`** for all text with snake_case i18n keys
 6. **Access services through DI container** with `useDI()` or `useService()`
 7. **Follow CLEAN architecture layers** strictly
 8. **Use Legend State observables** for all reactive state
@@ -715,6 +775,7 @@ const createCardStyles = (theme: Theme, variant: string) => StyleSheet.create({
 44. **Orchestrate with Task agents** for multi-step operations and complex workflows
 45. **Build native component libraries** using React Native primitives with theme system
 46. **Execute parallel operations** where possible for optimal performance
+47. **Follow naming conventions**: PascalCase for components, camelCase for variables/functions, snake_case for translation keys only
 
 ## TypeScript Strict Mode Standards
 

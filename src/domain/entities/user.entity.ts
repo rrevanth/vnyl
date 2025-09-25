@@ -1,5 +1,7 @@
 import type { Locale } from '@/src/presentation/shared/i18n'
 
+export type { Locale } from '@/src/presentation/shared/i18n'
+
 export interface User {
   userId: string
   createdAt: string
@@ -18,14 +20,38 @@ export interface UserMetadata {
 
 export interface UserPreferences {
   theme: ThemePreference
-  locale: Locale
+  locale: LocalePreferences
+  displaySettings: DisplaySettings
   streamPreferences: StreamPreferences
   providerPreferences: ProviderPreferences
   homeScreenLayout: HomeScreenLayoutPreference
   notificationSettings: NotificationPreferences
 }
 
-export type ThemePreference = 'light' | 'dark' | 'system'
+export interface ThemePreference {
+  mode: 'light' | 'dark' | 'system'
+  accentColor?: string
+  highContrast: boolean
+  adaptToContent: boolean
+}
+
+export interface LocalePreferences {
+  language: Locale
+  region: string
+  dateFormat: 'iso' | 'us' | 'eu'
+  timeFormat: '12h' | '24h'
+  currency: string
+}
+
+export interface DisplaySettings {
+  fontSize: FontSize
+  fontFamily?: string
+  lineHeight: number
+  compactMode: boolean
+  animationScale: number
+}
+
+export type FontSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
 
 export interface StreamPreferences {
   quality: StreamQuality
@@ -54,8 +80,24 @@ export interface NotificationPreferences {
 export type NotificationType = 'new_releases' | 'recommendations' | 'updates' | 'promotions'
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
-  theme: 'system',
-  locale: 'en',
+  theme: {
+    mode: 'system',
+    highContrast: false,
+    adaptToContent: true
+  },
+  locale: {
+    language: 'en',
+    region: 'US',
+    dateFormat: 'iso',
+    timeFormat: '12h',
+    currency: 'USD'
+  },
+  displaySettings: {
+    fontSize: 'md',
+    lineHeight: 1.4,
+    compactMode: false,
+    animationScale: 1.0
+  },
   streamPreferences: {
     quality: 'auto',
     autoplay: true,

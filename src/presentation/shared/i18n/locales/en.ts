@@ -25,22 +25,69 @@ export const en: TranslationKey = {
     title: 'Settings',
     theme: {
       title: 'Theme',
-      light: 'Light',
-      dark: 'Dark'
+      description: 'Customize appearance',
+      dark_mode: 'Dark Mode',
+      light_mode: 'Light Mode',
+      system_mode: 'System',
+      accent_color: 'Accent Color',
+      high_contrast: 'High Contrast',
+      adapt_to_content: 'Adapt to Content',
+      appearance: 'Appearance'
     },
     language: {
       title: 'Language',
       english: 'English',
       spanish: 'Spanish'
     },
+    locale: {
+      title: 'Language & Region',
+      description: 'Language and formatting',
+      language: 'Language',
+      region: 'Region',
+      date_format: 'Date Format',
+      time_format: 'Time Format',
+      currency: 'Currency'
+    },
+    display: {
+      title: 'Display',
+      description: 'Typography and layout',
+      font_size: 'Font Size',
+      font_family: 'Font Family',
+      line_height: 'Line Height',
+      compact_mode: 'Compact Mode',
+      animation_scale: 'Animation Scale',
+      typography: 'Typography',
+      layout: 'Layout'
+    },
     about: {
       title: 'About',
-      version: 'Version'
+      description: 'App information',
+      version: 'Version',
+      build: 'Build',
+      license: 'License',
+      privacy_policy: 'Privacy Policy',
+      terms_of_service: 'Terms of Service'
     }
+  },
+
+  colors: {
+    blue: 'Blue',
+    green: 'Green',
+    purple: 'Purple',
+    red: 'Red',
+    orange: 'Orange'
+  },
+
+  sizes: {
+    small: 'Small',
+    medium: 'Medium',
+    large: 'Large',
+    extra_large: 'Extra Large'
   },
 
   providers: {
     title: 'Providers',
+    description: 'External service configuration',
     comingSoon: 'Coming Soon',
     status: {
       configured: 'Configured',

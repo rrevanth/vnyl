@@ -8,7 +8,8 @@ import {
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase
+  UpdateUserLocaleUseCase,
+  UpdateUserDisplaySettingsUseCase
 } from '@/src/domain/usecases'
 
 export const useDI = () => {
@@ -83,6 +84,11 @@ export const useUpdateUserLocaleUseCase = (): UpdateUserLocaleUseCase => {
   return resolve<UpdateUserLocaleUseCase>(TOKENS.UPDATE_USER_LOCALE_USE_CASE)
 }
 
+export const useUpdateUserDisplaySettingsUseCase = (): UpdateUserDisplaySettingsUseCase => {
+  const { resolve } = useDI()
+  return resolve<UpdateUserDisplaySettingsUseCase>(TOKENS.UPDATE_USER_DISPLAY_SETTINGS_USE_CASE)
+}
+
 // Convenience Preference Hooks
 export const useStreamingPreferences = () => {
   const userPreferenceService = useUserPreferenceService()
@@ -98,6 +104,7 @@ export const useUserPreferences = () => {
     getPreferences: () => userPreferenceService.getPreferences(),
     getTheme: () => userPreferenceService.getTheme(),
     getLocale: () => userPreferenceService.getLocale(),
+    getDisplaySettings: () => userPreferenceService.getDisplaySettings(),
     getHomeScreenLayout: () => userPreferenceService.getHomeScreenLayout(),
     refreshCache: () => userPreferenceService.refreshCache(),
     isReady: () => userPreferenceService.isReady()
