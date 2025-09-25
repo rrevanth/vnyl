@@ -1,156 +1,147 @@
 import { useCallback } from 'react'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
 import { useUpdateUserPreferencesUseCase } from '@/src/infrastructure/di'
-import type { ThemePreference, DisplaySettings, FontSize } from '@/src/domain/entities'
+import { SettingsLogger } from '@/src/presentation/shared/utils/settings-logger'
+import type { ThemePreference, DisplaySettings, FontSize, UserPreferences } from '@/src/domain/entities'
 
 export const useSettingsActions = () => {
   const userPreferencesContext = useUserPreferences()
   const updateUserPreferencesUseCase = useUpdateUserPreferencesUseCase()
 
-  // Theme actions
-  const updateThemeMode = useCallback(async (mode: ThemePreference['mode']) => {
+  // Generic update function to reduce repetition
+  const updatePreferences = useCallback(async (
+    preferences: Partial<UserPreferences>,
+    actionName: string,
+    logData?: Record<string, any>
+  ) => {
     try {
-      console.log('🎨 Settings: Updating theme mode to:', mode)
+      SettingsLogger.start(actionName, logData)
+      SettingsLogger.saving(preferences)
 
-      const updatedTheme: ThemePreference = {
-        ...userPreferencesContext.themePreference,
-        mode
-      }
-
-      console.log('💾 Settings: Saving theme preferences through domain layer:', updatedTheme)
-      await updateUserPreferencesUseCase.execute({ theme: updatedTheme })
-      console.log('✅ Settings: Theme mode updated successfully')
+      await updateUserPreferencesUseCase.execute(preferences)
+      SettingsLogger.success(actionName)
 
       // Refresh the provider to get updated state
       await userPreferencesContext.refresh()
-      console.log('🔄 Settings: Provider state refreshed after theme mode update')
+      SettingsLogger.refresh(actionName)
     } catch (error) {
-      console.error('❌ Settings: Failed to update theme mode', error)
+      SettingsLogger.error(actionName, error)
       throw error
     }
-  }, [userPreferencesContext, updateUserPreferencesUseCase])
+  }, [updateUserPreferencesUseCase, userPreferencesContext])
+
+  // Theme actions using typed logging
+  const updateThemeMode = useCallback(async (mode: ThemePreference['mode']) => {
+    const updatedTheme: ThemePreference = {
+      ...userPreferencesContext.themePreference,
+      mode
+    }
+    await updatePreferences(
+      { theme: updatedTheme },
+      'theme mode update',
+      { mode }
+    )
+  }, [userPreferencesContext.themePreference, updatePreferences])
 
   const updateAccentColor = useCallback(async (accentColor: string) => {
-    try {
-      console.log('🌈 Settings: Updating accent color to:', accentColor)
-
-      const updatedTheme: ThemePreference = {
-        ...userPreferencesContext.themePreference,
-        accentColor
-      }
-
-      console.log('💾 Settings: Saving accent color through domain layer:', updatedTheme)
-      await updateUserPreferencesUseCase.execute({ theme: updatedTheme })
-      console.log('✅ Settings: Accent color updated successfully')
-
-      // Refresh the provider to get updated state
-      await userPreferencesContext.refresh()
-      console.log('🔄 Settings: Provider state refreshed after accent color update')
-    } catch (error) {
-      console.error('❌ Settings: Failed to update accent color', error)
-      throw error
+    const updatedTheme: ThemePreference = {
+      ...userPreferencesContext.themePreference,
+      accentColor
     }
-  }, [userPreferencesContext, updateUserPreferencesUseCase])
+    await updatePreferences(
+      { theme: updatedTheme },
+      'accent color update',
+      { accentColor }
+    )
+  }, [userPreferencesContext.themePreference, updatePreferences])
 
   // Display settings actions
   const updateFontSize = useCallback(async (fontSize: FontSize) => {
-    try {
-      console.log('📏 Settings: Updating font size to:', fontSize)
-
-      const updatedDisplaySettings: DisplaySettings = {
-        ...userPreferencesContext.displaySettings,
-        fontSize
-      }
-
-      console.log('💾 Settings: Saving display settings through domain layer:', updatedDisplaySettings)
-      await updateUserPreferencesUseCase.execute({ displaySettings: updatedDisplaySettings })
-      console.log('✅ Settings: Font size updated successfully')
-
-      // Refresh the provider to get updated state
-      await userPreferencesContext.refresh()
-      console.log('🔄 Settings: Provider state refreshed after font size update')
-    } catch (error) {
-      console.error('❌ Settings: Failed to update font size', error)
-      throw error
+    const updatedDisplaySettings: DisplaySettings = {
+      ...userPreferencesContext.displaySettings,
+      fontSize
     }
-  }, [userPreferencesContext, updateUserPreferencesUseCase])
+    await updatePreferences(
+      { displaySettings: updatedDisplaySettings },
+      'font size update',
+      { fontSize }
+    )
+  }, [userPreferencesContext.displaySettings, updatePreferences])
 
   const updateFontFamily = useCallback(async (fontFamily: string) => {
-    try {
-      console.log('🔤 Settings: Updating font family to:', fontFamily)
-
-      const updatedDisplaySettings: DisplaySettings = {
-        ...userPreferencesContext.displaySettings,
-        fontFamily
-      }
-
-      console.log('💾 Settings: Saving display settings through domain layer:', updatedDisplaySettings)
-      await updateUserPreferencesUseCase.execute({ displaySettings: updatedDisplaySettings })
-      console.log('✅ Settings: Font family updated successfully')
-
-      // Refresh the provider to get updated state
-      await userPreferencesContext.refresh()
-      console.log('🔄 Settings: Provider state refreshed after font family update')
-    } catch (error) {
-      console.error('❌ Settings: Failed to update font family', error)
-      throw error
+    const updatedDisplaySettings: DisplaySettings = {
+      ...userPreferencesContext.displaySettings,
+      fontFamily
     }
-  }, [userPreferencesContext, updateUserPreferencesUseCase])
+    await updatePreferences(
+      { displaySettings: updatedDisplaySettings },
+      'font family update',
+      { fontFamily }
+    )
+  }, [userPreferencesContext.displaySettings, updatePreferences])
 
   const updateLineHeight = useCallback(async (lineHeight: number) => {
-    try {
-      console.log('📐 Settings: Updating line height to:', lineHeight)
-
-      const updatedDisplaySettings: DisplaySettings = {
-        ...userPreferencesContext.displaySettings,
-        lineHeight
-      }
-
-      console.log('💾 Settings: Saving display settings through domain layer:', updatedDisplaySettings)
-      await updateUserPreferencesUseCase.execute({ displaySettings: updatedDisplaySettings })
-      console.log('✅ Settings: Line height updated successfully')
-
-      // Refresh the provider to get updated state
-      await userPreferencesContext.refresh()
-      console.log('🔄 Settings: Provider state refreshed after line height update')
-    } catch (error) {
-      console.error('❌ Settings: Failed to update line height', error)
-      throw error
+    const updatedDisplaySettings: DisplaySettings = {
+      ...userPreferencesContext.displaySettings,
+      lineHeight
     }
-  }, [userPreferencesContext, updateUserPreferencesUseCase])
+    await updatePreferences(
+      { displaySettings: updatedDisplaySettings },
+      'line height update',
+      { lineHeight }
+    )
+  }, [userPreferencesContext.displaySettings, updatePreferences])
 
   const updateCompactMode = useCallback(async (compactMode: boolean) => {
-    try {
-      console.log('📱 Settings: Updating compact mode to:', compactMode)
-
-      const updatedDisplaySettings: DisplaySettings = {
-        ...userPreferencesContext.displaySettings,
-        compactMode
-      }
-
-      console.log('💾 Settings: Saving display settings through domain layer:', updatedDisplaySettings)
-      await updateUserPreferencesUseCase.execute({ displaySettings: updatedDisplaySettings })
-      console.log('✅ Settings: Compact mode updated successfully')
-
-      // Refresh the provider to get updated state
-      await userPreferencesContext.refresh()
-      console.log('🔄 Settings: Provider state refreshed after compact mode update')
-    } catch (error) {
-      console.error('❌ Settings: Failed to update compact mode', error)
-      throw error
+    const updatedDisplaySettings: DisplaySettings = {
+      ...userPreferencesContext.displaySettings,
+      compactMode
     }
-  }, [userPreferencesContext, updateUserPreferencesUseCase])
+    await updatePreferences(
+      { displaySettings: updatedDisplaySettings },
+      'compact mode update',
+      { compactMode }
+    )
+  }, [userPreferencesContext.displaySettings, updatePreferences])
+
+  // Generic update functions for reusability
+  const updateThemePreference = useCallback(async (themeUpdate: Partial<ThemePreference>) => {
+    const updatedTheme: ThemePreference = {
+      ...userPreferencesContext.themePreference,
+      ...themeUpdate
+    }
+    await updatePreferences(
+      { theme: updatedTheme },
+      'theme preference update',
+      themeUpdate
+    )
+  }, [userPreferencesContext.themePreference, updatePreferences])
+
+  const updateDisplaySettings = useCallback(async (displayUpdate: Partial<DisplaySettings>) => {
+    const updatedDisplaySettings: DisplaySettings = {
+      ...userPreferencesContext.displaySettings,
+      ...displayUpdate
+    }
+    await updatePreferences(
+      { displaySettings: updatedDisplaySettings },
+      'display settings update',
+      displayUpdate
+    )
+  }, [userPreferencesContext.displaySettings, updatePreferences])
 
   return {
-    // Theme actions
+    // Specific actions
     updateThemeMode,
     updateAccentColor,
-
-    // Display settings actions
     updateFontSize,
     updateFontFamily,
     updateLineHeight,
     updateCompactMode,
+
+    // Generic update functions for advanced usage
+    updateThemePreference,
+    updateDisplaySettings,
+    updatePreferences,
 
     // Current values (for convenience)
     themePreference: userPreferencesContext.themePreference,

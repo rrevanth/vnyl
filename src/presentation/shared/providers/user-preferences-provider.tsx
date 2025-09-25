@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { useGetOrCreateUserUseCase } from '@/src/infrastructure/di'
+import { SettingsLogger } from '@/src/presentation/shared/utils/settings-logger'
 import type {
   UserPreferences,
   ThemePreference,
@@ -63,18 +64,18 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
   // Initialize user preferences from backend
   useEffect(() => {
     if (!getOrCreateUserUseCase) {
-      console.log('🔧 UserPreferencesProvider: Use case not ready yet')
+      SettingsLogger.providerNotReady()
       return
     }
 
     const initializePreferences = async () => {
       try {
-        console.log('🚀 UserPreferencesProvider: Starting user preferences initialization')
+        SettingsLogger.providerStart('user preferences initialization')
         userPreferencesState.isLoading.set(true)
         userPreferencesState.error.set(null)
 
         const user = await getOrCreateUserUseCase.execute()
-        console.log('✅ UserPreferencesProvider: Loaded user preferences from storage:', {
+        SettingsLogger.providerLoaded({
           userId: user.userId,
           themeMode: user.preferences.theme?.mode,
           accentColor: user.preferences.theme?.accentColor,
@@ -85,12 +86,12 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
 
         userPreferencesState.preferences.set(user.preferences)
         userPreferencesState.ready.set(true)
-        console.log('🎯 UserPreferencesProvider: User preferences state updated successfully')
+        SettingsLogger.providerSuccess('User preferences state')
       } catch (error) {
-        console.error('❌ UserPreferencesProvider: Failed to load user preferences', error)
+        SettingsLogger.providerError('load user preferences', error)
         userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
         // Continue with default preferences
-        console.log('🔄 UserPreferencesProvider: Falling back to default preferences')
+        SettingsLogger.providerFallback('default preferences')
         userPreferencesState.preferences.set(DEFAULT_USER_PREFERENCES)
       } finally {
         userPreferencesState.isLoading.set(false)
@@ -104,12 +105,12 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
     if (!getOrCreateUserUseCase) return
 
     try {
-      console.log('🔄 UserPreferencesProvider: Refreshing user preferences')
+      SettingsLogger.providerRefreshing()
       userPreferencesState.isLoading.set(true)
       userPreferencesState.error.set(null)
 
       const user = await getOrCreateUserUseCase.execute()
-      console.log('✅ UserPreferencesProvider: Refreshed user preferences:', {
+      SettingsLogger.providerRefreshed({
         userId: user.userId,
         themeMode: user.preferences.theme?.mode,
         accentColor: user.preferences.theme?.accentColor,
@@ -119,7 +120,7 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
       })
       userPreferencesState.preferences.set(user.preferences)
     } catch (error) {
-      console.error('❌ UserPreferencesProvider: Failed to refresh user preferences', error)
+      SettingsLogger.providerError('refresh user preferences', error)
       userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
     } finally {
       userPreferencesState.isLoading.set(false)

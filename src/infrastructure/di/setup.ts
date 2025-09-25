@@ -7,8 +7,7 @@ import {
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase,
-  UpdateUserDisplaySettingsUseCase
+  UpdateUserLocaleUseCase
 } from '@/src/domain/usecases'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
@@ -130,15 +129,6 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       const userRepository = container.resolve<IUserRepository>(TOKENS.USER_REPOSITORY)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
       return new UpdateUserLocaleUseCase(userRepository, logger)
-    }
-  )
-
-  container.registerSingleton<UpdateUserDisplaySettingsUseCase>(
-    TOKENS.UPDATE_USER_DISPLAY_SETTINGS_USE_CASE,
-    () => {
-      const userRepository = container.resolve<IUserRepository>(TOKENS.USER_REPOSITORY)
-      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      return new UpdateUserDisplaySettingsUseCase(userRepository, logger)
     }
   )
 
