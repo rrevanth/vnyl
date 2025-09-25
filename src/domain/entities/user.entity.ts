@@ -1,6 +1,4 @@
 import type { Locale } from '@/src/presentation/shared/i18n'
-import type { TMDBConfig } from './provider-configs.entity'
-import { DEFAULT_TMDB_CONFIG } from './provider-configs.entity'
 
 export interface User {
   userId: string
@@ -21,7 +19,6 @@ export interface UserMetadata {
 export interface UserPreferences {
   theme: ThemePreference
   locale: Locale
-  tmdbConfig: TMDBConfig
   streamPreferences: StreamPreferences
   providerPreferences: ProviderPreferences
   homeScreenLayout: HomeScreenLayoutPreference
@@ -59,7 +56,6 @@ export type NotificationType = 'new_releases' | 'recommendations' | 'updates' | 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   theme: 'system',
   locale: 'en',
-  tmdbConfig: DEFAULT_TMDB_CONFIG,
   streamPreferences: {
     quality: 'auto',
     autoplay: true,

@@ -4,10 +4,9 @@ import type {
   ProviderPreferences,
   NotificationPreferences,
   ThemePreference,
-  HomeScreenLayoutPreference,
-  TMDBConfig
+  HomeScreenLayoutPreference
 } from '@/src/domain/entities'
-import { DEFAULT_USER_PREFERENCES, DEFAULT_TMDB_CONFIG } from '@/src/domain/entities'
+import { DEFAULT_USER_PREFERENCES } from '@/src/domain/entities'
 import type { IUserPreferenceService, ILoggingService, IEnvironmentService } from '@/src/domain/services'
 import type { IUserRepository } from '@/src/domain/repositories'
 import type { Locale } from '@/src/presentation/shared/i18n'
@@ -94,49 +93,31 @@ export class UserPreferenceService implements IUserPreferenceService {
     return this.preferencesCache
   }
 
-  getTMDBConfig(): TMDBConfig {
-    if (!this.isInitialized) {
-      this.logger.warn('TMDB config accessed before initialization, returning defaults')
-      return { ...DEFAULT_TMDB_CONFIG }
-    }
-
-    const preferences = this.getPreferences()
-    const userTMDBConfig = preferences?.tmdbConfig ?? DEFAULT_TMDB_CONFIG
-
-    // Return user config as-is, without automatic environment fallback
-    return userTMDBConfig
-  }
-
-  /**
-   * Get the default API key from environment variables
-   * This is separate from user preferences for transparency
-   */
-  getDefaultTMDBApiKey(): string {
-    return this.environmentService.getTMDBApiKey() || ''
-  }
-
-  /**
-   * Get the effective API key (user preference or default)
-   * This is what should be used for actual API calls
-   */
-  getEffectiveTMDBApiKey(): string {
-    const userConfig = this.getTMDBConfig()
-    return userConfig.apiKey || this.getDefaultTMDBApiKey()
-  }
-
   getStreamPreferences(): StreamPreferences {
     const preferences = this.getPreferences()
-    return preferences?.streamPreferences ?? DEFAULT_USER_PREFERENCES.streamPreferences
+    if (!preferences) {
+      this.logger.debug('No preferences available, returning default stream preferences')
+      return DEFAULT_USER_PREFERENCES.streamPreferences
+    }
+    return preferences.streamPreferences ?? DEFAULT_USER_PREFERENCES.streamPreferences
   }
 
   getProviderPreferences(): ProviderPreferences {
     const preferences = this.getPreferences()
-    return preferences?.providerPreferences ?? DEFAULT_USER_PREFERENCES.providerPreferences
+    if (!preferences) {
+      this.logger.debug('No preferences available, returning default provider preferences')
+      return DEFAULT_USER_PREFERENCES.providerPreferences
+    }
+    return preferences.providerPreferences ?? DEFAULT_USER_PREFERENCES.providerPreferences
   }
 
   getNotificationPreferences(): NotificationPreferences {
     const preferences = this.getPreferences()
-    return preferences?.notificationSettings ?? DEFAULT_USER_PREFERENCES.notificationSettings
+    if (!preferences) {
+      this.logger.debug('No preferences available, returning default notification preferences')
+      return DEFAULT_USER_PREFERENCES.notificationSettings
+    }
+    return preferences.notificationSettings ?? DEFAULT_USER_PREFERENCES.notificationSettings
   }
 
   getTheme(): ThemePreference {
@@ -157,42 +138,5 @@ export class UserPreferenceService implements IUserPreferenceService {
   getHomeScreenLayout(): HomeScreenLayoutPreference {
     const preferences = this.getPreferences()
     return preferences?.homeScreenLayout ?? DEFAULT_USER_PREFERENCES.homeScreenLayout
-  }
-
-  // TMDB-specific methods
-  hasTMDBConfig(): boolean {
-    const tmdbConfig = this.getTMDBConfig()
-    return !!(tmdbConfig.apiKey || tmdbConfig.bearerToken)
-  }
-
-  isTMDBConfigured(): boolean {
-    const tmdbConfig = this.getTMDBConfig()
-    // Configuration is valid if we have either Bearer token OR API key
-    return !!(tmdbConfig.bearerToken || tmdbConfig.apiKey)
-  }
-
-  getTMDBApiKey(): string | null {
-    const tmdbConfig = this.getTMDBConfig()
-    return tmdbConfig.apiKey || null
-  }
-
-  getTMDBBearerToken(): string | null {
-    const tmdbConfig = this.getTMDBConfig()
-    return tmdbConfig.bearerToken || null
-  }
-
-  getTMDBLanguage(): string {
-    const tmdbConfig = this.getTMDBConfig()
-    return tmdbConfig.language || DEFAULT_TMDB_CONFIG.language
-  }
-
-  getTMDBRegion(): string {
-    const tmdbConfig = this.getTMDBConfig()
-    return tmdbConfig.region || DEFAULT_TMDB_CONFIG.region
-  }
-
-  getTMDBIncludeAdult(): boolean {
-    const tmdbConfig = this.getTMDBConfig()
-    return tmdbConfig.includeAdult ?? DEFAULT_TMDB_CONFIG.includeAdult
   }
 }

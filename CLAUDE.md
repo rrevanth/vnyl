@@ -129,13 +129,13 @@ const agentWorkflow = async () => {
 ```typescript
 // ✅ REQUIRED - All APIs use Bearer tokens
 export const createAPIConfig = (): ApiConfig => {
-  const apiKey = process.env.EXPO_PUBLIC_TMDB_API_KEY
+  const apiKey = process.env.EXPO_PUBLIC_API_KEY
   if (!apiKey) {
-    throw new Error('EXPO_PUBLIC_TMDB_API_KEY required')
+    throw new Error('EXPO_PUBLIC_API_KEY required')
   }
 
   return {
-    baseURL: 'https://api.themoviedb.org/3',
+    baseURL: 'https://api.example.com/v1',
     timeout: 10000,
     headers: {
       'Authorization': `Bearer ${apiKey}`,

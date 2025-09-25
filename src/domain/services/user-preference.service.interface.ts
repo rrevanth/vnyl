@@ -4,8 +4,7 @@ import type {
   ProviderPreferences,
   NotificationPreferences,
   ThemePreference,
-  HomeScreenLayoutPreference,
-  TMDBConfig
+  HomeScreenLayoutPreference
 } from '@/src/domain/entities'
 import type { Locale } from '@/src/presentation/shared/i18n'
 
@@ -27,7 +26,6 @@ export interface IUserPreferenceService {
   /**
    * Get specific preference categories with fallbacks
    */
-  getTMDBConfig(): TMDBConfig
   getStreamPreferences(): StreamPreferences
   getProviderPreferences(): ProviderPreferences
   getNotificationPreferences(): NotificationPreferences
@@ -39,27 +37,6 @@ export interface IUserPreferenceService {
   getLocale(): Locale
   getRegionSettings(): string
   getHomeScreenLayout(): HomeScreenLayoutPreference
-
-  /**
-   * TMDB-specific configuration helpers
-   */
-  hasTMDBConfig(): boolean
-  isTMDBConfigured(): boolean
-  getTMDBApiKey(): string | null
-  getTMDBBearerToken(): string | null
-  getTMDBLanguage(): string
-  getTMDBRegion(): string
-  getTMDBIncludeAdult(): boolean
-
-  /**
-   * Get the default API key from environment variables
-   */
-  getDefaultTMDBApiKey(): string
-
-  /**
-   * Get the effective API key (user preference or default)
-   */
-  getEffectiveTMDBApiKey(): string
 
   /**
    * Refresh preferences cache from storage

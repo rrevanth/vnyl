@@ -4,11 +4,6 @@
  */
 export interface IEnvironmentService {
   /**
-   * Get TMDB API key from environment
-   */
-  getTMDBApiKey(): string | undefined
-
-  /**
    * Get API base URL from environment
    */
   getApiBaseUrl(): string | undefined

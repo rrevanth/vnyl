@@ -8,10 +8,8 @@ import {
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase,
-  UpdateTMDBConfigUseCase
+  UpdateUserLocaleUseCase
 } from '@/src/domain/usecases'
-import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 
 export const useDI = () => {
   const resolve = useCallback(<T>(token: ServiceToken): T => {
@@ -54,12 +52,6 @@ export const useUserPreferenceService = (): IUserPreferenceService => {
   return resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
 }
 
-// TMDB Service Hook
-export const useTMDBApiClient = (): TMDBApiClient => {
-  const { resolve } = useDI()
-  return resolve<TMDBApiClient>(TOKENS.TMDB_API_CLIENT)
-}
-
 // User Service Hooks
 export const useUserRepository = (): IUserRepository => {
   const { resolve } = useDI()
@@ -91,26 +83,7 @@ export const useUpdateUserLocaleUseCase = (): UpdateUserLocaleUseCase => {
   return resolve<UpdateUserLocaleUseCase>(TOKENS.UPDATE_USER_LOCALE_USE_CASE)
 }
 
-export const useUpdateTMDBConfigUseCase = (): UpdateTMDBConfigUseCase => {
-  const { resolve } = useDI()
-  return resolve<UpdateTMDBConfigUseCase>(TOKENS.UPDATE_TMDB_CONFIG_USE_CASE)
-}
-
 // Convenience Preference Hooks
-export const useTMDBConfig = () => {
-  const userPreferenceService = useUserPreferenceService()
-  return {
-    getTMDBConfig: () => userPreferenceService.getTMDBConfig(),
-    getTMDBApiKey: () => userPreferenceService.getTMDBApiKey(),
-    getTMDBBearerToken: () => userPreferenceService.getTMDBBearerToken(),
-    getTMDBLanguage: () => userPreferenceService.getTMDBLanguage(),
-    getTMDBRegion: () => userPreferenceService.getTMDBRegion(),
-    getTMDBIncludeAdult: () => userPreferenceService.getTMDBIncludeAdult(),
-    isTMDBConfigured: () => userPreferenceService.isTMDBConfigured(),
-    hasTMDBConfig: () => userPreferenceService.hasTMDBConfig()
-  }
-}
-
 export const useStreamingPreferences = () => {
   const userPreferenceService = useUserPreferenceService()
   return {

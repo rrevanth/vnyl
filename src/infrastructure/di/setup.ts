@@ -7,13 +7,11 @@ import {
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase,
-  UpdateTMDBConfigUseCase
+  UpdateUserLocaleUseCase
 } from '@/src/domain/usecases'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
-import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/services'
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
 
@@ -89,16 +87,6 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
-  // Register TMDB API Client (depends on logging and user preferences)
-  container.registerSingleton<TMDBApiClient>(
-    TOKENS.TMDB_API_CLIENT,
-    () => {
-      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      const userPreferenceService = container.resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
-      return new TMDBApiClient(logger, userPreferenceService)
-    }
-  )
-
   container.registerSingleton<GetOrCreateUserUseCase>(
     TOKENS.GET_OR_CREATE_USER_USE_CASE,
     () => {
@@ -144,15 +132,6 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
-  container.registerSingleton<UpdateTMDBConfigUseCase>(
-    TOKENS.UPDATE_TMDB_CONFIG_USE_CASE,
-    () => {
-      const userRepository = container.resolve<IUserRepository>(TOKENS.USER_REPOSITORY)
-      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      return new UpdateTMDBConfigUseCase(userRepository, logger)
-    }
-  )
-
   // Log successful initialization
   const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
   logger.info('DI Container initialized successfully', {
@@ -164,13 +143,11 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'UserPreferenceService',
       'ConfigClient',
       'ApiClient',
-      'TMDBApiClient',
       'GetOrCreateUserUseCase',
       'UpdateUserPreferencesUseCase',
       'ResetUserPreferencesUseCase',
       'UpdateUserThemeUseCase',
-      'UpdateUserLocaleUseCase',
-      'UpdateTMDBConfigUseCase'
+      'UpdateUserLocaleUseCase'
     ]
   })
 }

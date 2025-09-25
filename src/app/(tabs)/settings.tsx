@@ -5,10 +5,7 @@ import { observer } from '@legendapp/state/react'
 import { useRouter } from 'expo-router'
 import { useTheme, useThemeMode, useThemeActions } from '@/src/presentation/shared/theme'
 import { useTranslation, useLocale, useLocaleActions } from '@/src/presentation/shared/i18n'
-import { useDI } from '@/src/presentation/shared/providers'
 import { SettingRow, Toggle, SectionHeader, Button } from '@/src/presentation/components'
-import { TOKENS } from '@/src/infrastructure/di/tokens'
-import { IUserPreferenceService } from '@/src/domain/services'
 import type { Theme, ThemeMode } from '@/src/presentation/shared/theme'
 import type { Locale } from '@/src/presentation/shared/i18n'
 
@@ -21,10 +18,6 @@ export default observer(function SettingsScreen() {
   const { setLocale } = useLocaleActions()
   const router = useRouter()
   const styles = createStyles(theme)
-
-  // DI Services
-  const { resolve } = useDI()
-  const userPreferenceService = resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
 
   const handleLanguageChange = () => {
     Alert.alert(
@@ -76,18 +69,13 @@ export default observer(function SettingsScreen() {
   }
 
   const getProviderStatus = (): string => {
-    const isTMDBConfigured = userPreferenceService.isTMDBConfigured()
-
-    if (isTMDBConfigured) {
-      return t('providers.status.configured')
-    }
-
+    // No providers configured yet
     return t('providers.status.notConfigured')
   }
 
   const getProviderStatusColor = () => {
-    const isTMDBConfigured = userPreferenceService.isTMDBConfigured()
-    return isTMDBConfigured ? theme.colors.status.success : theme.colors.status.error
+    // No providers configured yet
+    return theme.colors.status.error
   }
 
   return (

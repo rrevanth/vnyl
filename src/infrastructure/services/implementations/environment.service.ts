@@ -7,13 +7,8 @@ import type { IEnvironmentService, ILoggingService } from '@/src/domain/services
 export class EnvironmentService implements IEnvironmentService {
   constructor(private readonly logger: ILoggingService) {
     this.logger.debug('Environment service initialized', undefined, {
-      environment: this.getEnvironment(),
-      hasTMDBApiKey: !!this.getTMDBApiKey()
+      environment: this.getEnvironment()
     })
-  }
-
-  getTMDBApiKey(): string | undefined {
-    return this.get('EXPO_PUBLIC_TMDB_API_KEY')
   }
 
   getApiBaseUrl(): string | undefined {
@@ -38,9 +33,6 @@ export class EnvironmentService implements IEnvironmentService {
       let value: string | undefined
 
       switch (key) {
-        case 'EXPO_PUBLIC_TMDB_API_KEY':
-          value = process.env.EXPO_PUBLIC_TMDB_API_KEY
-          break
         case 'EXPO_PUBLIC_API_BASE_URL':
           value = process.env.EXPO_PUBLIC_API_BASE_URL
           break
