@@ -1,12 +1,16 @@
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs"
 import { observer } from '@legendapp/state/react'
 import { useTranslation } from '@/src/presentation/shared/i18n'
+import { useTheme } from '@/src/presentation/shared/theme'
 
 export default observer(function TabLayout() {
   const { t } = useTranslation()
+  const theme = useTheme()
 
   return (
-    <NativeTabs>
+    <NativeTabs
+      tintColor={theme.colors.interactive.primary}
+    >
       <NativeTabs.Trigger name="index">
         <Label>{t('navigation.home')}</Label>
         <Icon sf="house.fill" drawable="home" />

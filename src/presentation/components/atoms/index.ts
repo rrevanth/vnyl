@@ -1,2 +1,7 @@
 export { Screen } from './Screen'
 export { NavigationHeader } from './NavigationHeader'
+export { SegmentedControl } from './SegmentedControl'
+export { ColorPicker } from './ColorPicker'
+export { SettingsToggle } from './SettingsToggle'
+export { SettingsSlider } from './SettingsSlider'
+export { SettingsCard } from './SettingsCard'

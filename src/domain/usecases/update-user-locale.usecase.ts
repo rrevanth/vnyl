@@ -1,4 +1,4 @@
-import { User, LocalePreferences } from '@/src/domain/entities'
+import { LocalePreferences, User } from '@/src/domain/entities'
 import { IUserRepository } from '@/src/domain/repositories'
 import { ILoggingService } from '@/src/domain/services'
 
@@ -16,8 +16,6 @@ export class UpdateUserLocaleUseCase {
 
       this.logger.info('User locale preference updated successfully', {
         userId: updatedUser.userId,
-        language: locale.language,
-        region: locale.region
       })
 
       return updatedUser

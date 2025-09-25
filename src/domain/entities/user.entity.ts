@@ -31,16 +31,10 @@ export interface UserPreferences {
 export interface ThemePreference {
   mode: 'light' | 'dark' | 'system'
   accentColor?: string
-  highContrast: boolean
-  adaptToContent: boolean
 }
 
 export interface LocalePreferences {
   language: Locale
-  region: string
-  dateFormat: 'iso' | 'us' | 'eu'
-  timeFormat: '12h' | '24h'
-  currency: string
 }
 
 export interface DisplaySettings {
@@ -48,7 +42,6 @@ export interface DisplaySettings {
   fontFamily?: string
   lineHeight: number
   compactMode: boolean
-  animationScale: number
 }
 
 export type FontSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
@@ -82,21 +75,14 @@ export type NotificationType = 'new_releases' | 'recommendations' | 'updates' | 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   theme: {
     mode: 'system',
-    highContrast: false,
-    adaptToContent: true
   },
   locale: {
     language: 'en',
-    region: 'US',
-    dateFormat: 'iso',
-    timeFormat: '12h',
-    currency: 'USD'
   },
   displaySettings: {
     fontSize: 'md',
     lineHeight: 1.4,
     compactMode: false,
-    animationScale: 1.0
   },
   streamPreferences: {
     quality: 'auto',

@@ -36,6 +36,14 @@ export interface TranslationKey {
       high_contrast: string
       adapt_to_content: string
       appearance: string
+      appearance_description: string
+      accent_color_description: string
+      preview: string
+      preview_description: string
+      preview_title: string
+      preview_subtitle: string
+      preview_body: string
+      preview_button: string
     }
     language: {
       title: string
@@ -57,10 +65,20 @@ export interface TranslationKey {
       font_size: string
       font_family: string
       line_height: string
+      line_height_description: string
       compact_mode: string
+      compact_mode_description: string
       animation_scale: string
       typography: string
+      typography_description: string
       layout: string
+      spacing: string
+      spacing_description: string
+      preview: string
+      preview_description: string
+      preview_heading: string
+      preview_body: string
+      preview_caption: string
     }
     about: {
       title: string

@@ -1,6 +1,7 @@
 import { scale, moderateScale } from 'react-native-size-matters'
 import type { Theme, ThemeMode, ThemeColors, ThemeSpacing, ThemeTypography, ThemeRadius, ThemeShadows, ThemeTransition } from './types'
 import type { DisplaySettings, FontSize, ThemePreference } from '@/src/domain/entities'
+import { getFontFamilyName } from './font-utils'
 
 // Custom color tokens for VNYL app
 const createColors = (mode: ThemeMode, accentColor = '#007AFF'): ThemeColors => {
@@ -88,47 +89,56 @@ const getFontSizeMultiplier = (fontSize: FontSize): number => {
 const createTypography = (displaySettings?: DisplaySettings): ThemeTypography => {
   const fontMultiplier = displaySettings ? getFontSizeMultiplier(displaySettings.fontSize) : 1.0
   const baseLineHeight = displaySettings?.lineHeight || 1.3
+  const fontFamily = getFontFamilyName(displaySettings?.fontFamily)
 
   return {
     display: {
       fontSize: moderateScale(34 * fontMultiplier),
       lineHeight: moderateScale(34 * fontMultiplier * baseLineHeight),
-      fontWeight: '700' as const
+      fontWeight: '700' as const,
+      fontFamily
     },
     heading1: {
       fontSize: moderateScale(28 * fontMultiplier),
       lineHeight: moderateScale(28 * fontMultiplier * baseLineHeight),
-      fontWeight: '600' as const
+      fontWeight: '600' as const,
+      fontFamily
     },
     heading2: {
       fontSize: moderateScale(24 * fontMultiplier),
       lineHeight: moderateScale(24 * fontMultiplier * baseLineHeight),
-      fontWeight: '600' as const
+      fontWeight: '600' as const,
+      fontFamily
     },
     heading3: {
       fontSize: moderateScale(20 * fontMultiplier),
       lineHeight: moderateScale(20 * fontMultiplier * baseLineHeight),
-      fontWeight: '600' as const
+      fontWeight: '600' as const,
+      fontFamily
     },
     body: {
       fontSize: moderateScale(17 * fontMultiplier),
       lineHeight: moderateScale(17 * fontMultiplier * baseLineHeight),
-      fontWeight: '400' as const
+      fontWeight: '400' as const,
+      fontFamily
     },
     bodySmall: {
       fontSize: moderateScale(15 * fontMultiplier),
       lineHeight: moderateScale(15 * fontMultiplier * baseLineHeight),
-      fontWeight: '400' as const
+      fontWeight: '400' as const,
+      fontFamily
     },
     caption: {
       fontSize: moderateScale(13 * fontMultiplier),
       lineHeight: moderateScale(13 * fontMultiplier * baseLineHeight),
-      fontWeight: '400' as const
+      fontWeight: '400' as const,
+      fontFamily
     },
     button: {
       fontSize: moderateScale(17 * fontMultiplier),
       lineHeight: moderateScale(17 * fontMultiplier * baseLineHeight),
-      fontWeight: '600' as const
+      fontWeight: '600' as const,
+      fontFamily
     }
   }
 }

@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useCallback, useEffect } from 'react'
-import { observable } from '@legendapp/state'
-import { observer } from '@legendapp/state/react'
+import type { ThemePreference } from '@/src/domain/entities'
+import type { GetOrCreateUserUseCase, UpdateUserThemeUseCase } from '@/src/domain/usecases'
 import { useGetOrCreateUserUseCase, useUpdateUserThemeUseCase } from '@/src/infrastructure/di'
 import { getUserPreferencesObservable } from '@/src/presentation/shared/providers/user-preferences-provider'
-import type { Theme, ThemeMode, ThemeContextValue } from './types'
-import type { ThemePreference } from '@/src/domain/entities'
+import { observable } from '@legendapp/state'
+import { observer } from '@legendapp/state/react'
+import React, { createContext, useCallback, useContext, useEffect } from 'react'
 import { createTheme } from './theme-factory'
-import type { GetOrCreateUserUseCase, UpdateUserThemeUseCase } from '@/src/domain/usecases'
+import type { Theme, ThemeContextValue, ThemeMode } from './types'
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
@@ -43,8 +43,6 @@ const themePreferenceToMode = (preference: ThemePreference): ThemeMode => {
 const themeModeToPreference = (mode: ThemeMode): ThemePreference => {
   return {
     mode: mode as ThemePreference['mode'],
-    highContrast: false,
-    adaptToContent: true
   }
 }
 

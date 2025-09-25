@@ -1,4 +1,4 @@
-import { User, ThemePreference } from '@/src/domain/entities'
+import { ThemePreference, User } from '@/src/domain/entities'
 import { IUserRepository } from '@/src/domain/repositories'
 import { ILoggingService } from '@/src/domain/services'
 
@@ -17,7 +17,6 @@ export class UpdateUserThemeUseCase {
       this.logger.info('User theme preference updated successfully', {
         userId: updatedUser.userId,
         themeMode: theme.mode,
-        highContrast: theme.highContrast
       })
 
       return updatedUser

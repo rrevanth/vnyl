@@ -126,6 +126,7 @@ const createStyles = (theme: Theme, topInset: number): HeaderStyles => ({
   title: {
     fontSize: theme.typography.heading2.fontSize,
     fontWeight: theme.typography.heading2.fontWeight as TextStyle['fontWeight'],
+    fontFamily: theme.typography.heading2.fontFamily,
     color: theme.colors.text.primary,
     textAlign: 'center'
   }

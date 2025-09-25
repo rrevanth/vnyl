@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/src/presentation/shared/theme'
 import { I18nProvider } from '@/src/presentation/shared/i18n'
 import { AppErrorBoundary } from '@/src/presentation/shared/error-boundary'
 import { UserPreferencesProvider } from './user-preferences-provider'
+import { FontProvider } from './font-provider'
 import { initializeApp } from '@/src/infrastructure/app-container'
 
 interface AppProvidersProps {
@@ -46,13 +47,15 @@ export const AppProviders: React.FC<AppProvidersProps> = observer(({ children })
 
   return (
     <AppErrorBoundary>
-      <UserPreferencesProvider>
-        <ThemeProvider initialMode="light">
-          <I18nProvider fallbackLocale="en">
-            {children}
-          </I18nProvider>
-        </ThemeProvider>
-      </UserPreferencesProvider>
+      <FontProvider>
+        <UserPreferencesProvider>
+          <ThemeProvider initialMode="light">
+            <I18nProvider fallbackLocale="en">
+              {children}
+            </I18nProvider>
+          </ThemeProvider>
+        </UserPreferencesProvider>
+      </FontProvider>
     </AppErrorBoundary>
   )
 })

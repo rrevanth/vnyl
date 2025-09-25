@@ -32,7 +32,15 @@ export const es: TranslationKey = {
       accent_color: 'Color de Acento',
       high_contrast: 'Alto Contraste',
       adapt_to_content: 'Adaptar al Contenido',
-      appearance: 'Apariencia'
+      appearance: 'Apariencia',
+      appearance_description: 'Elige cómo se ve la app',
+      accent_color_description: 'Selecciona tu color de acento preferido',
+      preview: 'Vista Previa',
+      preview_description: 'Ve cómo se ven tus elecciones de tema',
+      preview_title: 'Título de Ejemplo',
+      preview_subtitle: 'Texto de subtítulo de ejemplo',
+      preview_body: 'Así es como aparecerá el texto regular con tu configuración de tema actual.',
+      preview_button: 'Botón de Acción'
     },
     language: {
       title: 'Idioma',
@@ -54,10 +62,20 @@ export const es: TranslationKey = {
       font_size: 'Tamaño de Fuente',
       font_family: 'Familia de Fuente',
       line_height: 'Altura de Línea',
+      line_height_description: 'Ajustar espaciado entre líneas de texto',
       compact_mode: 'Modo Compacto',
+      compact_mode_description: 'Reducir espaciado para un diseño más denso',
       animation_scale: 'Escala de Animación',
       typography: 'Tipografía',
-      layout: 'Diseño'
+      typography_description: 'Personalizar apariencia del texto',
+      layout: 'Diseño',
+      spacing: 'Espaciado',
+      spacing_description: 'Controlar densidad y espaciado del diseño',
+      preview: 'Vista Previa',
+      preview_description: 'Ve cómo se ven tus elecciones de tipografía',
+      preview_heading: 'Texto de Encabezado de Ejemplo',
+      preview_body: 'Así es como aparecerá el texto regular de párrafo con tu configuración de pantalla actual. Puedes ajustar el tamaño de fuente, altura de línea y espaciado para que sea más cómodo de leer.',
+      preview_caption: 'Este es el texto de leyenda más pequeño que aparece en varios lugares de la app.'
     },
     about: {
       title: 'Acerca de',

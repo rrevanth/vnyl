@@ -56,41 +56,49 @@ export interface ThemeTypography {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   heading1: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   heading2: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   heading3: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   body: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   bodySmall: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   caption: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
   button: {
     fontSize: number
     lineHeight: number
     fontWeight: string
+    fontFamily?: string
   }
 }
 

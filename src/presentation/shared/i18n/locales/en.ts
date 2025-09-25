@@ -32,7 +32,15 @@ export const en: TranslationKey = {
       accent_color: 'Accent Color',
       high_contrast: 'High Contrast',
       adapt_to_content: 'Adapt to Content',
-      appearance: 'Appearance'
+      appearance: 'Appearance',
+      appearance_description: 'Choose how the app looks',
+      accent_color_description: 'Select your preferred accent color',
+      preview: 'Preview',
+      preview_description: 'See how your theme choices look',
+      preview_title: 'Sample Title',
+      preview_subtitle: 'Sample subtitle text',
+      preview_body: 'This is how regular text will appear with your current theme settings.',
+      preview_button: 'Action Button'
     },
     language: {
       title: 'Language',
@@ -54,10 +62,20 @@ export const en: TranslationKey = {
       font_size: 'Font Size',
       font_family: 'Font Family',
       line_height: 'Line Height',
+      line_height_description: 'Adjust spacing between lines of text',
       compact_mode: 'Compact Mode',
+      compact_mode_description: 'Reduce spacing for a denser layout',
       animation_scale: 'Animation Scale',
       typography: 'Typography',
-      layout: 'Layout'
+      typography_description: 'Customize text appearance',
+      layout: 'Layout',
+      spacing: 'Spacing',
+      spacing_description: 'Control layout density and spacing',
+      preview: 'Preview',
+      preview_description: 'See how your typography choices look',
+      preview_heading: 'Sample Heading Text',
+      preview_body: 'This is how regular paragraph text will appear with your current display settings. You can adjust the font size, line height, and spacing to make it more comfortable to read.',
+      preview_caption: 'This is smaller caption text that appears in various places throughout the app.'
     },
     about: {
       title: 'About',
