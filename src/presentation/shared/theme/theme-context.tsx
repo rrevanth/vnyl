@@ -5,6 +5,7 @@ import { useGetOrCreateUserUseCase, useUpdateUserThemeUseCase } from '@/src/infr
 import type { Theme, ThemeMode, ThemeContextValue } from './types'
 import type { ThemePreference } from '@/src/domain/entities'
 import { createTheme } from './theme-factory'
+import type { GetOrCreateUserUseCase, UpdateUserThemeUseCase } from '@/src/domain/usecases'
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
@@ -15,6 +16,17 @@ const themeState = observable<{
 }>({
   mode: 'light',
   theme: createTheme('light')
+})
+
+// Observable services state
+const servicesState = observable<{
+  ready: boolean
+  getUserUseCase: GetOrCreateUserUseCase | null
+  updateThemeUseCase: UpdateUserThemeUseCase | null
+}>({
+  ready: false,
+  getUserUseCase: null,
+  updateThemeUseCase: null
 })
 
 // Helper function to convert ThemePreference to ThemeMode
@@ -40,14 +52,42 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
   children,
   initialMode = 'light'
 }) => {
-  const getOrCreateUserUseCase = useGetOrCreateUserUseCase()
-  const updateUserThemeUseCase = useUpdateUserThemeUseCase()
+  // Safely try to get services, handling DI container race condition
+  let getOrCreateUserUseCase: GetOrCreateUserUseCase | null = null
+  let updateUserThemeUseCase: UpdateUserThemeUseCase | null = null
 
-  // Initialize theme from user preferences
+  try {
+    getOrCreateUserUseCase = useGetOrCreateUserUseCase()
+    updateUserThemeUseCase = useUpdateUserThemeUseCase()
+    servicesState.ready.set(true)
+  } catch {
+    // Services not ready yet, continue with fallback theme
+    servicesState.ready.set(false)
+  }
+
+  // Store services in observable state
   useEffect(() => {
+    if (getOrCreateUserUseCase && updateUserThemeUseCase) {
+      servicesState.getUserUseCase.set(getOrCreateUserUseCase)
+      servicesState.updateThemeUseCase.set(updateUserThemeUseCase)
+    }
+  }, [getOrCreateUserUseCase, updateUserThemeUseCase])
+
+  // Initialize theme from user preferences (only if services are ready)
+  useEffect(() => {
+    const servicesReady = servicesState.ready.get()
+    const getUserUseCase = servicesState.getUserUseCase.get()
+
+    if (!servicesReady || !getUserUseCase) {
+      // Use fallback theme when services aren't ready
+      themeState.mode.set(initialMode)
+      themeState.theme.set(createTheme(initialMode))
+      return
+    }
+
     const initializeTheme = async () => {
       try {
-        const user = await getOrCreateUserUseCase.execute()
+        const user = await getUserUseCase.execute()
         const mode = themePreferenceToMode(user.preferences.theme)
 
         themeState.mode.set(mode)
@@ -60,20 +100,24 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
     }
 
     initializeTheme()
-  }, [getOrCreateUserUseCase, initialMode])
+  }, [initialMode])
 
   const setThemeMode = useCallback(async (mode: ThemeMode) => {
     try {
       themeState.mode.set(mode)
       themeState.theme.set(createTheme(mode))
 
-      // Update user preferences
-      const themePreference = themeModeToPreference(mode)
-      await updateUserThemeUseCase.execute(themePreference)
+      // Update user preferences only if service is available
+      const updateThemeUseCase = servicesState.updateThemeUseCase.get()
+      if (updateThemeUseCase) {
+        const themePreference = themeModeToPreference(mode)
+        await updateThemeUseCase.execute(themePreference)
+      }
     } catch {
       // Handle error gracefully - UI layer doesn't need detailed error handling
+      console.warn('ThemeProvider: Failed to update user theme preference')
     }
-  }, [updateUserThemeUseCase])
+  }, [])
 
   const toggleTheme = useCallback(() => {
     const newMode = themeState.mode.peek() === 'light' ? 'dark' : 'light'

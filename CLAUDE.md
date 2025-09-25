@@ -188,7 +188,7 @@ const Button: React.FC<ButtonProps> = ({ title, onPress, variant = 'primary' }) 
   const styles = StyleSheet.create({
     button: {
       backgroundColor: theme.colors.interactive.primary,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.radius.md,
       padding: theme.spacing.md,
       alignItems: 'center'
     },
@@ -297,20 +297,13 @@ export interface ThemeTypography {
 }
 
 export interface Theme {
+  mode: ThemeMode
   colors: ThemeColors
   spacing: ThemeSpacing
   typography: ThemeTypography
-  borderRadius: {
-    sm: number
-    md: number
-    lg: number
-    full: number
-  }
-  shadows: {
-    sm: object
-    md: object
-    lg: object
-  }
+  radius: ThemeRadius
+  shadows: ThemeShadows
+  transition: ThemeTransition
 }
 
 const lightTheme: Theme = {
@@ -432,13 +425,13 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   card: {
     backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     ...theme.shadows.sm
   },
   primaryButton: {
     backgroundColor: theme.colors.interactive.primary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     alignItems: 'center',
@@ -516,7 +509,7 @@ const createButtonStyles = (
   disabled: boolean
 ) => StyleSheet.create({
   button: {
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: size === 'sm' ? theme.spacing.xs :
@@ -583,7 +576,7 @@ export const Card: React.FC<CardProps> = observer(({
 const createCardStyles = (theme: Theme, variant: string) => StyleSheet.create({
   card: {
     backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     ...(variant === 'elevated' && theme.shadows.md),
     ...(variant === 'outlined' && {
@@ -866,7 +859,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: theme.colors.background.secondary,
     margin: theme.spacing.md,
     padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.radius.md,
     ...theme.shadows.md
   },
   cardTitle: {
@@ -880,7 +873,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: theme.colors.interactive.primary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     alignItems: 'center',

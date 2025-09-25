@@ -15,10 +15,17 @@ import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api
 
 export const useDI = () => {
   const resolve = useCallback(<T>(token: ServiceToken): T => {
+    if (!container.isRegistered(token)) {
+      throw new Error(`Service not available: ${token.toString()}. DI container may not be initialized yet.`)
+    }
     return container.resolve<T>(token)
   }, [])
 
-  return { resolve }
+  const isServiceAvailable = useCallback((token: ServiceToken): boolean => {
+    return container.isRegistered(token)
+  }, [])
+
+  return { resolve, isServiceAvailable }
 }
 
 // Infrastructure Service Hooks
