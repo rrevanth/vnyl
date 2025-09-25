@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
-import { useGetOrCreateUserUseCase, useStorage } from '@/src/infrastructure/di'
+import { useGetOrCreateUserUseCase } from '@/src/infrastructure/di'
 import type {
   UserPreferences,
   ThemePreference,
@@ -10,9 +10,6 @@ import type {
   ProviderPreferences
 } from '@/src/domain/entities'
 import { DEFAULT_USER_PREFERENCES } from '@/src/domain/entities'
-
-// Storage key for UserPreferences
-const USER_PREFERENCES_STORAGE_KEY = 'user_preferences'
 
 interface UserPreferencesContextValue {
   preferences: UserPreferences
@@ -56,7 +53,6 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
 }) => {
   // Safely try to get services, handling DI container race condition
   let getOrCreateUserUseCase: any = null
-  let storageService: any = null
 
   try {
     getOrCreateUserUseCase = useGetOrCreateUserUseCase()
@@ -64,59 +60,37 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
     // Services not ready yet, continue with default preferences
   }
 
-  try {
-    storageService = useStorage()
-  } catch {
-    // Storage service not ready yet
-  }
-
-  // Initialize storage service for persistence
-  useEffect(() => {
-    if (storageService) {
-      setStorageService(storageService)
-    }
-  }, [storageService])
-
-  // Load preferences from storage on startup
-  useEffect(() => {
-    const loadStoredPreferences = async () => {
-      if (!storageService) return
-
-      try {
-        const stored = await storageService.getItem(USER_PREFERENCES_STORAGE_KEY)
-        if (stored) {
-          const parsedPreferences = JSON.parse(stored) as UserPreferences
-          userPreferencesState.preferences.set(parsedPreferences)
-          console.log('Loaded user preferences from storage')
-        }
-      } catch (error) {
-        console.warn('Failed to load user preferences from storage:', error)
-        // Continue with defaults
-      }
-    }
-
-    loadStoredPreferences()
-  }, [storageService])
-
   // Initialize user preferences from backend
   useEffect(() => {
     if (!getOrCreateUserUseCase) {
+      console.log('🔧 UserPreferencesProvider: Use case not ready yet')
       return
     }
 
     const initializePreferences = async () => {
       try {
+        console.log('🚀 UserPreferencesProvider: Starting user preferences initialization')
         userPreferencesState.isLoading.set(true)
         userPreferencesState.error.set(null)
 
         const user = await getOrCreateUserUseCase.execute()
+        console.log('✅ UserPreferencesProvider: Loaded user preferences from storage:', {
+          userId: user.userId,
+          themeMode: user.preferences.theme?.mode,
+          accentColor: user.preferences.theme?.accentColor,
+          fontSize: user.preferences.displaySettings?.fontSize,
+          fontFamily: user.preferences.displaySettings?.fontFamily,
+          compactMode: user.preferences.displaySettings?.compactMode
+        })
 
         userPreferencesState.preferences.set(user.preferences)
         userPreferencesState.ready.set(true)
+        console.log('🎯 UserPreferencesProvider: User preferences state updated successfully')
       } catch (error) {
-        console.warn('UserPreferencesProvider: Failed to load user preferences', error)
+        console.error('❌ UserPreferencesProvider: Failed to load user preferences', error)
         userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
         // Continue with default preferences
+        console.log('🔄 UserPreferencesProvider: Falling back to default preferences')
         userPreferencesState.preferences.set(DEFAULT_USER_PREFERENCES)
       } finally {
         userPreferencesState.isLoading.set(false)
@@ -130,13 +104,22 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
     if (!getOrCreateUserUseCase) return
 
     try {
+      console.log('🔄 UserPreferencesProvider: Refreshing user preferences')
       userPreferencesState.isLoading.set(true)
       userPreferencesState.error.set(null)
 
       const user = await getOrCreateUserUseCase.execute()
+      console.log('✅ UserPreferencesProvider: Refreshed user preferences:', {
+        userId: user.userId,
+        themeMode: user.preferences.theme?.mode,
+        accentColor: user.preferences.theme?.accentColor,
+        fontSize: user.preferences.displaySettings?.fontSize,
+        fontFamily: user.preferences.displaySettings?.fontFamily,
+        compactMode: user.preferences.displaySettings?.compactMode
+      })
       userPreferencesState.preferences.set(user.preferences)
     } catch (error) {
-      console.warn('UserPreferencesProvider: Failed to refresh user preferences', error)
+      console.error('❌ UserPreferencesProvider: Failed to refresh user preferences', error)
       userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
     } finally {
       userPreferencesState.isLoading.set(false)
@@ -204,69 +187,3 @@ export const useProviderPreferences = (): ProviderPreferences => {
 
 // Export observable state for theme context to observe
 export const getUserPreferencesObservable = () => userPreferencesState.preferences
-
-// Storage helper functions
-let _storageService: any = null
-
-export const setStorageService = (storage: any) => {
-  _storageService = storage
-}
-
-const persistPreferencesToStorage = async (preferences: UserPreferences) => {
-  if (!_storageService) return
-
-  try {
-    await _storageService.setItem(USER_PREFERENCES_STORAGE_KEY, JSON.stringify(preferences))
-    console.log('Successfully persisted user preferences to storage')
-  } catch (error) {
-    console.warn('Failed to persist user preferences to storage:', error)
-  }
-}
-
-// Utility function to update preferences in observable state and persist to storage
-export const updateUserPreferencesState = async (preferences: Partial<UserPreferences>): Promise<void> => {
-  const currentPreferences = userPreferencesState.preferences.get()
-
-  // Deep merge the preferences
-  const updatedPreferences: UserPreferences = {
-    ...currentPreferences,
-    ...preferences,
-    theme: {
-      ...currentPreferences.theme,
-      ...preferences.theme
-    },
-    locale: {
-      ...currentPreferences.locale,
-      ...preferences.locale
-    },
-    displaySettings: {
-      ...currentPreferences.displaySettings,
-      ...preferences.displaySettings
-    },
-    providerPreferences: {
-      ...currentPreferences.providerPreferences,
-      ...preferences.providerPreferences,
-      enabledProviders: {
-        ...currentPreferences.providerPreferences.enabledProviders,
-        ...preferences.providerPreferences?.enabledProviders
-      }
-    },
-    streamPreferences: {
-      ...currentPreferences.streamPreferences,
-      ...preferences.streamPreferences
-    },
-    notificationSettings: {
-      ...currentPreferences.notificationSettings,
-      ...preferences.notificationSettings
-    }
-  }
-
-  // Update observable state immediately for instant UI updates
-  userPreferencesState.preferences.set(updatedPreferences)
-
-  // Persist to storage asynchronously
-  await persistPreferencesToStorage(updatedPreferences)
-
-  // Note: Theme updates are handled by the theme context listening to user preferences
-  // The theme context will automatically recreate themes when it detects preference changes
-}

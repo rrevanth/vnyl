@@ -7,6 +7,5 @@ export {
   useThemePreference,
   useLocalePreferences,
   useDisplaySettings,
-  useProviderPreferences,
-  updateUserPreferencesState
+  useProviderPreferences
 } from './user-preferences-provider'
