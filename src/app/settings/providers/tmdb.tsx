@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
-import { NavigationHeader, TextInput, Button, SegmentedControl, SettingsToggle } from '@/src/presentation/components'
+import { NavigationHeader, TextInput, Button, Select, SettingsToggle } from '@/src/presentation/components'
 import { useSettingsActions } from '@/src/presentation/shared/hooks/useSettingsActions'
 import type { Theme } from '@/src/presentation/shared/theme'
 import type { TMDBSettings } from '@/src/domain/entities'
@@ -162,20 +162,13 @@ export default observer(function TMDBSettingsScreen() {
             {t('settings.providers.tmdb.configuration_description')}
           </Text>
 
-          <View style={styles.settingContainer}>
-            <Text style={styles.settingLabel}>
-              {t('settings.providers.tmdb.language')}
-            </Text>
-            <Text style={styles.settingDescription}>
-              {t('settings.providers.tmdb.language_description')}
-            </Text>
-
-            <SegmentedControl
-              options={LANGUAGE_OPTIONS.slice(0, 3)} // Show first 3 options for now
-              selectedValue={language}
-              onValueChange={setLanguage}
-            />
-          </View>
+          <Select
+            label={t('settings.providers.tmdb.language')}
+            description={t('settings.providers.tmdb.language_description')}
+            options={LANGUAGE_OPTIONS}
+            selectedValue={language}
+            onValueChange={setLanguage}
+          />
 
           <View style={styles.settingContainer}>
             <SettingsToggle
