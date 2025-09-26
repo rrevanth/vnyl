@@ -1,4 +1,5 @@
 import type { Locale } from '@/src/presentation/shared/i18n'
+import { ProviderCapability } from '@/src/infrastructure/providers/provider-interfaces'
 
 export type { Locale } from '@/src/presentation/shared/i18n'
 
@@ -66,11 +67,21 @@ export interface ProviderSettings {
   tmdbSettings: TMDBSettings
 }
 
+/**
+ * Capability configuration object for provider capabilities
+ * Extensible design allows future per-capability settings beyond enabled/disabled
+ */
+export interface CapabilityConfig {
+  enabled: boolean
+  // Future extensibility: priority?: number, settings?: Record<string, unknown>, etc.
+}
+
 export interface TMDBSettings {
   bearerToken?: string
   apiKey?: string
   language: string
   includeAdult: boolean
+  capabilitySettings: Record<ProviderCapability, CapabilityConfig>
 }
 
 export type HomeScreenLayoutPreference = 'grid' | 'list' | 'carousel'
@@ -110,7 +121,21 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   providerSettings: {
     tmdbSettings: {
       language: 'en-US',
-      includeAdult: false
+      includeAdult: false,
+      capabilitySettings: {
+        [ProviderCapability.METADATA]: { enabled: true },
+        [ProviderCapability.CATALOG]: { enabled: true },
+        [ProviderCapability.SEARCH]: { enabled: true },
+        [ProviderCapability.STREAM]: { enabled: false }, // TMDB doesn't provide streams
+        [ProviderCapability.RECOMMENDATION]: { enabled: true },
+        [ProviderCapability.COLLECTION]: { enabled: false }, // TMDB doesn't support user collections
+        [ProviderCapability.WATCHLIST]: { enabled: false }, // TMDB watchlist requires user auth
+        [ProviderCapability.PROGRESS]: { enabled: false }, // TMDB doesn't track watch progress
+        [ProviderCapability.RATING]: { enabled: true },
+        [ProviderCapability.IMAGE]: { enabled: true },
+        [ProviderCapability.VIDEO]: { enabled: true },
+        [ProviderCapability.SUBTITLE]: { enabled: false } // TMDB doesn't provide subtitles
+      }
     }
   },
   homeScreenLayout: 'grid',

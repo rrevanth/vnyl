@@ -4,6 +4,9 @@ import { container } from '@/src/infrastructure/di/setup'
 import { TOKENS } from '@/src/infrastructure/di/tokens'
 import { GetOrCreateUserUseCase } from '@/src/domain/usecases'
 
+// Export container getter for DI hooks
+export const getContainer = () => container
+
 export const initializeApp = async (): Promise<void> => {
   const apiConfig: ApiConfig = {
     baseURL: process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.example.com',

@@ -1,5 +1,5 @@
 import { TextStyle } from 'react-native'
-import { Theme } from '@/src/presentation/shared/theme'
+import { Theme, FontWeight } from '@/src/presentation/shared/theme'
 
 /**
  * Helper function to create text styles with proper font family application
@@ -23,7 +23,7 @@ export const createTextStyle = (
  * Helper function to get the proper font family name for React Native
  * Handles the mapping between user preference and actual font name with weight
  */
-export const getFontFamilyName = (fontFamily?: string, fontWeight?: string): string | undefined => {
+export const getFontFamilyName = (fontFamily?: string, fontWeight?: FontWeight): string | undefined => {
   if (!fontFamily || fontFamily === 'system') {
     return undefined // Use system default
   }
@@ -34,7 +34,7 @@ export const getFontFamilyName = (fontFamily?: string, fontWeight?: string): str
   }
 
   // Map font family and weight to exact font names loaded by expo-font
-  const weight = fontWeight || '400'
+  const weight = String(fontWeight) || '400'
 
   switch (fontFamily) {
     case 'Inter':

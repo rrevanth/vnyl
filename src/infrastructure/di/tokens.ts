@@ -10,9 +10,24 @@ export const TOKENS = {
   // TMDB Services
   TMDB_CONFIG_SERVICE: Symbol('ITMDBConfigService'),
   TMDB_API_CLIENT: Symbol('ITMDBApiClient'),
+  TMDB_CLIENT: Symbol('TMDBClient'),
+
+  // Provider System
+  PROVIDER_FACTORY: Symbol('ProviderFactory'),
+  PROVIDER_REGISTRY: Symbol('ProviderRegistry'),
+  TMDB_PROVIDER_HELPER: Symbol('TMDBProviderFactoryHelper'),
 
   // API Configuration
   API_CONFIG: Symbol('ApiConfig'),
+
+  // Enhancement Services
+  ENHANCEMENT_SERVICE: Symbol('ISimpleEnhancementService'),
+
+  // Media Services
+  MEDIA_REPOSITORY: Symbol('IMediaRepository'),
+  GET_BASIC_CATALOG_ITEMS_USE_CASE: Symbol('GetBasicCatalogItemsUseCase'),
+  GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),
+  MEDIA_DETAIL_USE_CASE: Symbol('MediaDetailUseCase'),
 
   // User Services
   USER_REPOSITORY: Symbol('IUserRepository'),

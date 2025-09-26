@@ -51,53 +51,75 @@ export interface ThemeSpacing {
   xxxl: number
 }
 
+export type FontWeight = 
+  | 'normal' 
+  | 'bold' 
+  | '100' 
+  | '200' 
+  | '300' 
+  | '400' 
+  | '500' 
+  | '600' 
+  | '700' 
+  | '800' 
+  | '900'
+  | 100 
+  | 200 
+  | 300 
+  | 400 
+  | 500 
+  | 600 
+  | 700 
+  | 800 
+  | 900
+
 export interface ThemeTypography {
   display: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   heading1: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   heading2: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   heading3: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   body: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   bodySmall: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   caption: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
   button: {
     fontSize: number
     lineHeight: number
-    fontWeight: string
+    fontWeight: FontWeight
     fontFamily?: string
   }
 }

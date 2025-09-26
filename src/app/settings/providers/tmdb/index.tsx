@@ -1,14 +1,27 @@
+/**
+ * TMDB Account Settings Screen
+ * 
+ * Handles TMDB provider account configuration including:
+ * - Bearer token authentication
+ * - API key configuration
+ * - Language preferences
+ * - Adult content settings
+ * - Navigation to capabilities management
+ */
+
 import React, { useState, useCallback } from 'react'
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, Text, ScrollView, StyleSheet, Alert, Pressable } from 'react-native'
 import type { ViewStyle, TextStyle } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { observer } from '@legendapp/state/react'
+import { useRouter } from 'expo-router'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
 import { NavigationHeader, TextInput, Button, Select, SettingsToggle } from '@/src/presentation/components'
 import { useSettingsActions } from '@/src/presentation/shared/hooks/useSettingsActions'
 import type { Theme } from '@/src/presentation/shared/theme'
 import type { TMDBSettings } from '@/src/domain/entities'
+import { ProviderCapability } from '@/src/infrastructure/providers/provider-interfaces'
 
 // Common language options for TMDB
 const LANGUAGE_OPTIONS = [
@@ -24,9 +37,10 @@ const LANGUAGE_OPTIONS = [
   { label: 'Chinese', value: 'zh-CN' }
 ]
 
-export default observer(function TMDBSettingsScreen() {
+export default observer(function TMDBAccountSettingsScreen() {
   const theme = useTheme()
   const { t } = useTranslation()
+  const router = useRouter()
   const styles = createStyles(theme)
 
   const {
@@ -49,32 +63,95 @@ export default observer(function TMDBSettingsScreen() {
   // Check if using defaults (no custom config)
   const isUsingDefaults = !currentTMDBSettings.bearerToken && !currentTMDBSettings.apiKey
 
-  // Basic validation
-  const isValid = bearerToken.trim() !== '' || apiKey.trim() !== ''
+  // Track changes - always allow saves when there are changes
   const hasChanges =
     bearerToken !== (currentTMDBSettings.bearerToken || '') ||
     apiKey !== (currentTMDBSettings.apiKey || '') ||
     language !== currentTMDBSettings.language ||
     includeAdult !== currentTMDBSettings.includeAdult
 
-  const handleSave = useCallback(async () => {
-    if (!isValid) {
-      Alert.alert(
-        t('settings.providers.tmdb.validation_error_title'),
-        t('settings.providers.tmdb.validation_error_message')
-      )
-      return
-    }
+  // Check if user provided custom credentials
+  const hasCustomCredentials = bearerToken.trim() !== '' || apiKey.trim() !== ''
 
+  // Validate custom credentials using TMDB API
+  const validateCustomCredentials = useCallback(async (testSettings: TMDBSettings): Promise<{ isValid: boolean; error?: string }> => {
+    try {
+      // Test credentials by calling a simple TMDB endpoint
+      const url = 'https://api.themoviedb.org/3/configuration'
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      }
+      
+      let requestUrl = url
+      
+      // Add authentication based on what user provided
+      if (testSettings.bearerToken) {
+        headers['Authorization'] = `Bearer ${testSettings.bearerToken}`
+      } else if (testSettings.apiKey) {
+        requestUrl = `${url}?api_key=${testSettings.apiKey}`
+      }
+      
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers
+      })
+      
+      if (response.ok) {
+        return { isValid: true }
+      } else {
+        const errorData = await response.json().catch(() => ({ status_message: 'Unknown error' }))
+        return { 
+          isValid: false, 
+          error: errorData.status_message || `HTTP ${response.status}: Invalid credentials` 
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Network error'
+      return { isValid: false, error: `Validation failed: ${errorMessage}` }
+    }
+  }, [])
+
+  const handleSave = useCallback(async () => {
     setSaving(true)
+    
     try {
       const newTMDBSettings: TMDBSettings = {
         bearerToken: bearerToken.trim() || undefined,
         apiKey: apiKey.trim() || undefined,
         language,
-        includeAdult
+        includeAdult,
+        // Preserve existing capability settings or use defaults
+        capabilitySettings: currentTMDBSettings.capabilitySettings || {
+          [ProviderCapability.METADATA]: { enabled: true },
+          [ProviderCapability.CATALOG]: { enabled: true },
+          [ProviderCapability.SEARCH]: { enabled: true },
+          [ProviderCapability.STREAM]: { enabled: false },
+          [ProviderCapability.RECOMMENDATION]: { enabled: true },
+          [ProviderCapability.COLLECTION]: { enabled: false },
+          [ProviderCapability.WATCHLIST]: { enabled: false },
+          [ProviderCapability.PROGRESS]: { enabled: false },
+          [ProviderCapability.RATING]: { enabled: true },
+          [ProviderCapability.IMAGE]: { enabled: true },
+          [ProviderCapability.VIDEO]: { enabled: true },
+          [ProviderCapability.SUBTITLE]: { enabled: false }
+        }
       }
 
+      // If user provided custom credentials, validate them first
+      if (hasCustomCredentials) {
+        const validationResult = await validateCustomCredentials(newTMDBSettings)
+        
+        if (!validationResult.isValid) {
+          Alert.alert(
+            t('settings.providers.tmdb.validation_error_title'),
+            validationResult.error || t('settings.providers.tmdb.validation_error_message')
+          )
+          return
+        }
+      }
+
+      // Save settings (will use environment credentials if no custom ones provided)
       await updateProviderSettings({
         tmdbSettings: newTMDBSettings
       })
@@ -83,23 +160,23 @@ export default observer(function TMDBSettingsScreen() {
         t('settings.providers.tmdb.save_success_title'),
         t('settings.providers.tmdb.save_success_message')
       )
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       Alert.alert(
         t('common.error'),
-        t('settings.providers.tmdb.save_error_message')
+        t('settings.providers.tmdb.save_error_message') + ': ' + errorMessage
       )
     } finally {
       setSaving(false)
     }
-  }, [bearerToken, apiKey, language, includeAdult, isValid, updateProviderSettings, t])
+  }, [bearerToken, apiKey, language, includeAdult, hasCustomCredentials, validateCustomCredentials, updateProviderSettings, t, currentTMDBSettings.capabilitySettings])
+
+  const handleNavigateToCapabilities = useCallback(() => {
+    router.push('/settings/providers/tmdb/capabilities')
+  }, [router])
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <NavigationHeader
-        title={t('settings.providers.tmdb.title')}
-        showBackButton
-      />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -180,12 +257,42 @@ export default observer(function TMDBSettingsScreen() {
           </View>
         </View>
 
+        {/* Capabilities Management Navigation */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {t('settings.providers.tmdb.capabilities_section_title')}
+          </Text>
+          <Text style={styles.sectionDescription}>
+            {t('settings.providers.tmdb.capabilities_section_description')}
+          </Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.capabilitiesCard,
+              pressed && styles.capabilitiesCardPressed
+            ]}
+            onPress={handleNavigateToCapabilities}
+            accessibilityRole="button"
+            accessibilityLabel={t('settings.providers.tmdb.manage_capabilities')}
+          >
+            <View style={styles.capabilitiesContent}>
+              <Text style={styles.capabilitiesTitle}>
+                {t('settings.providers.tmdb.manage_capabilities')}
+              </Text>
+              <Text style={styles.capabilitiesDescription}>
+                {t('settings.providers.tmdb.manage_capabilities_description')}
+              </Text>
+            </View>
+            <Text style={styles.capabilitiesArrow}>›</Text>
+          </Pressable>
+        </View>
+
         {/* Save Button */}
         <View style={styles.buttonContainer}>
           <Button
-            title={t('common.save')}
+            title={hasCustomCredentials ? t('settings.providers.tmdb.validate_and_save') : t('common.save')}
             onPress={handleSave}
-            disabled={!isValid || !hasChanges}
+            disabled={!hasChanges}
             loading={saving}
             fullWidth
           />
@@ -195,7 +302,7 @@ export default observer(function TMDBSettingsScreen() {
   )
 })
 
-interface TMDBSettingsStyles {
+interface TMDBAccountSettingsStyles {
   container: ViewStyle
   scrollView: ViewStyle
   scrollContent: ViewStyle
@@ -206,12 +313,16 @@ interface TMDBSettingsStyles {
   sectionTitle: TextStyle
   sectionDescription: TextStyle
   settingContainer: ViewStyle
-  settingLabel: TextStyle
-  settingDescription: TextStyle
+  capabilitiesCard: ViewStyle
+  capabilitiesCardPressed: ViewStyle
+  capabilitiesContent: ViewStyle
+  capabilitiesTitle: TextStyle
+  capabilitiesDescription: TextStyle
+  capabilitiesArrow: TextStyle
   buttonContainer: ViewStyle
 }
 
-const createStyles = (theme: Theme): TMDBSettingsStyles => StyleSheet.create({
+const createStyles = (theme: Theme): TMDBAccountSettingsStyles => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background.primary
@@ -266,19 +377,40 @@ const createStyles = (theme: Theme): TMDBSettingsStyles => StyleSheet.create({
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md
   },
-  settingLabel: {
+  capabilitiesCard: {
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...theme.shadows.sm
+  },
+  capabilitiesCardPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }]
+  },
+  capabilitiesContent: {
+    flex: 1,
+    marginRight: theme.spacing.sm
+  },
+  capabilitiesTitle: {
     fontSize: theme.typography.body.fontSize,
-    fontWeight: '500' as TextStyle['fontWeight'],
+    fontWeight: '600' as TextStyle['fontWeight'],
     fontFamily: theme.typography.body.fontFamily,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs
   },
-  settingDescription: {
+  capabilitiesDescription: {
     fontSize: theme.typography.caption.fontSize,
     fontFamily: theme.typography.caption.fontFamily,
     color: theme.colors.text.secondary,
-    lineHeight: theme.typography.caption.lineHeight,
-    marginBottom: theme.spacing.md
+    lineHeight: theme.typography.caption.lineHeight
+  },
+  capabilitiesArrow: {
+    fontSize: theme.typography.heading2.fontSize,
+    color: theme.colors.text.tertiary,
+    fontWeight: '300' as TextStyle['fontWeight']
   },
   buttonContainer: {
     marginTop: theme.spacing.md

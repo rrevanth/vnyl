@@ -11,7 +11,11 @@ export const es: TranslationKey = {
     delete: 'Eliminar',
     edit: 'Editar',
     done: 'Listo',
-    close: 'Cerrar'
+    close: 'Cerrar',
+    expand: 'Expandir',
+    collapse: 'Contraer',
+    refresh: 'Actualizar',
+    and_more: 'y {{count}} más'
   },
 
   navigation: {
@@ -100,6 +104,7 @@ export const es: TranslationKey = {
         using_defaults: 'Usando Configuración Predeterminada',
         using_custom_config: 'Usando Configuración Personalizada',
         defaults_description: 'Usando claves API integradas y configuración predeterminada. Configura ajustes personalizados a continuación para usar tus propias claves API.',
+        environment_credentials_description: 'Usando credenciales del entorno para autenticación. Aún puedes personalizar las preferencias de idioma y contenido a continuación.',
         custom_config_description: 'Usando tu configuración API personalizada. Todas las solicitudes usarán tus claves API proporcionadas.',
         authentication: 'Autenticación',
         authentication_description: 'Configura tus credenciales API de TMDB. Necesitas un Token Bearer o una Clave API.',
@@ -119,7 +124,8 @@ export const es: TranslationKey = {
         validation_error_message: 'Por favor proporciona un Token Bearer o una Clave API.',
         save_success_title: 'Configuración Guardada',
         save_success_message: 'Tu configuración de TMDB se ha guardado exitosamente.',
-        save_error_message: 'Error al guardar configuración de TMDB. Por favor intenta de nuevo.'
+        save_error_message: 'Error al guardar configuración de TMDB. Por favor intenta de nuevo.',
+        validate_and_save: 'Validar y Guardar'
       }
     },
     about: {
@@ -174,6 +180,66 @@ export const es: TranslationKey = {
     favorites: 'Favoritos',
     watchlist: 'Lista de Reproducción',
     history: 'Historial de Reproducción'
+  },
+
+  catalog: {
+    no_items: 'Sin elementos',
+    one_item: '1 elemento',
+    items_count: '{{count}} elementos',
+    items_k_count: '{{count}}K elementos',
+    items_m_count: '{{count}}M elementos',
+    has_more: 'Más disponibles',
+    updated: 'Actualizado {{date}}',
+    card_accessibility: 'Catálogo {{title}} de {{provider}} con contenido {{type}}',
+    loading_catalogs: 'Cargando catálogos...',
+    no_catalogs: 'No hay catálogos disponibles',
+    error_loading: 'Error al cargar catálogos',
+    retry_loading: 'Reintentar carga de catálogos',
+    all_providers: 'Todos los Proveedores',
+    healthy_providers: 'Proveedores saludables: {{count}}',
+    total_catalogs: 'Total de catálogos: {{count}}'
+  },
+
+  provider: {
+    toggle_expansion: 'Alternar catálogos de {{provider}} ({{state}})',
+    catalog_count: '{{count}} catálogos',
+    catalog_count_one: '1 catálogo',
+    show_more: 'Mostrar {{count}} más',
+    show_more_catalogs: 'Mostrar {{count}} catálogos más de {{provider}}',
+    no_catalogs: 'No hay catálogos disponibles',
+    health: {
+      healthy: 'Saludable',
+      unhealthy: 'No saludable'
+    },
+    type: {
+      official: 'Oficial',
+      addon: 'Complemento',
+      custom: 'Personalizado',
+      local: 'Local'
+    }
+  },
+
+  content_type: {
+    movie: 'Películas',
+    tv: 'Series de TV',
+    person: 'Personas',
+    collection: 'Colecciones',
+    network: 'Cadenas',
+    company: 'Empresas'
+  },
+
+  homescreen: {
+    title: 'Inicio',
+    welcome: 'Bienvenido a VNYL',
+    loading_providers: 'Cargando proveedores...',
+    no_providers: 'No hay proveedores configurados',
+    provider_error: 'Error al cargar proveedores',
+    stats: {
+      providers: 'Proveedores',
+      catalogs: 'Catálogos',
+      healthy: 'Saludables',
+      response_time: 'Tiempo de Respuesta Promedio'
+    }
   },
 
   errors: {

@@ -3,6 +3,7 @@ import { container } from './setup'
 import { TOKENS, ServiceToken } from './tokens'
 import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService, ITMDBConfigService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
+import { IMediaRepository } from '@/src/domain/repositories/media.repository.interface'
 import {
   GetOrCreateUserUseCase,
   UpdateUserPreferencesUseCase,
@@ -10,6 +11,8 @@ import {
   UpdateUserThemeUseCase,
   UpdateUserLocaleUseCase
 } from '@/src/domain/usecases'
+import { GetBasicCatalogItemsUseCase } from '@/src/domain/usecases/get-basic-catalog-items.usecase'
+import { MediaDetailUseCase } from '@/src/domain/use-cases/media-detail.use-case'
 import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 
 export const useDI = () => {
@@ -70,6 +73,23 @@ export const useUserRepository = (): IUserRepository => {
   return resolve<IUserRepository>(TOKENS.USER_REPOSITORY)
 }
 
+// Media Service Hooks
+export const useMediaRepository = (): IMediaRepository => {
+  const { resolve } = useDI()
+  return resolve<IMediaRepository>(TOKENS.MEDIA_REPOSITORY)
+}
+
+export const useGetBasicCatalogItemsUseCase = (): GetBasicCatalogItemsUseCase => {
+  const { resolve } = useDI()
+  return resolve<GetBasicCatalogItemsUseCase>(TOKENS.GET_BASIC_CATALOG_ITEMS_USE_CASE)
+}
+
+export const useMediaDetailUseCase = (): MediaDetailUseCase => {
+  const { resolve } = useDI()
+  return resolve<MediaDetailUseCase>(TOKENS.MEDIA_DETAIL_USE_CASE)
+}
+
+// User Use Case Hooks
 export const useGetOrCreateUserUseCase = (): GetOrCreateUserUseCase => {
   const { resolve } = useDI()
   return resolve<GetOrCreateUserUseCase>(TOKENS.GET_OR_CREATE_USER_USE_CASE)

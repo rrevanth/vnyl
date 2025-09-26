@@ -13,6 +13,10 @@ export interface TranslationKey {
     edit: string
     done: string
     close: string
+    expand: string
+    collapse: string
+    refresh: string
+    and_more: string
   }
 
   // Navigation
@@ -103,6 +107,7 @@ export interface TranslationKey {
         using_defaults: string
         using_custom_config: string
         defaults_description: string
+        environment_credentials_description: string
         custom_config_description: string
         authentication: string
         authentication_description: string
@@ -123,6 +128,7 @@ export interface TranslationKey {
         save_success_title: string
         save_success_message: string
         save_error_message: string
+        validate_and_save: string
       }
     }
     about: {
@@ -151,6 +157,70 @@ export interface TranslationKey {
     medium: string
     large: string
     extra_large: string
+  }
+
+  // Catalog
+  catalog: {
+    no_items: string
+    one_item: string
+    items_count: string
+    items_k_count: string
+    items_m_count: string
+    has_more: string
+    updated: string
+    card_accessibility: string
+    loading_catalogs: string
+    no_catalogs: string
+    error_loading: string
+    retry_loading: string
+    all_providers: string
+    healthy_providers: string
+    total_catalogs: string
+  }
+
+  // Provider
+  provider: {
+    toggle_expansion: string
+    catalog_count: string
+    catalog_count_one: string
+    show_more: string
+    show_more_catalogs: string
+    no_catalogs: string
+    health: {
+      healthy: string
+      unhealthy: string
+    }
+    type: {
+      official: string
+      addon: string
+      custom: string
+      local: string
+    }
+  }
+
+  // Content Type
+  content_type: {
+    movie: string
+    tv: string
+    person: string
+    collection: string
+    network: string
+    company: string
+  }
+
+  // Homescreen
+  homescreen: {
+    title: string
+    welcome: string
+    loading_providers: string
+    no_providers: string
+    provider_error: string
+    stats: {
+      providers: string
+      catalogs: string
+      healthy: string
+      response_time: string
+    }
   }
 
   // Media

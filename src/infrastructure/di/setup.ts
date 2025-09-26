@@ -2,6 +2,7 @@ import { DIContainer } from './container'
 import { TOKENS } from './tokens'
 import { ILoggingService, IStorageService, IApiClient, IConfigClient, ApiConfig, IUserPreferenceService, IEnvironmentService, ITMDBConfigService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
+import { IMediaRepository } from '@/src/domain/repositories/media.repository.interface'
 import {
   GetOrCreateUserUseCase,
   UpdateUserPreferencesUseCase,
@@ -9,13 +10,25 @@ import {
   UpdateUserThemeUseCase,
   UpdateUserLocaleUseCase
 } from '@/src/domain/usecases'
+import { GetBasicCatalogItemsUseCase } from '@/src/domain/usecases/get-basic-catalog-items.usecase'
+import { GetAllCatalogsUseCase } from '@/src/domain/usecases/get-all-catalogs.usecase'
+import { MediaDetailUseCase } from '@/src/domain/use-cases/media-detail.use-case'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
 import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/services'
 import { TMDBConfigService } from '@/src/infrastructure/services/implementations/tmdb-config.service'
 import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
+import { TMDBClient } from '@/src/infrastructure/api/tmdb-client'
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
+import { MediaRepository } from '@/src/data/repositories/implementations/media.repository'
+
+// Provider System Imports
+import { 
+  ProviderFactory, 
+  ProviderRegistry, 
+  TMDBProviderFactoryHelper 
+} from '@/src/infrastructure/providers'
 
 const container = new DIContainer()
 
@@ -89,6 +102,17 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
+  // Register Centralized TMDB Client (depends on TMDB config service, logging, and base API client)
+  container.registerSingleton<TMDBClient>(
+    TOKENS.TMDB_CLIENT,
+    () => {
+      const tmdbConfigService = container.resolve<ITMDBConfigService>(TOKENS.TMDB_CONFIG_SERVICE)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      const baseApiClient = container.resolve<IApiClient>(TOKENS.API_CLIENT)
+      return new TMDBClient(tmdbConfigService, logger, baseApiClient)
+    }
+  )
+
   // Register Config Client (depends on logging and user preferences)
   container.registerSingleton<IConfigClient>(
     TOKENS.CONFIG_CLIENT,
@@ -109,6 +133,89 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       return new AxiosApiClient(config, logger)
     }
   )
+
+  // ============================================================================
+  // PROVIDER SYSTEM REGISTRATION
+  // ============================================================================
+
+  // Register Provider Factory (depends on logging)
+  container.registerSingleton<ProviderFactory>(
+    TOKENS.PROVIDER_FACTORY,
+    () => {
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new ProviderFactory(logger)
+    }
+  )
+
+  // Register Provider Registry (depends on logging, creates its own factory)
+  container.registerSingleton<ProviderRegistry>(
+    TOKENS.PROVIDER_REGISTRY,
+    () => {
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new ProviderRegistry(logger)
+    }
+  )
+
+  // Register TMDB Provider Helper (depends on factory, logging, and TMDB client)
+  container.registerSingleton<TMDBProviderFactoryHelper>(
+    TOKENS.TMDB_PROVIDER_HELPER,
+    () => {
+      const factory = container.resolve<ProviderFactory>(TOKENS.PROVIDER_FACTORY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      const tmdbClient = container.resolve<TMDBClient>(TOKENS.TMDB_CLIENT)
+      return new TMDBProviderFactoryHelper(factory, logger, tmdbClient)
+    }
+  )
+
+  // ============================================================================
+  // MEDIA SERVICES REGISTRATION
+  // ============================================================================
+
+  // Register Media Repository (depends on use cases, storage, and logging)
+  container.registerSingleton<IMediaRepository>(
+    TOKENS.MEDIA_REPOSITORY,
+    () => {
+      const catalogItemsUseCase = container.resolve<GetBasicCatalogItemsUseCase>(TOKENS.GET_BASIC_CATALOG_ITEMS_USE_CASE)
+      const mediaDetailUseCase = container.resolve<MediaDetailUseCase>(TOKENS.MEDIA_DETAIL_USE_CASE)
+      const storageService = container.resolve<IStorageService>(TOKENS.STORAGE_SERVICE)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new MediaRepository(catalogItemsUseCase, mediaDetailUseCase, storageService, logger)
+    }
+  )
+
+  // Register Get Basic Catalog Items Use Case (depends on provider registry and logging)
+  container.registerSingleton<GetBasicCatalogItemsUseCase>(
+    TOKENS.GET_BASIC_CATALOG_ITEMS_USE_CASE,
+    () => {
+      const providerRegistry = container.resolve<ProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new GetBasicCatalogItemsUseCase(providerRegistry, logger)
+    }
+  )
+
+  // Register Get All Catalogs Use Case (depends on provider registry and logging)
+  container.registerSingleton<GetAllCatalogsUseCase>(
+    TOKENS.GET_ALL_CATALOGS_USE_CASE,
+    () => {
+      const providerRegistry = container.resolve<ProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new GetAllCatalogsUseCase(providerRegistry, logger)
+    }
+  )
+
+  // Register Media Detail Use Case (already exists, just add to tokens)
+  container.registerSingleton<MediaDetailUseCase>(
+    TOKENS.MEDIA_DETAIL_USE_CASE,
+    () => {
+      const providerRegistry = container.resolve<ProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new MediaDetailUseCase(providerRegistry, logger)
+    }
+  )
+
+  // ============================================================================
+  // USE CASE REGISTRATION
+  // ============================================================================
 
   container.registerSingleton<GetOrCreateUserUseCase>(
     TOKENS.GET_OR_CREATE_USER_USE_CASE,
@@ -166,8 +273,16 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'UserPreferenceService',
       'TMDBConfigService',
       'TMDBApiClient',
+      'TMDBClient',
       'ConfigClient',
       'ApiClient',
+      'ProviderFactory',
+      'ProviderRegistry',
+      'TMDBProviderHelper',
+      'MediaRepository',
+      'GetBasicCatalogItemsUseCase',
+      'GetAllCatalogsUseCase',
+      'MediaDetailUseCase',
       'GetOrCreateUserUseCase',
       'UpdateUserPreferencesUseCase',
       'ResetUserPreferencesUseCase',
@@ -175,6 +290,25 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'UpdateUserLocaleUseCase'
     ]
   })
+}
+
+/**
+ * Initialize TMDB providers after DI container setup
+ * Call this after initializeDI to register TMDB provider capabilities
+ */
+export const initializeTMDBProviders = async (): Promise<void> => {
+  const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+  const tmdbProviderHelper = container.resolve<TMDBProviderFactoryHelper>(TOKENS.TMDB_PROVIDER_HELPER)
+
+  try {
+    logger.info('Initializing TMDB providers...')
+    await tmdbProviderHelper.initialize()
+    logger.info('TMDB providers initialized successfully')
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    logger.error('Failed to initialize TMDB providers', undefined, { error: errorMessage })
+    throw error
+  }
 }
 
 export { container }

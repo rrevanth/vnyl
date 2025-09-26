@@ -1,0 +1,290 @@
+╭───────────────────────────────────────────────────╮
+│ ✻ Welcome to Claude Code!                         │
+│                                                   │
+│   /help for help, /status for your current setup  │
+│                                                   │
+│   cwd: /Volumes/data/.jinx/vnyl                   │
+│                                                   │
+│   ─────────────────────────────────────────────── │
+│                                                   │
+│   Overrides (via env):                            │
+│                                                   │
+│   • API Base URL: http://localhost:4595           │
+╰───────────────────────────────────────────────────╯
+⏺ Compact summary (ctrl+r to expand)
+  ⎿  Read src/presentation/shared/hooks/useSettingsActions.tsx (181 lines)
+  ⎿  Read src/domain/usecases/update-user-preferences.usecase.ts (33 lines)
+  ⎿  Read src/domain/entities/user.entity.ts (123 lines)
+  ⎿  Read src/infrastructure/providers/provider-interfaces.ts (356 lines)
+  ⎿  Read src/domain/entities/index.ts (2 lines)
+
+⏺ I'll create a comprehensive plan for implementing the capability configuration system with objects instead of arrays, then use agents to implement it.
+
+⏺ Update Todos
+  ⎿  ☐ Enhance TMDBSettings entity with capability configuration objects         
+     ☐ Create provider capability management use cases for business logic
+     ☐ Implement dynamic capability resolution from provider registry
+     ☐ Create two-section TMDB settings UI with stack navigation
+     ☐ Build reusable CapabilityToggle component with i18n descriptions
+     ☐ Register new use cases in DI container
+     ☐ Fix TMDB provider registration to resolve 'No providers available' warning
+
+⏺ Let me analyze the current architecture and create a comprehensive implementation plan.
+
+⏺ Read(src/infrastructure/providers/provider-interfaces.ts)
+  ⎿  Read 50 lines (ctrl+r to expand)
+
+⏺ Read(src/infrastructure/providers/provider-interfaces.ts)
+  ⎿  Read 57 lines (ctrl+r to expand)
+
+⏺ Search(pattern: "getAvailableCapabilities")
+  ⎿  Found 0 files 
+
+⏺ Search(pattern: "**/provider-registry*")
+  ⎿  Found 3 files (ctrl+r to expand)
+
+⏺ Read(src/infrastructure/providers/provider-registry.ts)
+  ⎿  Read 670 lines (ctrl+r to expand)
+
+⏺ Search(pattern: "**/settings*/**tmdb*")
+  ⎿  Found 0 files 
+
+⏺ Search(pattern: "**/presentation/**/*settings*")
+  ⎿  Found 11 files (ctrl+r to expand)
+
+⏺ Search(pattern: "**/infrastructure/di*")
+  ⎿  Found 0 files 
+
+⏺ Search(pattern: "**/di/**")
+  ⎿  Found 12 files (ctrl+r to expand)
+
+⏺ Read(src/infrastructure/di/tokens.ts)
+  ⎿  Read 41 lines (ctrl+r to expand)
+
+⏺ Read(src/infrastructure/di/container.ts)
+  ⎿  Read 45 lines (ctrl+r to expand)
+
+⏺ Search(pattern: "**/app/**")
+  ⎿  Found 89 files (ctrl+r to expand)
+
+⏺ Read(src/app/settings/providers/tmdb.tsx)
+  ⎿  Read 335 lines (ctrl+r to expand)
+
+⏺ Now I have a comprehensive understanding of the current architecture. Let me create a detailed implementation plan that addresses all the user's requirements.
+                                                                                                                                                                       
+⏺ User approved Claude's plan:
+  ⎿ TMDB Capability Configuration Implementation Plan
+
+    Overview
+
+    Transform the existing single TMDB settings screen into a two-section system with account settings and dynamic capability management, using capability 
+    configuration objects for future extensibility.
+
+    🎯 Core Objectives
+
+    1. Fix Provider Registration: Resolve "No providers available for catalog loading" warning
+    2. Two-Section UI: Account settings + capabilities management with stack navigation
+    3. Dynamic Capability Resolution: Use existing provider registry instead of hardcoded capabilities
+    4. Configuration Objects: Store capability configs as {enabled: boolean} objects, not arrays
+    5. CLEAN Architecture: Move business logic to use cases, away from components
+    6. Reusable Components: Create CapabilityToggle component with i18n descriptions
+
+    📋 Detailed Implementation Steps
+
+    1. Enhance TMDBSettings Entity with Capability Configuration Objects
+
+    Files to modify: src/domain/entities/user.entity.ts
+    - Add capabilitySettings to TMDBSettings interface
+    - Structure: Record<ProviderCapability, { enabled: boolean }> 
+    - Update DEFAULT_USER_PREFERENCES with default capability configurations
+    - All available capabilities from ProviderCapability enum enabled by default
+
+    2. Create Provider Capability Management Use Cases
+
+    New files:
+    - src/domain/usecases/get-provider-capabilities.usecase.ts
+    - src/domain/usecases/update-provider-capabilities.usecase.ts
+
+    Business logic:
+    - GetProviderCapabilitiesUseCase: Dynamically resolve available capabilities from provider registry
+    - UpdateProviderCapabilitiesUseCase: Update capability configurations in user preferences
+    - Integration with existing provider registry system using getProvidersForCapability method
+
+    3. Implement Provider Registry Capability Resolution
+
+    Files to modify: src/infrastructure/providers/provider-registry.ts
+    - Add getAvailableCapabilities(providerId: string): ProviderCapability[] method
+    - Use existing factory pattern to dynamically discover provider capabilities
+    - No hardcoding - leverage existing getProvidersForCapability and factory systems
+
+    4. Create Two-Section TMDB Settings with Stack Navigation
+
+    File structure:
+    src/app/settings/providers/tmdb/
+    ├── _layout.tsx (Stack navigator)
+    ├── index.tsx (Main settings - account)
+    └── capabilities.tsx (Capabilities management)
+
+    Navigation flow:
+    - Main TMDB settings (account): Current screen becomes account-focused
+    - Capabilities section: New screen with dynamic capability toggles  
+    - Stack navigation pattern following Expo Router conventions
+
+    5. Build Reusable CapabilityToggle Component
+
+    New file: src/presentation/components/atoms/CapabilityToggle.tsx
+    - Props: capability, enabled, onToggle, providerId
+    - Dynamic i18n descriptions using capability enum values
+    - Theme integration following existing SettingsToggle pattern
+    - Accessibility compliance with proper labels and roles
+
+    6. Update DI Container with New Use Cases
+
+    Files to modify: 
+    - src/infrastructure/di/tokens.ts - Add new use case tokens
+    - src/infrastructure/di/container.ts or setup - Register new use cases
+    - Integration with existing provider registry and user preference services
+
+    7. Fix TMDB Provider Registration Issue
+
+    Root cause analysis: Provider registration not happening at app startup
+    Solution: Ensure TMDB provider is registered in provider registry during container initialization
+    Files to check/modify: DI setup, provider registration, container initialization
+
+    🔧 Technical Architecture
+
+    Data Flow Pattern
+
+    UI Component → Use Case → Provider Registry → User Preferences
+         ↓              ↓           ↓                ↓
+    Capability Toggle → Get/Update → Dynamic Resolve → Store Config Objects
+
+    Capability Configuration Storage
+
+    // Current (arrays - remove)
+    enabledCapabilities: ProviderCapability[]
+
+    // New (objects - implement)  
+    capabilitySettings: {
+      metadata: { enabled: true },
+      catalog: { enabled: false },
+      search: { enabled: true }
+      // Future extensibility for per-capability settings
+    }
+
+    Use Case Integration Pattern
+
+    // Component calls use case, not provider registry directly
+    const capabilities = await getProviderCapabilitiesUseCase.execute('tmdb')
+    await updateProviderCapabilitiesUseCase.execute('tmdb', capabilitySettings)
+
+    🎨 UI/UX Structure
+
+    Account Settings Screen (src/app/settings/providers/tmdb/index.tsx)
+
+    - Bearer token and API key inputs
+    - Language and adult content settings
+    - Navigation button to capabilities section
+    - Existing validation and save functionality
+
+    Capabilities Management Screen (src/app/settings/providers/tmdb/capabilities.tsx)
+
+    - Dynamic list of available capabilities from provider registry
+    - CapabilityToggle components with i18n descriptions
+    - Save/reset functionality for capability configurations
+    - Loading states and error handling
+
+    🔄 Migration Strategy
+
+    1. Backward Compatible: Existing TMDB settings continue working
+    2. Gradual Enhancement: Add capability configuration alongside existing settings
+    3. Default Values: All capabilities enabled by default for existing users
+    4. Data Migration: Convert any existing array-based configs to object format
+
+    ✅ Validation Requirements
+
+    - All capabilities resolve dynamically from provider registry
+    - Business logic isolated in use cases, not UI components
+    - Capability configurations stored as extensible objects
+    - Stack navigation follows Expo Router patterns
+    - i18n integration for all new text content
+    - TypeScript strict mode compliance
+    - Theme integration for consistent styling
+    - Bearer token authentication maintained
+
+    🎭 Success Criteria
+
+    - "No providers available" warning resolved
+    - Two-section navigation working smoothly
+    - Dynamic capability toggles reflect actual provider capabilities
+    - Capability configurations persist correctly as objects
+    - All business logic in use cases, not components
+    - Reusable CapabilityToggle component with proper i18n
+    - Full TypeScript compliance with existing code patterns
+
+⏺ Perfect! Now I'll implement this comprehensive plan using agents to handle the complex multi-step process efficiently.
+  ⎿  Interrupted by user
+
+> use agents to develop
+
+⏺ Update Todos
+  ⎿  ☐ Enhance TMDBSettings entity with capability configuration objects         
+     ☐ Create provider capability management use cases for business logic
+     ☐ Implement dynamic capability resolution from provider registry
+     ☐ Create two-section TMDB settings UI with stack navigation
+     ☐ Build reusable CapabilityToggle component with i18n descriptions
+     ☐ Register new use cases in DI container
+     ☐ Fix TMDB provider registration to resolve 'No providers available' warning
+
+⏺ I'll use agents to develop this complex capability configuration system. Let me start with the first task: enhancing the TMDBSettings entity.
+
+⏺ system-architect(Enhance TMDBSettings entity design)
+  ⎿  Done (17 tool uses · 85.2k tokens · 6m 59.9s)                                                                                                                     
+
+⏺ Update Todos
+  ⎿  ☒ Enhance TMDBSettings entity with capability configuration objects         
+     ☐ Create provider capability management use cases for business logic
+     ☐ Implement dynamic capability resolution from provider registry
+     ☐ Create two-section TMDB settings UI with stack navigation
+     ☐ Build reusable CapabilityToggle component with i18n descriptions
+     ☐ Register new use cases in DI container
+     ☐ Fix TMDB provider registration to resolve 'No providers available' warning
+
+⏺ Great! Now let me use an agent to create the provider capability management use cases for business logic.
+
+⏺ Now I'll use an agent to create the provider capability management use cases for the business logic.
+
+⏺ system-architect(Create capability management use cases)
+  ⎿  Done (18 tool uses · 96.7k tokens · 7m 18.2s)                                                                                                                     
+
+⏺ Update Todos
+  ⎿  ☒ Enhance TMDBSettings entity with capability configuration objects         
+     ☒ Create provider capability management use cases for business logic
+     ☐ Implement dynamic capability resolution from provider registry
+     ☐ Create two-section TMDB settings UI with stack navigation
+     ☐ Build reusable CapabilityToggle component with i18n descriptions
+     ☐ Register new use cases in DI container
+     ☐ Fix TMDB provider registration to resolve 'No providers available' warning
+
+⏺ Now I'll implement the dynamic capability resolution from the provider registry system.
+
+⏺ system-architect(Implement provider registry capability resolution)
+  ⎿  Done (18 tool uses · 101.2k tokens · 20m 47.5s)                                                                                                                   
+
+⏺ Update Todos
+  ⎿  ☒ Enhance TMDBSettings entity with capability configuration objects         
+     ☒ Create provider capability management use cases for business logic
+     ☒ Implement dynamic capability resolution from provider registry
+     ☐ Create two-section TMDB settings UI with stack navigation
+     ☐ Build reusable CapabilityToggle component with i18n descriptions
+     ☐ Register new use cases in DI container
+     ☐ Fix TMDB provider registration to resolve 'No providers available' warning
+
+⏺ Now I'll create the two-section TMDB settings UI with stack navigation.
+
+⏺ frontend-architect(Create two-section TMDB settings UI)
+  ⎿  Update(src/presentation/shared/i18n/locales/en.ts)
+     Updated src/presentation/shared/i18n/locales/en.ts with 49 additions and 1 removal
+     +20 more tool uses
+  ⎿  No (tell Claude what to do differently)
+
