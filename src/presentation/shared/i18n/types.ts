@@ -97,33 +97,6 @@ export interface TranslationKey {
         title: string
         description: string
       }
-      tmdb: {
-        title: string
-        description: string
-        using_defaults: string
-        using_custom_config: string
-        defaults_description: string
-        custom_config_description: string
-        authentication: string
-        authentication_description: string
-        bearer_token: string
-        bearer_token_placeholder: string
-        bearer_token_description: string
-        api_key: string
-        api_key_placeholder: string
-        api_key_description: string
-        configuration: string
-        configuration_description: string
-        language: string
-        language_description: string
-        include_adult: string
-        include_adult_description: string
-        validation_error_title: string
-        validation_error_message: string
-        save_success_title: string
-        save_success_message: string
-        save_error_message: string
-      }
     }
     about: {
       title: string

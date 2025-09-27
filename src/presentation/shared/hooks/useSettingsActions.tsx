@@ -119,16 +119,6 @@ export const useSettingsActions = () => {
     )
   }, [userPreferencesContext.preferences.providerSettings, updatePreferences])
 
-  const updateTMDBSettings = useCallback(async (tmdbUpdate: Partial<UserPreferences['providerSettings']['tmdbSettings']>) => {
-    const currentTMDBSettings = userPreferencesContext.preferences.providerSettings?.tmdbSettings || DEFAULT_USER_PREFERENCES.providerSettings.tmdbSettings
-    const updatedTMDBSettings = {
-      ...currentTMDBSettings,
-      ...tmdbUpdate
-    }
-    await updateProviderSettings({
-      tmdbSettings: updatedTMDBSettings
-    })
-  }, [userPreferencesContext.preferences.providerSettings?.tmdbSettings, updateProviderSettings])
 
   // Generic update functions for reusability
   const updateThemePreference = useCallback(async (themeUpdate: Partial<ThemePreference>) => {
@@ -166,7 +156,6 @@ export const useSettingsActions = () => {
 
     // Provider settings actions
     updateProviderSettings,
-    updateTMDBSettings,
 
     // Generic update functions for advanced usage
     updateThemePreference,

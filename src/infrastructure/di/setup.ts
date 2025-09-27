@@ -1,6 +1,6 @@
 import { DIContainer } from './container'
 import { TOKENS } from './tokens'
-import { ILoggingService, IStorageService, IApiClient, IConfigClient, ApiConfig, IUserPreferenceService, IEnvironmentService, ITMDBConfigService } from '@/src/domain/services'
+import { ILoggingService, IStorageService, IApiClient, IConfigClient, ApiConfig, IUserPreferenceService, IEnvironmentService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
 import {
   GetOrCreateUserUseCase,
@@ -13,9 +13,9 @@ import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
 import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/services'
-import { TMDBConfigService } from '@/src/infrastructure/services/implementations/tmdb-config.service'
-import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
+import { createTMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
+import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 
 const container = new DIContainer()
 
@@ -68,26 +68,6 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
-  // Register TMDB Config Service (depends on environment, user preferences, and logging)
-  container.registerSingleton<ITMDBConfigService>(
-    TOKENS.TMDB_CONFIG_SERVICE,
-    () => {
-      const environmentService = container.resolve<IEnvironmentService>(TOKENS.ENVIRONMENT_SERVICE)
-      const userPreferenceService = container.resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
-      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      return new TMDBConfigService(environmentService, userPreferenceService, logger)
-    }
-  )
-
-  // Register TMDB API Client (depends on TMDB config service and logging)
-  container.registerSingleton<TMDBApiClient>(
-    TOKENS.TMDB_API_CLIENT,
-    () => {
-      const tmdbConfigService = container.resolve<ITMDBConfigService>(TOKENS.TMDB_CONFIG_SERVICE)
-      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      return new TMDBApiClient(tmdbConfigService, logger)
-    }
-  )
 
   // Register Config Client (depends on logging and user preferences)
   container.registerSingleton<IConfigClient>(
@@ -155,6 +135,16 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
+  // Register TMDB Service (depends on environment and logging)
+  container.registerSingleton<ITMDBService>(
+    TOKENS.TMDB_SERVICE,
+    () => {
+      const environmentService = container.resolve<IEnvironmentService>(TOKENS.ENVIRONMENT_SERVICE)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return createTMDBService(environmentService, logger)
+    }
+  )
+
   // Log successful initialization
   const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
   logger.info('DI Container initialized successfully', {
@@ -164,10 +154,9 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'StorageService',
       'UserRepository',
       'UserPreferenceService',
-      'TMDBConfigService',
-      'TMDBApiClient',
       'ConfigClient',
       'ApiClient',
+      'TMDBService',
       'GetOrCreateUserUseCase',
       'UpdateUserPreferencesUseCase',
       'ResetUserPreferencesUseCase',

@@ -94,33 +94,6 @@ export const es: TranslationKey = {
         title: 'Información',
         description: 'Información y documentación de proveedores'
       },
-      tmdb: {
-        title: 'TMDB (The Movie Database)',
-        description: 'Metadatos de películas y series',
-        using_defaults: 'Usando Configuración Predeterminada',
-        using_custom_config: 'Usando Configuración Personalizada',
-        defaults_description: 'Usando claves API integradas y configuración predeterminada. Configura ajustes personalizados a continuación para usar tus propias claves API.',
-        custom_config_description: 'Usando tu configuración API personalizada. Todas las solicitudes usarán tus claves API proporcionadas.',
-        authentication: 'Autenticación',
-        authentication_description: 'Configura tus credenciales API de TMDB. Necesitas un Token Bearer o una Clave API.',
-        bearer_token: 'Token Bearer',
-        bearer_token_placeholder: 'Ingresa tu Token Bearer de TMDB',
-        bearer_token_description: 'Método preferido. Obtener desde configuración API de TMDB.',
-        api_key: 'Clave API',
-        api_key_placeholder: 'Ingresa tu Clave API de TMDB',
-        api_key_description: 'Alternativa al Token Bearer. Obtener desde configuración API de TMDB.',
-        configuration: 'Configuración',
-        configuration_description: 'Personalizar comportamiento de API de TMDB y preferencias de contenido.',
-        language: 'Idioma',
-        language_description: 'Idioma para metadatos de películas y series',
-        include_adult: 'Incluir Contenido Adulto',
-        include_adult_description: 'Mostrar contenido adulto/maduro en resultados de búsqueda',
-        validation_error_title: 'Error de Validación',
-        validation_error_message: 'Por favor proporciona un Token Bearer o una Clave API.',
-        save_success_title: 'Configuración Guardada',
-        save_success_message: 'Tu configuración de TMDB se ha guardado exitosamente.',
-        save_error_message: 'Error al guardar configuración de TMDB. Por favor intenta de nuevo.'
-      }
     },
     about: {
       title: 'Acerca de',

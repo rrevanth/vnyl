@@ -94,33 +94,6 @@ export const en: TranslationKey = {
         title: 'Information',
         description: 'Provider information and documentation'
       },
-      tmdb: {
-        title: 'TMDB (The Movie Database)',
-        description: 'Movie and TV show metadata',
-        using_defaults: 'Using Default Configuration',
-        using_custom_config: 'Using Custom Configuration',
-        defaults_description: 'Using built-in API keys and default settings. Configure custom settings below to use your own API keys.',
-        custom_config_description: 'Using your custom API configuration. All requests will use your provided API keys.',
-        authentication: 'Authentication',
-        authentication_description: 'Configure your TMDB API credentials. You need either a Bearer Token or API Key.',
-        bearer_token: 'Bearer Token',
-        bearer_token_placeholder: 'Enter your TMDB Bearer Token',
-        bearer_token_description: 'Preferred method. Get from TMDB API settings.',
-        api_key: 'API Key',
-        api_key_placeholder: 'Enter your TMDB API Key',
-        api_key_description: 'Alternative to Bearer Token. Get from TMDB API settings.',
-        configuration: 'Configuration',
-        configuration_description: 'Customize TMDB API behavior and content preferences.',
-        language: 'Language',
-        language_description: 'Language for movie and TV show metadata',
-        include_adult: 'Include Adult Content',
-        include_adult_description: 'Show adult/mature content in search results',
-        validation_error_title: 'Validation Error',
-        validation_error_message: 'Please provide either a Bearer Token or API Key.',
-        save_success_title: 'Settings Saved',
-        save_success_message: 'Your TMDB configuration has been saved successfully.',
-        save_error_message: 'Failed to save TMDB settings. Please try again.'
-      }
     },
     about: {
       title: 'About',

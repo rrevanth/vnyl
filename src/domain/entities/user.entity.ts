@@ -62,15 +62,9 @@ export interface ProviderPreferences {
   enabledProviders: Record<string, boolean>
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ProviderSettings {
-  tmdbSettings: TMDBSettings
-}
-
-export interface TMDBSettings {
-  bearerToken?: string
-  apiKey?: string
-  language: string
-  includeAdult: boolean
+  // Provider-specific settings will be added here as needed
 }
 
 export type HomeScreenLayoutPreference = 'grid' | 'list' | 'carousel'
@@ -107,12 +101,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
     regionSettings: 'US',
     enabledProviders: {}
   },
-  providerSettings: {
-    tmdbSettings: {
-      language: 'en-US',
-      includeAdult: false
-    }
-  },
+  providerSettings: {},
   homeScreenLayout: 'grid',
   notificationSettings: {
     enabled: true,
