@@ -8,6 +8,15 @@ export interface IEnvironmentService {
    */
   getApiBaseUrl(): string | undefined
 
+  /**
+   * Get TMDB API key from environment
+   */
+  getTmdbApiKey(): string | undefined
+
+  /**
+   * Get TMDB base URL from environment (with fallback to official TMDB API)
+   */
+  getTmdbBaseUrl(): string
 
   /**
    * Get environment mode (development, production, etc.)

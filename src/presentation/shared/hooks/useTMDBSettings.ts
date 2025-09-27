@@ -86,7 +86,7 @@ export const useTMDBSettings = () => {
       // For now, we'll simulate success if credentials are provided
       const hasCredentials = !!(settings.apiKey || settings.bearerToken)
       return hasCredentials
-    } catch (_error) {
+    } catch {
       return false
     } finally {
       setIsTesting(false)
@@ -121,7 +121,7 @@ export const useTMDBSettings = () => {
         // Use defaults if no saved settings
         setSettings({ ...DEFAULT_TMDB_SETTINGS })
       }
-    } catch (_error) {
+    } catch {
       // Fallback to defaults on error
       setSettings({ ...DEFAULT_TMDB_SETTINGS })
     } finally {

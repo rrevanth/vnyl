@@ -146,6 +146,8 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
+
+
   // Log successful initialization
   const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
   logger.info('DI Container initialized successfully', {

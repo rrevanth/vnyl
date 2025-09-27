@@ -135,8 +135,8 @@ export class TMDBConfigService implements ITMDBConfigService {
   }
 
   private initializeConfig(): TMDBConfig {
-    const apiKey = this.environmentService.get('EXPO_PUBLIC_TMDB_API_KEY')
-    const baseURL = this.environmentService.get('EXPO_PUBLIC_TMDB_BASE_URL') || 'https://api.themoviedb.org/3'
+    const apiKey = this.environmentService.getTmdbApiKey()
+    const baseURL = this.environmentService.getTmdbBaseUrl()!
 
     if (!apiKey) {
       throw new Error('TMDB API key not found in environment variables')
@@ -247,9 +247,6 @@ export class TMDBConfigService implements ITMDBConfigService {
     this.logger.info('TMDB preferences updated', {
       preferences: this.userPreferences
     })
-
-    // TODO: Persist to user preference service here
-    // This would update the user preferences and trigger a cache refresh
   }
 
   getPreferences(): TMDBUserPreferences {

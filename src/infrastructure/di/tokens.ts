@@ -21,7 +21,8 @@ export const TOKENS = {
   UPDATE_USER_PREFERENCES_USE_CASE: Symbol('UpdateUserPreferencesUseCase'),
   RESET_USER_PREFERENCES_USE_CASE: Symbol('ResetUserPreferencesUseCase'),
   UPDATE_USER_THEME_USE_CASE: Symbol('UpdateUserThemeUseCase'),
-  UPDATE_USER_LOCALE_USE_CASE: Symbol('UpdateUserLocaleUseCase')
+  UPDATE_USER_LOCALE_USE_CASE: Symbol('UpdateUserLocaleUseCase'),
+
 } as const
 
 export type ServiceToken = typeof TOKENS[keyof typeof TOKENS]

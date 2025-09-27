@@ -232,7 +232,7 @@ export type MovieSimilarResponse = PaginatedResponse<MovieSummary>
 /**
  * Movie reviews response
  */
-export interface MovieReviewsResponse extends PaginatedResponse<{
+export type MovieReviewsResponse = PaginatedResponse<{
   /** Review ID */
   id: string
   /** Author username */
@@ -252,12 +252,12 @@ export interface MovieReviewsResponse extends PaginatedResponse<{
   updated_at: string
   /** Review URL */
   url: string
-}> {}
+}>
 
 /**
  * Movie lists response  
  */
-export interface MovieListsResponse extends PaginatedResponse<{
+export type MovieListsResponse = PaginatedResponse<{
   /** List ID */
   id: number
   /** List name */
@@ -274,7 +274,7 @@ export interface MovieListsResponse extends PaginatedResponse<{
   list_type: string
   /** Poster path */
   poster_path: string | null
-}> {}
+}>
 
 /**
  * Movie account states response (requires authentication)

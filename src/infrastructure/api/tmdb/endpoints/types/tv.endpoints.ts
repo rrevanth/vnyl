@@ -360,7 +360,7 @@ export type TVSimilarResponse = PaginatedResponse<TVShowSummary>
 /**
  * TV reviews response
  */
-export interface TVReviewsResponse extends PaginatedResponse<{
+export type TVReviewsResponse = PaginatedResponse<{
   /** Review ID */
   id: string
   /** Author username */
@@ -380,7 +380,7 @@ export interface TVReviewsResponse extends PaginatedResponse<{
   updated_at: string
   /** Review URL */
   url: string
-}> {}
+}>
 
 /**
  * TV account states response (requires authentication)

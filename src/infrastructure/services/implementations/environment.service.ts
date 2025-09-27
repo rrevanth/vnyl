@@ -16,6 +16,14 @@ export class EnvironmentService implements IEnvironmentService {
     return this.get('EXPO_PUBLIC_API_BASE_URL')
   }
 
+  getTmdbApiKey(): string | undefined {
+    return this.get('EXPO_PUBLIC_TMDB_API_KEY')
+  }
+
+  getTmdbBaseUrl(): string {
+    return this.get('EXPO_PUBLIC_TMDB_BASE_URL', 'https://api.themoviedb.org/3')!
+  }
+
   getEnvironment(): string {
     return this.get('NODE_ENV', 'development')!
   }
@@ -36,6 +44,12 @@ export class EnvironmentService implements IEnvironmentService {
       switch (key) {
         case 'EXPO_PUBLIC_API_BASE_URL':
           value = process.env.EXPO_PUBLIC_API_BASE_URL
+          break
+        case 'EXPO_PUBLIC_TMDB_API_KEY':
+          value = process.env.EXPO_PUBLIC_TMDB_API_KEY
+          break
+        case 'EXPO_PUBLIC_TMDB_BASE_URL':
+          value = process.env.EXPO_PUBLIC_TMDB_BASE_URL
           break
         case 'NODE_ENV':
           value = process.env.NODE_ENV

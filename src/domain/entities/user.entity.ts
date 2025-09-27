@@ -1,6 +1,6 @@
 import type { Locale } from '@/src/presentation/shared/i18n'
-import type { TMDBSettings } from './provider-configs.entity'
-import { DEFAULT_TMDB_SETTINGS } from './provider-configs.entity'
+import type { TMDBSettings } from './tmdb-settings.entity'
+import { DEFAULT_TMDB_SETTINGS } from './tmdb-settings.entity'
 
 export type { Locale } from '@/src/presentation/shared/i18n'
 

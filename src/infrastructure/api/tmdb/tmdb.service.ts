@@ -26,6 +26,31 @@ export interface ITMDBService {
    * Initialize the service (fetch image configuration, etc.)
    */
   initialize(): Promise<void>
+
+  /**
+   * Get TMDB configuration (for health checks)
+   */
+  getConfiguration(): Promise<any>
+
+  /**
+   * Get trending movies
+   */
+  getTrendingMovies(params?: { page?: number }): Promise<any>
+
+  /**
+   * Get trending TV shows
+   */
+  getTrendingTV(params?: { page?: number }): Promise<any>
+
+  /**
+   * Get popular movies
+   */
+  getPopularMovies(params?: { page?: number }): Promise<any>
+
+  /**
+   * Get popular TV shows
+   */
+  getPopularTV(params?: { page?: number }): Promise<any>
 }
 
 /**
@@ -62,6 +87,43 @@ export class TMDBService implements ITMDBService {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
       console.warn('Failed to fetch TMDB image configuration, using defaults:', errorInstance.message)
     }
+  }
+
+  /**
+   * Get TMDB configuration (for health checks)
+   */
+  async getConfiguration(): Promise<any> {
+    return this.client.configuration.getApiConfiguration()
+  }
+
+  /**
+   * Get trending movies
+   */
+  async getTrendingMovies(params?: { page?: number }): Promise<any> {
+    // Note: trending endpoints only accept language, not page
+    return this.client.trending.getTrendingMovies('week')
+  }
+
+  /**
+   * Get trending TV shows
+   */
+  async getTrendingTV(params?: { page?: number }): Promise<any> {
+    // Note: trending endpoints only accept language, not page
+    return this.client.trending.getTrendingTV('week')
+  }
+
+  /**
+   * Get popular movies
+   */
+  async getPopularMovies(params?: { page?: number }): Promise<any> {
+    return this.client.movies.getPopular(params)
+  }
+
+  /**
+   * Get popular TV shows
+   */
+  async getPopularTV(params?: { page?: number }): Promise<any> {
+    return this.client.tv.getPopular(params)
   }
 }
 

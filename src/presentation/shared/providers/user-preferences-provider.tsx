@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
-import { useGetOrCreateUserUseCase } from '@/src/infrastructure/di'
-import { SettingsLogger } from '@/src/presentation/shared/utils/settings-logger'
+import { useGetOrCreateUserUseCase, useLogging } from '@/src/infrastructure/di'
 import type {
   UserPreferences,
   ThemePreference,
@@ -54,28 +53,30 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
 }) => {
   // Safely try to get services, handling DI container race condition
   let getOrCreateUserUseCase: any = null
+  let logger: any = null
 
   try {
     getOrCreateUserUseCase = useGetOrCreateUserUseCase()
+    logger = useLogging()
   } catch {
     // Services not ready yet, continue with default preferences
   }
 
   // Initialize user preferences from backend
   useEffect(() => {
-    if (!getOrCreateUserUseCase) {
-      SettingsLogger.providerNotReady()
+    if (!getOrCreateUserUseCase || !logger) {
+      // Services not ready yet
       return
     }
 
     const initializePreferences = async () => {
       try {
-        SettingsLogger.providerStart('user preferences initialization')
+        logger.info('UserPreferencesProvider: Starting user preferences initialization')
         userPreferencesState.isLoading.set(true)
         userPreferencesState.error.set(null)
 
         const user = await getOrCreateUserUseCase.execute()
-        SettingsLogger.providerLoaded({
+        logger.info('UserPreferencesProvider: Loaded user preferences from storage', {
           userId: user.userId,
           themeMode: user.preferences.theme?.mode,
           accentColor: user.preferences.theme?.accentColor,
@@ -86,12 +87,12 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
 
         userPreferencesState.preferences.set(user.preferences)
         userPreferencesState.ready.set(true)
-        SettingsLogger.providerSuccess('User preferences state')
+        logger.info('UserPreferencesProvider: User preferences state updated successfully')
       } catch (error) {
-        SettingsLogger.providerError('load user preferences', error)
+        logger.error('UserPreferencesProvider: Failed to load user preferences', error)
         userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
         // Continue with default preferences
-        SettingsLogger.providerFallback('default preferences')
+        logger.info('UserPreferencesProvider: Falling back to default preferences')
         userPreferencesState.preferences.set(DEFAULT_USER_PREFERENCES)
       } finally {
         userPreferencesState.isLoading.set(false)
@@ -99,18 +100,18 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
     }
 
     initializePreferences()
-  }, [getOrCreateUserUseCase])
+  }, [getOrCreateUserUseCase, logger])
 
   const refresh = async (): Promise<void> => {
-    if (!getOrCreateUserUseCase) return
+    if (!getOrCreateUserUseCase || !logger) return
 
     try {
-      SettingsLogger.providerRefreshing()
+      logger.info('UserPreferencesProvider: Refreshing user preferences')
       userPreferencesState.isLoading.set(true)
       userPreferencesState.error.set(null)
 
       const user = await getOrCreateUserUseCase.execute()
-      SettingsLogger.providerRefreshed({
+      logger.info('UserPreferencesProvider: Refreshed user preferences', {
         userId: user.userId,
         themeMode: user.preferences.theme?.mode,
         accentColor: user.preferences.theme?.accentColor,
@@ -120,7 +121,7 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
       })
       userPreferencesState.preferences.set(user.preferences)
     } catch (error) {
-      SettingsLogger.providerError('refresh user preferences', error)
+      logger.error('UserPreferencesProvider: Failed to refresh user preferences', error)
       userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
     } finally {
       userPreferencesState.isLoading.set(false)

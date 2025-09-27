@@ -235,8 +235,6 @@ export const createTheme = (
   transition
 })
 
-// Backwards compatibility - keep the original function for simple theme creation
-export const createSimpleTheme = (mode: ThemeMode): Theme => createTheme(mode)
 
 // Pre-defined themes
 export const lightTheme = createTheme('light')

@@ -5,7 +5,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import axiosRetry from 'axios-retry'
+import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
 import type { 
   HttpClientConfig, 
   RequestOptions, 
@@ -47,7 +47,7 @@ export class HttpClient {
       },
       retryCondition: (error) => {
         // Retry on network errors or 5xx status codes
-        return axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+        return isNetworkOrIdempotentRequestError(error) ||
                (error.response?.status !== undefined && error.response.status >= 500)
       },
       onRetry: (retryCount, error) => {

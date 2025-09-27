@@ -123,16 +123,12 @@ export interface CollectionSearchParams extends PaginationParams {
 /**
  * Company search parameters
  */
-export interface CompanySearchParams extends PaginationParams {
-  /** Optional page number for pagination */
-}
+export type CompanySearchParams = PaginationParams
 
 /**
  * Keyword search parameters
  */
-export interface KeywordSearchParams extends PaginationParams {
-  /** Optional page number for pagination */
-}
+export type KeywordSearchParams = PaginationParams
 
 /**
  * Search endpoints interface
