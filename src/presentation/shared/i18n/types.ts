@@ -9,6 +9,7 @@ export interface TranslationKey {
     cancel: string
     confirm: string
     save: string
+    reset: string
     delete: string
     edit: string
     done: string
@@ -129,6 +130,54 @@ export interface TranslationKey {
         save_success_message: string
         save_error_message: string
         validate_and_save: string
+        
+        // Stack navigation titles
+        account_settings_title: string
+        capabilities_title: string
+        
+        // Account settings screen
+        capabilities_section_title: string
+        capabilities_section_description: string
+        manage_capabilities: string
+        manage_capabilities_description: string
+        
+        // Capabilities screen
+        capabilities_header_title: string
+        capabilities_header_description: string
+        available_capabilities: string
+        loading_capabilities: string
+        capabilities_error_title: string
+        capabilities_save_success_title: string
+        capabilities_save_success_message: string
+        capabilities_save_error_message: string
+        capabilities_reset_title: string
+        capabilities_reset_message: string
+        
+        // Individual capability descriptions
+        capability_metadata_title: string
+        capability_metadata_description: string
+        capability_catalog_title: string
+        capability_catalog_description: string
+        capability_search_title: string
+        capability_search_description: string
+        capability_stream_title: string
+        capability_stream_description: string
+        capability_recommendation_title: string
+        capability_recommendation_description: string
+        capability_collection_title: string
+        capability_collection_description: string
+        capability_watchlist_title: string
+        capability_watchlist_description: string
+        capability_progress_title: string
+        capability_progress_description: string
+        capability_rating_title: string
+        capability_rating_description: string
+        capability_image_title: string
+        capability_image_description: string
+        capability_video_title: string
+        capability_video_description: string
+        capability_subtitle_title: string
+        capability_subtitle_description: string
       }
     }
     about: {
@@ -139,6 +188,60 @@ export interface TranslationKey {
       license: string
       privacy_policy: string
       terms_of_service: string
+    }
+  }
+
+  // Providers
+  providers: {
+    capabilities: {
+      metadata: {
+        title: string
+        description: string
+      }
+      catalog: {
+        title: string
+        description: string
+      }
+      search: {
+        title: string
+        description: string
+      }
+      stream: {
+        title: string
+        description: string
+      }
+      recommendation: {
+        title: string
+        description: string
+      }
+      collection: {
+        title: string
+        description: string
+      }
+      watchlist: {
+        title: string
+        description: string
+      }
+      progress: {
+        title: string
+        description: string
+      }
+      rating: {
+        title: string
+        description: string
+      }
+      image: {
+        title: string
+        description: string
+      }
+      video: {
+        title: string
+        description: string
+      }
+      subtitle: {
+        title: string
+        description: string
+      }
     }
   }
 

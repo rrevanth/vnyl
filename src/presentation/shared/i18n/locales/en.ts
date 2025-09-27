@@ -8,6 +8,7 @@ export const en: TranslationKey = {
     cancel: 'Cancel',
     confirm: 'Confirm',
     save: 'Save',
+    reset: 'Reset',
     delete: 'Delete',
     edit: 'Edit',
     done: 'Done',
@@ -184,6 +185,59 @@ export const en: TranslationKey = {
       license: 'License',
       privacy_policy: 'Privacy Policy',
       terms_of_service: 'Terms of Service'
+    }
+  },
+
+  providers: {
+    capabilities: {
+      metadata: {
+        title: 'Metadata',
+        description: 'Get detailed information about movies and TV shows'
+      },
+      catalog: {
+        title: 'Catalogs',
+        description: 'Browse organized collections of content'
+      },
+      search: {
+        title: 'Search',
+        description: 'Search for movies, TV shows, and people'
+      },
+      stream: {
+        title: 'Streaming',
+        description: 'Find streaming links and sources'
+      },
+      recommendation: {
+        title: 'Recommendations',
+        description: 'Get personalized content suggestions'
+      },
+      collection: {
+        title: 'Collections',
+        description: 'Manage custom content collections'
+      },
+      watchlist: {
+        title: 'Watchlist',
+        description: 'Track movies and shows to watch later'
+      },
+      progress: {
+        title: 'Watch Progress',
+        description: 'Track viewing progress and history'
+      },
+      rating: {
+        title: 'Ratings',
+        description: 'Rate and review content'
+      },
+      image: {
+        title: 'Images',
+        description: 'Access posters, backdrops, and other artwork'
+      },
+      video: {
+        title: 'Videos',
+        description: 'Access trailers, clips, and featurettes'
+      },
+      subtitle: {
+        title: 'Subtitles',
+        description: 'Download subtitles in multiple languages'
+      }
     }
   },
 

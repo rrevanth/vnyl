@@ -85,34 +85,55 @@ export function registerTMDBProviders(
     tmdbClient
   }
 
-  logger.info('Registering TMDB providers with factory', {
+  logger.info('Starting TMDB provider registration with factory', {
     providerId: effectiveConfig.providerId,
     enabled: effectiveConfig.enabled,
     priority: effectiveConfig.priority,
-    hasValidClient: !!tmdbClient
+    hasValidClient: !!tmdbClient,
+    clientType: tmdbClient?.constructor?.name || 'unknown',
+    capabilitiesToRegister: [
+      ProviderCapability.METADATA,
+      ProviderCapability.CATALOG,
+      ProviderCapability.SEARCH
+    ]
   })
 
   try {
     // Register Metadata Provider
+    logger.debug('Registering TMDB Metadata Provider', undefined, {
+      providerId: effectiveConfig.providerId,
+      capability: ProviderCapability.METADATA
+    })
     factory.registerProvider(
       effectiveConfig.providerId,
       ProviderCapability.METADATA,
       TMDBMetadataProvider as any
     )
+    logger.debug('TMDB Metadata Provider registered successfully')
 
     // Register Catalog Provider
+    logger.debug('Registering TMDB Catalog Provider', undefined, {
+      providerId: effectiveConfig.providerId,
+      capability: ProviderCapability.CATALOG
+    })
     factory.registerProvider(
       effectiveConfig.providerId,
       ProviderCapability.CATALOG,
       TMDBCatalogProvider as any
     )
+    logger.debug('TMDB Catalog Provider registered successfully')
 
-    // Register Search Provider
+    // Register Search Provider  
+    logger.debug('Registering TMDB Search Provider', undefined, {
+      providerId: effectiveConfig.providerId,
+      capability: ProviderCapability.SEARCH
+    })
     factory.registerProvider(
       effectiveConfig.providerId,
       ProviderCapability.SEARCH,
       TMDBSearchProvider as any
     )
+    logger.debug('TMDB Search Provider registered successfully')
 
     // Could register additional capabilities in the future:
     // - Rating Provider (for user ratings via TMDB account)
@@ -257,13 +278,27 @@ export class TMDBProviderFactoryHelper {
    * Initialize TMDB providers with full registration
    */
   async initialize(config?: Partial<TMDBProviderConfig>): Promise<void> {
-    this.logger.info('Initializing TMDB provider system')
+    this.logger.info('Starting TMDB provider system initialization', {
+      hasValidClient: !!this.tmdbClient,
+      providedConfig: !!config
+    })
 
     try {
       // Register all TMDB providers
+      this.logger.debug('Calling registerTMDBProviders')
       registerTMDBProviders(this.factory, this.logger, this.tmdbClient, config)
+      this.logger.debug('registerTMDBProviders completed successfully')
+
+      // Validate that providers were registered correctly  
+      const registeredCapabilities = this.factory.getProviderCapabilities('tmdb')
+      this.logger.info('TMDB providers registered, checking capabilities', {
+        registeredCapabilities,
+        capabilityCount: registeredCapabilities.length,
+        expectedCapabilities: ['metadata', 'catalog', 'search']
+      })
 
       // Validate health of registered providers
+      this.logger.debug('Starting TMDB provider health checks')
       const healthResults = await checkTMDBProviderHealth(this.factory, this.logger)
       const unhealthyProviders = healthResults.filter(result => !result.healthy)
 
@@ -271,17 +306,25 @@ export class TMDBProviderFactoryHelper {
         this.logger.warn('Some TMDB providers failed health check', undefined, {
           unhealthyProviders: unhealthyProviders.map(p => ({
             capability: p.capability,
-            error: p.error
-          }))
+            error: p.error,
+            responseTime: p.responseTime
+          })),
+          healthyProviders: healthResults.filter(result => result.healthy).length,
+          totalProviders: healthResults.length
         })
       } else {
-        this.logger.info('All TMDB providers initialized successfully and are healthy')
+        this.logger.info('All TMDB providers initialized successfully and are healthy', {
+          totalProviders: healthResults.length,
+          capabilities: healthResults.map(r => r.capability)
+        })
       }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      this.logger.error('Failed to initialize TMDB provider system', undefined, {
-        error: errorMessage
+      this.logger.error('Failed to initialize TMDB provider system', error instanceof Error ? error : new Error(errorMessage), {
+        error: errorMessage,
+        hasValidClient: !!this.tmdbClient,
+        clientType: this.tmdbClient?.constructor?.name || 'unknown'
       })
       throw error
     }

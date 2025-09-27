@@ -13,6 +13,8 @@ import {
 import { GetBasicCatalogItemsUseCase } from '@/src/domain/usecases/get-basic-catalog-items.usecase'
 import { GetAllCatalogsUseCase } from '@/src/domain/usecases/get-all-catalogs.usecase'
 import { MediaDetailUseCase } from '@/src/domain/use-cases/media-detail.use-case'
+import { GetProviderCapabilitiesUseCase } from '@/src/domain/usecases/get-provider-capabilities.usecase'
+import { UpdateProviderCapabilitiesUseCase } from '@/src/domain/usecases/update-provider-capabilities.usecase'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
@@ -27,8 +29,13 @@ import { MediaRepository } from '@/src/data/repositories/implementations/media.r
 import { 
   ProviderFactory, 
   ProviderRegistry, 
-  TMDBProviderFactoryHelper 
+  TMDBProviderFactoryHelper,
+  ProviderCapability,
+  BaseProviderConfig
 } from '@/src/infrastructure/providers'
+import { TMDBMetadataProvider } from '@/src/infrastructure/providers/tmdb/tmdb-metadata-provider'
+import { TMDBCatalogProvider } from '@/src/infrastructure/providers/tmdb/tmdb-catalog-provider'
+import { TMDBSearchProvider } from '@/src/infrastructure/providers/tmdb/tmdb-search-provider'
 
 const container = new DIContainer()
 
@@ -262,6 +269,25 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
+  // Provider Capabilities Use Cases
+  container.registerSingleton<GetProviderCapabilitiesUseCase>(
+    TOKENS.GET_PROVIDER_CAPABILITIES_USE_CASE,
+    () => {
+      const providerRegistry = container.resolve<ProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new GetProviderCapabilitiesUseCase(providerRegistry, logger)
+    }
+  )
+
+  container.registerSingleton<UpdateProviderCapabilitiesUseCase>(
+    TOKENS.UPDATE_PROVIDER_CAPABILITIES_USE_CASE,
+    () => {
+      const userRepository = container.resolve<IUserRepository>(TOKENS.USER_REPOSITORY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new UpdateProviderCapabilitiesUseCase(userRepository, logger)
+    }
+  )
+
   // Log successful initialization
   const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
   logger.info('DI Container initialized successfully', {
@@ -287,7 +313,9 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'UpdateUserPreferencesUseCase',
       'ResetUserPreferencesUseCase',
       'UpdateUserThemeUseCase',
-      'UpdateUserLocaleUseCase'
+      'UpdateUserLocaleUseCase',
+      'GetProviderCapabilitiesUseCase',
+      'UpdateProviderCapabilitiesUseCase'
     ]
   })
 }
@@ -299,14 +327,70 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
 export const initializeTMDBProviders = async (): Promise<void> => {
   const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
   const tmdbProviderHelper = container.resolve<TMDBProviderFactoryHelper>(TOKENS.TMDB_PROVIDER_HELPER)
+  const providerRegistry = container.resolve<ProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
 
   try {
-    logger.info('Initializing TMDB providers...')
+    logger.info('Starting TMDB provider initialization with registry registration')
+    
+    // Initialize the TMDB provider system (this registers with factory)
     await tmdbProviderHelper.initialize()
-    logger.info('TMDB providers initialized successfully')
+    
+    // Now register TMDB providers with the registry using the proper pattern
+    const tmdbClient = container.resolve<TMDBClient>(TOKENS.TMDB_CLIENT)
+    const baseConfig = {
+      id: 'tmdb',
+      name: 'TMDB Provider',
+      type: 'external',
+      enabled: true,
+      priority: 10,
+      settings: {}
+    }
+    
+    // Register TMDB with all its capabilities in the registry
+    // Create wrapper factories that handle TMDBClient dependency
+    const tmdbCapabilities = {
+      [ProviderCapability.METADATA]: class extends TMDBMetadataProvider {
+        constructor(config: BaseProviderConfig, logger: ILoggingService) {
+          super(config, logger, tmdbClient)
+        }
+      },
+      [ProviderCapability.CATALOG]: class extends TMDBCatalogProvider {
+        constructor(config: BaseProviderConfig, logger: ILoggingService) {
+          super(config, logger, tmdbClient)
+        }
+      },
+      [ProviderCapability.SEARCH]: class extends TMDBSearchProvider {
+        constructor(config: BaseProviderConfig, logger: ILoggingService) {
+          super(config, logger, tmdbClient)
+        }
+      }
+    }
+    
+    logger.debug('Registering TMDB providers with registry', undefined, {
+      providerId: 'tmdb',
+      capabilities: Object.keys(tmdbCapabilities),
+      capabilityCount: Object.keys(tmdbCapabilities).length
+    })
+    
+    providerRegistry.registerProviderWithCapabilities('tmdb', tmdbCapabilities, baseConfig)
+    
+    // Verify registration was successful
+    const registeredCapabilities = providerRegistry.getAvailableCapabilities('tmdb')
+    const catalogProviders = providerRegistry.getProvidersForCapability(ProviderCapability.CATALOG)
+    
+    logger.info('TMDB providers registered with registry successfully', {
+      registeredCapabilities,
+      capabilitiesCount: registeredCapabilities.length,
+      catalogProvidersCount: catalogProviders.length,
+      catalogProviders: catalogProviders.map(p => p.providerId)
+    })
+    
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('Failed to initialize TMDB providers', undefined, { error: errorMessage })
+    logger.error('Failed to initialize TMDB providers', error instanceof Error ? error : new Error(errorMessage), { 
+      error: errorMessage,
+      context: 'TMDB-registry-initialization'
+    })
     throw error
   }
 }

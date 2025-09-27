@@ -1,4 +1,4 @@
-import { initializeDI } from '@/src/infrastructure/di'
+import { initializeDI, initializeTMDBProviders } from '@/src/infrastructure/di'
 import { ApiConfig, ILoggingService, IUserPreferenceService } from '@/src/domain/services'
 import { container } from '@/src/infrastructure/di/setup'
 import { TOKENS } from '@/src/infrastructure/di/tokens'
@@ -21,6 +21,19 @@ export const initializeApp = async (): Promise<void> => {
   initializeDI(apiConfig)
 
   const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+
+  // Initialize TMDB providers after DI container is ready
+  try {
+    logger.debug('Initializing TMDB providers')
+    await initializeTMDBProviders()
+    logger.info('TMDB providers initialized successfully')
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    logger.error('Failed to initialize TMDB providers', error instanceof Error ? error : new Error(errorMessage), {
+      context: 'app-initialization'
+    })
+    // Don't throw - allow app to continue even if TMDB initialization fails
+  }
 
   // Initialize UserPreferenceService first (before any other services that might use it)
   try {

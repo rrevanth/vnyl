@@ -33,7 +33,6 @@ export default observer(function TMDBSettingsLayout() {
           color: theme.colors.text.primary
         },
         headerShadowVisible: false,
-        headerBackTitleVisible: false,
         animation: 'slide_from_right'
       }}
     >

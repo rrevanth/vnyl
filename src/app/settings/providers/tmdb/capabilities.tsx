@@ -15,66 +15,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
-import { Button, SettingsToggle } from '@/src/presentation/components'
-import { useDI } from '@/src/presentation/shared/hooks/useDI'
+import { Button, CapabilityToggle } from '@/src/presentation/components'
+import { useDI } from '@/src/presentation/shared/hooks/use-di'
 import { GetProviderCapabilitiesUseCase } from '@/src/domain/usecases/get-provider-capabilities.usecase'
 import { UpdateProviderCapabilitiesUseCase } from '@/src/domain/usecases/update-provider-capabilities.usecase'
+import { TOKENS } from '@/src/infrastructure/di/tokens'
 import { useSettingsActions } from '@/src/presentation/shared/hooks/useSettingsActions'
 import type { Theme } from '@/src/presentation/shared/theme'
 import { ProviderCapability } from '@/src/infrastructure/providers/provider-interfaces'
 import type { CapabilityConfig } from '@/src/domain/entities'
-
-// Capability display information
-const CAPABILITY_INFO: Record<ProviderCapability, { titleKey: string; descriptionKey: string }> = {
-  [ProviderCapability.METADATA]: {
-    titleKey: 'settings.providers.tmdb.capability_metadata_title',
-    descriptionKey: 'settings.providers.tmdb.capability_metadata_description'
-  },
-  [ProviderCapability.CATALOG]: {
-    titleKey: 'settings.providers.tmdb.capability_catalog_title',
-    descriptionKey: 'settings.providers.tmdb.capability_catalog_description'
-  },
-  [ProviderCapability.SEARCH]: {
-    titleKey: 'settings.providers.tmdb.capability_search_title',
-    descriptionKey: 'settings.providers.tmdb.capability_search_description'
-  },
-  [ProviderCapability.STREAM]: {
-    titleKey: 'settings.providers.tmdb.capability_stream_title',
-    descriptionKey: 'settings.providers.tmdb.capability_stream_description'
-  },
-  [ProviderCapability.RECOMMENDATION]: {
-    titleKey: 'settings.providers.tmdb.capability_recommendation_title',
-    descriptionKey: 'settings.providers.tmdb.capability_recommendation_description'
-  },
-  [ProviderCapability.COLLECTION]: {
-    titleKey: 'settings.providers.tmdb.capability_collection_title',
-    descriptionKey: 'settings.providers.tmdb.capability_collection_description'
-  },
-  [ProviderCapability.WATCHLIST]: {
-    titleKey: 'settings.providers.tmdb.capability_watchlist_title',
-    descriptionKey: 'settings.providers.tmdb.capability_watchlist_description'
-  },
-  [ProviderCapability.PROGRESS]: {
-    titleKey: 'settings.providers.tmdb.capability_progress_title',
-    descriptionKey: 'settings.providers.tmdb.capability_progress_description'
-  },
-  [ProviderCapability.RATING]: {
-    titleKey: 'settings.providers.tmdb.capability_rating_title',
-    descriptionKey: 'settings.providers.tmdb.capability_rating_description'
-  },
-  [ProviderCapability.IMAGE]: {
-    titleKey: 'settings.providers.tmdb.capability_image_title',
-    descriptionKey: 'settings.providers.tmdb.capability_image_description'
-  },
-  [ProviderCapability.VIDEO]: {
-    titleKey: 'settings.providers.tmdb.capability_video_title',
-    descriptionKey: 'settings.providers.tmdb.capability_video_description'
-  },
-  [ProviderCapability.SUBTITLE]: {
-    titleKey: 'settings.providers.tmdb.capability_subtitle_title',
-    descriptionKey: 'settings.providers.tmdb.capability_subtitle_description'
-  }
-}
 
 export default observer(function TMDBCapabilitiesScreen() {
   const theme = useTheme()
@@ -82,8 +31,8 @@ export default observer(function TMDBCapabilitiesScreen() {
   const styles = createStyles(theme)
 
   // Dependency injection
-  const getProviderCapabilitiesUseCase = useDI(GetProviderCapabilitiesUseCase)
-  const updateProviderCapabilitiesUseCase = useDI(UpdateProviderCapabilitiesUseCase)
+  const getProviderCapabilitiesUseCase = useDI<GetProviderCapabilitiesUseCase>(TOKENS.GET_PROVIDER_CAPABILITIES_USE_CASE)
+  const updateProviderCapabilitiesUseCase = useDI<UpdateProviderCapabilitiesUseCase>(TOKENS.UPDATE_PROVIDER_CAPABILITIES_USE_CASE)
 
   // Settings state
   const { preferences } = useSettingsActions()
@@ -91,8 +40,8 @@ export default observer(function TMDBCapabilitiesScreen() {
 
   // Component state
   const [availableCapabilities, setAvailableCapabilities] = useState<ProviderCapability[]>([])
-  const [capabilitySettings, setCapabilitySettings] = useState<Record<ProviderCapability, CapabilityConfig>>({})
-  const [originalSettings, setOriginalSettings] = useState<Record<ProviderCapability, CapabilityConfig>>({})
+  const [capabilitySettings, setCapabilitySettings] = useState<Partial<Record<ProviderCapability, CapabilityConfig>>>({})
+  const [originalSettings, setOriginalSettings] = useState<Partial<Record<ProviderCapability, CapabilityConfig>>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -109,10 +58,10 @@ export default observer(function TMDBCapabilitiesScreen() {
 
       // Initialize settings from current user preferences or defaults
       const currentSettings = currentTMDBSettings?.capabilitySettings || {}
-      const initialSettings: Record<ProviderCapability, CapabilityConfig> = {}
+      const initialSettings: Partial<Record<ProviderCapability, CapabilityConfig>> = {}
 
       // Create settings for all available capabilities
-      capabilities.forEach(capability => {
+      capabilities.forEach((capability: ProviderCapability) => {
         initialSettings[capability] = currentSettings[capability] || {
           enabled: getDefaultCapabilityState(capability)
         }
@@ -177,13 +126,13 @@ export default observer(function TMDBCapabilitiesScreen() {
       setError(null)
 
       // Create settings object with only available capabilities
-      const settingsToSave: Record<ProviderCapability, CapabilityConfig> = {}
-      availableCapabilities.forEach(capability => {
-        settingsToSave[capability] = capabilitySettings[capability]
+      const settingsToSave: Partial<Record<ProviderCapability, CapabilityConfig>> = {}
+      availableCapabilities.forEach((capability: ProviderCapability) => {
+        settingsToSave[capability] = capabilitySettings[capability]!
       })
 
       // Update provider capabilities
-      await updateProviderCapabilitiesUseCase.execute('tmdb', settingsToSave)
+      await updateProviderCapabilitiesUseCase.execute('tmdb', settingsToSave as Record<ProviderCapability, CapabilityConfig>)
 
       // Update original settings to reflect saved state
       setOriginalSettings({ ...capabilitySettings })
@@ -294,16 +243,17 @@ export default observer(function TMDBCapabilitiesScreen() {
           </Text>
           
           {availableCapabilities.map(capability => {
-            const info = CAPABILITY_INFO[capability]
             const isEnabled = capabilitySettings[capability]?.enabled ?? false
 
             return (
               <View key={capability} style={styles.capabilityContainer}>
-                <SettingsToggle
-                  title={t(info.titleKey)}
-                  description={t(info.descriptionKey)}
-                  value={isEnabled}
-                  onValueChange={(enabled) => handleCapabilityToggle(capability, enabled)}
+                <CapabilityToggle
+                  capability={capability}
+                  enabled={isEnabled}
+                  onToggle={handleCapabilityToggle}
+                  providerId="tmdb"
+                  disabled={saving}
+                  loading={false}
                 />
               </View>
             )
@@ -408,7 +358,7 @@ const createStyles = (theme: Theme): TMDBCapabilitiesStyles => StyleSheet.create
     lineHeight: theme.typography.body.lineHeight
   },
   errorBanner: {
-    backgroundColor: theme.colors.status?.error || theme.colors.accent.red,
+    backgroundColor: theme.colors.status?.error || '#FF453A',
     borderRadius: theme.radius.sm,
     padding: theme.spacing.sm,
     marginBottom: theme.spacing.md
@@ -446,11 +396,7 @@ const createStyles = (theme: Theme): TMDBCapabilitiesStyles => StyleSheet.create
     marginBottom: theme.spacing.md
   },
   capabilityContainer: {
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm
+    marginBottom: theme.spacing.sm
   },
   buttonContainer: {
     marginTop: theme.spacing.md

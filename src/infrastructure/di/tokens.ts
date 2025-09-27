@@ -16,6 +16,8 @@ export const TOKENS = {
   PROVIDER_FACTORY: Symbol('ProviderFactory'),
   PROVIDER_REGISTRY: Symbol('ProviderRegistry'),
   TMDB_PROVIDER_HELPER: Symbol('TMDBProviderFactoryHelper'),
+  GET_PROVIDER_CAPABILITIES_USE_CASE: Symbol('GetProviderCapabilitiesUseCase'),
+  UPDATE_PROVIDER_CAPABILITIES_USE_CASE: Symbol('UpdateProviderCapabilitiesUseCase'),
 
   // API Configuration
   API_CONFIG: Symbol('ApiConfig'),

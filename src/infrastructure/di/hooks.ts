@@ -13,6 +13,8 @@ import {
 } from '@/src/domain/usecases'
 import { GetBasicCatalogItemsUseCase } from '@/src/domain/usecases/get-basic-catalog-items.usecase'
 import { MediaDetailUseCase } from '@/src/domain/use-cases/media-detail.use-case'
+import { GetProviderCapabilitiesUseCase } from '@/src/domain/usecases/get-provider-capabilities.usecase'
+import { UpdateProviderCapabilitiesUseCase } from '@/src/domain/usecases/update-provider-capabilities.usecase'
 import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 
 export const useDI = () => {
@@ -115,6 +117,17 @@ export const useUpdateUserLocaleUseCase = (): UpdateUserLocaleUseCase => {
   return resolve<UpdateUserLocaleUseCase>(TOKENS.UPDATE_USER_LOCALE_USE_CASE)
 }
 
+// Provider Capabilities Use Case Hooks
+export const useGetProviderCapabilitiesUseCase = (): GetProviderCapabilitiesUseCase => {
+  const { resolve } = useDI()
+  return resolve<GetProviderCapabilitiesUseCase>(TOKENS.GET_PROVIDER_CAPABILITIES_USE_CASE)
+}
+
+export const useUpdateProviderCapabilitiesUseCase = (): UpdateProviderCapabilitiesUseCase => {
+  const { resolve } = useDI()
+  return resolve<UpdateProviderCapabilitiesUseCase>(TOKENS.UPDATE_PROVIDER_CAPABILITIES_USE_CASE)
+}
+
 // Convenience Preference Hooks
 export const useStreamingPreferences = () => {
   const userPreferenceService = useUserPreferenceService()
@@ -164,5 +177,53 @@ export const useTMDBServices = () => {
     // Helper methods
     isConfigured: () => configService.hasValidCredentials(),
     getConfig: () => configService.getEffectiveTMDBConfig()
+  }
+}
+
+// Provider Capabilities Management Hook
+export const useProviderCapabilities = () => {
+  const getCapabilitiesUseCase = useGetProviderCapabilitiesUseCase()
+  const updateCapabilitiesUseCase = useUpdateProviderCapabilitiesUseCase()
+  const logger = useLogging()
+
+  return {
+    // Get capabilities for a provider
+    getCapabilities: async (providerId: string) => {
+      try {
+        return await getCapabilitiesUseCase.execute(providerId)
+      } catch (error) {
+        const errorInstance = error instanceof Error ? error : new Error(String(error))
+        logger.error('Failed to get provider capabilities', errorInstance, { providerId })
+        throw errorInstance
+      }
+    },
+
+    // Update capability settings for a provider
+    updateCapabilities: async (
+      providerId: string, 
+      capabilitySettings: Parameters<typeof updateCapabilitiesUseCase.execute>[1]
+    ) => {
+      try {
+        return await updateCapabilitiesUseCase.execute(providerId, capabilitySettings)
+      } catch (error) {
+        const errorInstance = error instanceof Error ? error : new Error(String(error))
+        logger.error('Failed to update provider capabilities', errorInstance, { 
+          providerId, 
+          capabilityCount: Object.keys(capabilitySettings).length 
+        })
+        throw errorInstance
+      }
+    },
+
+    // Convenience methods for TMDB specifically
+    getTMDBCapabilities: async () => {
+      return await getCapabilitiesUseCase.execute('tmdb')
+    },
+
+    updateTMDBCapabilities: async (
+      capabilitySettings: Parameters<typeof updateCapabilitiesUseCase.execute>[1]
+    ) => {
+      return await updateCapabilitiesUseCase.execute('tmdb', capabilitySettings)
+    }
   }
 }

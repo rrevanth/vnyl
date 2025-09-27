@@ -8,6 +8,7 @@ export const es: TranslationKey = {
     cancel: 'Cancelar',
     confirm: 'Confirmar',
     save: 'Guardar',
+    reset: 'Restablecer',
     delete: 'Eliminar',
     edit: 'Editar',
     done: 'Listo',
@@ -125,7 +126,55 @@ export const es: TranslationKey = {
         save_success_title: 'Configuración Guardada',
         save_success_message: 'Tu configuración de TMDB se ha guardado exitosamente.',
         save_error_message: 'Error al guardar configuración de TMDB. Por favor intenta de nuevo.',
-        validate_and_save: 'Validar y Guardar'
+        validate_and_save: 'Validar y Guardar',
+        
+        // Stack navigation titles
+        account_settings_title: 'Configuración de Cuenta',
+        capabilities_title: 'Capacidades',
+        
+        // Account settings screen
+        capabilities_section_title: 'Capacidades del Proveedor',
+        capabilities_section_description: 'Configura qué funciones de TMDB están habilitadas para tu aplicación',
+        manage_capabilities: 'Gestionar Capacidades',
+        manage_capabilities_description: 'Habilitar o deshabilitar funciones específicas de TMDB',
+        
+        // Capabilities screen
+        capabilities_header_title: 'Capacidades de TMDB',
+        capabilities_header_description: 'Controla qué funciones de TMDB están activas. Deshabilitar capacidades no utilizadas puede mejorar el rendimiento.',
+        available_capabilities: 'Capacidades Disponibles',
+        loading_capabilities: 'Cargando capacidades...',
+        capabilities_error_title: 'Error al Cargar Capacidades',
+        capabilities_save_success_title: 'Capacidades Guardadas',
+        capabilities_save_success_message: 'Tus configuraciones de capacidades de TMDB se han actualizado exitosamente.',
+        capabilities_save_error_message: 'Error al guardar configuraciones de capacidades',
+        capabilities_reset_title: 'Restablecer Capacidades',
+        capabilities_reset_message: 'Esto restablecerá todas las configuraciones de capacidades a sus valores guardados actuales. ¿Estás seguro?',
+        
+        // Individual capability descriptions
+        capability_metadata_title: 'Metadatos',
+        capability_metadata_description: 'Información detallada de películas y series',
+        capability_catalog_title: 'Catálogo',
+        capability_catalog_description: 'Navegar colecciones de películas y series',
+        capability_search_title: 'Búsqueda',
+        capability_search_description: 'Buscar películas y series',
+        capability_stream_title: 'Transmisión',
+        capability_stream_description: 'Enlaces de transmisión e información de reproducción',
+        capability_recommendation_title: 'Recomendaciones',
+        capability_recommendation_description: 'Contenido similar y recomendaciones',
+        capability_collection_title: 'Colecciones',
+        capability_collection_description: 'Colecciones de películas y series',
+        capability_watchlist_title: 'Lista de Seguimiento',
+        capability_watchlist_description: 'Gestión de lista de seguimiento personal',
+        capability_progress_title: 'Seguimiento de Progreso',
+        capability_progress_description: 'Progreso de visualización e historial',
+        capability_rating_title: 'Calificaciones',
+        capability_rating_description: 'Calificaciones de usuarios y críticos',
+        capability_image_title: 'Imágenes',
+        capability_image_description: 'Pósters, fondos y arte',
+        capability_video_title: 'Videos',
+        capability_video_description: 'Tráilers y contenido de video',
+        capability_subtitle_title: 'Subtítulos',
+        capability_subtitle_description: 'Archivos de subtítulos y captions'
       }
     },
     about: {
@@ -136,6 +185,59 @@ export const es: TranslationKey = {
       license: 'Licencia',
       privacy_policy: 'Política de Privacidad',
       terms_of_service: 'Términos de Servicio'
+    }
+  },
+
+  providers: {
+    capabilities: {
+      metadata: {
+        title: 'Metadatos',
+        description: 'Obtener información detallada sobre películas y series de TV'
+      },
+      catalog: {
+        title: 'Catálogos',
+        description: 'Explorar colecciones organizadas de contenido'
+      },
+      search: {
+        title: 'Búsqueda',
+        description: 'Buscar películas, series de TV y personas'
+      },
+      stream: {
+        title: 'Transmisión',
+        description: 'Encontrar enlaces y fuentes de transmisión'
+      },
+      recommendation: {
+        title: 'Recomendaciones',
+        description: 'Obtener sugerencias de contenido personalizadas'
+      },
+      collection: {
+        title: 'Colecciones',
+        description: 'Gestionar colecciones de contenido personalizadas'
+      },
+      watchlist: {
+        title: 'Lista de Reproducción',
+        description: 'Rastrear películas y series para ver más tarde'
+      },
+      progress: {
+        title: 'Progreso de Visualización',
+        description: 'Rastrear progreso de visualización e historial'
+      },
+      rating: {
+        title: 'Calificaciones',
+        description: 'Calificar y reseñar contenido'
+      },
+      image: {
+        title: 'Imágenes',
+        description: 'Acceder a pósters, fondos y otras ilustraciones'
+      },
+      video: {
+        title: 'Videos',
+        description: 'Acceder a tráilers, clips y documentales'
+      },
+      subtitle: {
+        title: 'Subtítulos',
+        description: 'Descargar subtítulos en múltiples idiomas'
+      }
     }
   },
 
