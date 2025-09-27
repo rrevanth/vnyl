@@ -13,6 +13,3 @@
 [submodule "repos/nuvio"]
 	path = repos/nuvio
 	url = https://github.com/tapframe/NuvioStreaming.git
-[submodule "repos/vnyllll"]
-	path = repos/vnyllll
-	url = https://github.com/rrevanth/vnyllll
