@@ -1,8 +1,8 @@
 import { useCallback, useState, useEffect } from 'react'
-import { Alert } from 'react-native'
 import { useTranslation } from '@/src/presentation/shared/i18n'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
-import { useUpdateUserPreferencesUseCase, useTMDBService, useLogging } from '@/src/infrastructure/di'
+import { useUpdateUserPreferencesUseCase, useLogging } from '@/src/infrastructure/di'
+import { createHttpClient } from '@/src/infrastructure/api/tmdb/base/http.client'
 import type { TMDBSettings } from '@/src/domain/entities'
 import { DEFAULT_TMDB_SETTINGS } from '@/src/domain/entities'
 
@@ -16,7 +16,6 @@ export const useTMDBSettings = () => {
   const { t } = useTranslation()
   const userPreferencesContext = useUserPreferences()
   const updateUserPreferencesUseCase = useUpdateUserPreferencesUseCase()
-  const tmdbService = useTMDBService()
   const logger = useLogging()
   const [settings, setSettings] = useState<TMDBSettings>(DEFAULT_TMDB_SETTINGS)
   const [isLoading, setIsLoading] = useState(true)
@@ -66,68 +65,91 @@ export const useTMDBSettings = () => {
   }, [settings, userPreferencesContext, updateUserPreferencesUseCase])
 
   /**
-   * Test TMDB API connection
+   * Test TMDB API connection with user's custom credentials
+   * Only tests if user has provided custom credentials (API key or bearer token)
    */
-  const testConnection = useCallback(async (): Promise<boolean> => {
-    if (!settings.apiKey && !settings.bearerToken) {
-      Alert.alert(
-        t('common.error'),
-        t('settings.providers.tmdb.validation.api_key_required'),
-        [{ text: t('common.close') }]
-      )
-      return false
+  const testConnection = useCallback(async (testSettings?: Partial<TMDBSettings>): Promise<boolean> => {
+    const credentialsToTest = testSettings || settings
+    
+    // Only test if user has provided custom credentials
+    if (!credentialsToTest.apiKey && !credentialsToTest.bearerToken) {
+      throw new Error(t('settings.providers.tmdb.validation.no_custom_credentials'))
     }
 
     setIsTesting(true)
     
     try {
-      // Make actual TMDB API test call to validate credentials
-      // Use the configuration endpoint as it's a simple health check
-      await tmdbService.getConfiguration()
+      // Create a temporary HTTP client with custom credentials for testing
+      const testConfig = {
+        baseURL: 'https://api.themoviedb.org/3',
+        timeout: 10000,
+        defaultHeaders: {} as Record<string, string>,
+        logger
+      }
+      
+      if (credentialsToTest.bearerToken) {
+        // Bearer token goes in Authorization header
+        testConfig.defaultHeaders['Authorization'] = `Bearer ${credentialsToTest.bearerToken}`
+      }
+      
+      const testClient = createHttpClient(testConfig)
+      
+      // Prepare test endpoint and parameters
+      const endpoint = '/configuration'
+      const params: Record<string, any> = {}
+      
+      if (credentialsToTest.apiKey && !credentialsToTest.bearerToken) {
+        // API key goes as query parameter when no bearer token
+        params.api_key = credentialsToTest.apiKey
+      }
+      
+      // Test the connection by calling the configuration endpoint
+      await testClient.get(endpoint, { params })
       
       // If we get here without throwing, the API call was successful
-      Alert.alert(
-        t('common.success'),
-        t('settings.providers.tmdb.validation.connection_successful'),
-        [{ text: t('common.close') }]
-      )
       return true
     } catch (error) {
       // Handle specific API errors
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      const isAuthError = errorInstance.message.includes('401') || errorInstance.message.includes('Unauthorized')
-      const isNetworkError = errorInstance.message.includes('Network') || errorInstance.message.includes('timeout')
+      const isAuthError = errorInstance.message.includes('401') || errorInstance.message.includes('Unauthorized') || errorInstance.message.includes('Invalid API key')
       
-      let errorMessage = t('settings.providers.tmdb.validation.connection_failed')
       if (isAuthError) {
-        errorMessage = t('settings.providers.tmdb.validation.invalid_credentials')
-      } else if (isNetworkError) {
-        errorMessage = t('settings.providers.tmdb.validation.network_error')
+        throw new Error(t('settings.providers.tmdb.validation.invalid_credentials'))
+      } else {
+        throw new Error(t('settings.providers.tmdb.validation.connection_failed'))
       }
-      
-      Alert.alert(
-        t('common.error'),
-        errorMessage,
-        [{ text: t('common.close') }]
-      )
-      return false
     } finally {
       setIsTesting(false)
     }
-  }, [settings, tmdbService, t])
+  }, [settings, logger, t])
+
+  /**
+   * Test connection and save settings if successful
+   */
+  const testAndSaveSettings = useCallback(async (settingsToSave?: TMDBSettings): Promise<boolean> => {
+    const targetSettings = settingsToSave || settings
+    
+    try {
+      // First test the connection with the provided settings (if custom credentials exist)
+      if (targetSettings.apiKey || targetSettings.bearerToken) {
+        await testConnection(targetSettings)
+      }
+      
+      // If test passes (or no custom credentials), save the settings
+      await saveSettings(targetSettings)
+      return true
+    } catch (error) {
+      // Re-throw the error to be handled by the UI
+      throw error
+    }
+  }, [testConnection, saveSettings, settings])
 
   /**
    * Reset settings to defaults
    */
   const resetSettings = useCallback(() => {
     setSettings({ ...DEFAULT_TMDB_SETTINGS })
-    
-    Alert.alert(
-      t('settings.providers.tmdb.reset_settings'),
-      t('settings.providers.tmdb.validation.settings_reset'),
-      [{ text: t('common.close') }]
-    )
-  }, [t])
+  }, [])
 
   /**
    * Load settings from user preferences persistent storage
@@ -190,6 +212,7 @@ export const useTMDBSettings = () => {
     updateSettings,
     saveSettings,
     testConnection,
+    testAndSaveSettings,
     resetSettings,
     loadSettings,
     

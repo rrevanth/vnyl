@@ -23,7 +23,8 @@ const createColors = (mode: ThemeMode, accentColor = '#007AFF'): ThemeColors => 
       secondary: isLight ? '#6E6E73' : '#A1A1A6',
       tertiary: isLight ? '#8E8E93' : '#636366',
       inverse: isLight ? '#FFFFFF' : '#1D1D1F',
-      disabled: isLight ? '#C7C7CC' : '#48484A'
+      disabled: isLight ? '#C7C7CC' : '#48484A',
+      onColor: '#FFFFFF' // Always white text for colored backgrounds (buttons, toasts, etc.)
     },
     border: {
       primary: isLight ? '#D2D2D7' : '#38383A',

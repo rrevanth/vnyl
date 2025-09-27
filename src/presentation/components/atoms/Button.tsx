@@ -127,7 +127,7 @@ const createStyles = (
     if (disabled) return theme.colors.text.disabled
     switch (variant) {
       case 'outline': return theme.colors.interactive.primary
-      default: return theme.colors.text.inverse
+      default: return theme.colors.text.onColor
     }
   }
 

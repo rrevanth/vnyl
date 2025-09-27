@@ -141,6 +141,7 @@ export interface TranslationKey {
         reset_settings: string
         test_connection: string
         validate_connection: string
+        validate_and_save: string
         setup_guide: string
         setup_guide_description: string
         setup_steps: {
@@ -159,6 +160,8 @@ export interface TranslationKey {
           connection_success: string
           settings_saved: string
           settings_reset: string
+          no_custom_credentials: string
+          invalid_credentials: string
         }
       }
     }

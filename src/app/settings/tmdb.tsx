@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, Text, ScrollView, StyleSheet } from 'react-native'
 import type { ViewStyle, TextStyle } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
-import { NavigationHeader, Button, Select, SettingsToggle, TextInput } from '@/src/presentation/components/atoms'
+import { NavigationHeader, Button, Select, SettingsToggle, TextInput, Toast } from '@/src/presentation/components/atoms'
 import { useTMDBSettings } from '@/src/presentation/shared/hooks/useTMDBSettings'
 import { TMDB_LANGUAGE_OPTIONS, TMDB_COUNTRY_OPTIONS, TMDB_IMAGE_QUALITY_OPTIONS } from '@/src/domain/entities'
 import type { Theme } from '@/src/presentation/shared/theme'
@@ -19,15 +19,16 @@ export default observer(function TMDBSettingsScreen() {
   const {
     settings,
     // updateSettings, // Not used in this component - we manage local state
-    testConnection,
-    saveSettings,
+    testAndSaveSettings,
     isTesting,
     isSaving,
     loadSettings
   } = useTMDBSettings()
 
   const [localSettings, setLocalSettings] = useState<TMDBSettings>(settings)
-  const [hasChanges, setHasChanges] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info')
 
   // Load settings on mount
   useEffect(() => {
@@ -37,54 +38,30 @@ export default observer(function TMDBSettingsScreen() {
   // Update local settings when settings change
   useEffect(() => {
     setLocalSettings(settings)
-    setHasChanges(false)
   }, [settings])
 
   const handleLocalChange = useCallback((changes: Partial<TMDBSettings>) => {
     setLocalSettings(prev => ({ ...prev, ...changes }))
-    setHasChanges(true)
   }, [])
 
-  const handleValidateConnection = useCallback(async () => {
-    try {
-      const success = await testConnection()
-      
-      Alert.alert(
-        t('settings.providers.tmdb.test_connection'),
-        success 
-          ? t('settings.providers.tmdb.validation.connection_success')
-          : t('settings.providers.tmdb.validation.connection_failed'),
-        [{ text: t('common.close') }]
-      )
-    } catch (error) {
-      const errorInstance = error instanceof Error ? error : new Error(String(error))
-      Alert.alert(
-        t('common.error'),
-        errorInstance.message,
-        [{ text: t('common.close') }]
-      )
-    }
-  }, [testConnection, t])
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message)
+    setToastType(type)
+    setToastVisible(true)
+  }, [])
 
-  const handleSaveSettings = useCallback(async () => {
+  const handleValidateAndSave = useCallback(async () => {
     try {
-      await saveSettings(localSettings)
-      setHasChanges(false)
+      const success = await testAndSaveSettings(localSettings)
       
-      Alert.alert(
-        t('common.success'),
-        t('settings.providers.tmdb.validation.settings_saved'),
-        [{ text: t('common.close') }]
-      )
+      if (success) {
+        showToast(t('settings.providers.tmdb.validation.settings_saved'), 'success')
+      }
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      Alert.alert(
-        t('common.error'),
-        errorInstance.message,
-        [{ text: t('common.close') }]
-      )
+      showToast(errorInstance.message, 'error')
     }
-  }, [localSettings, saveSettings, t])
+  }, [localSettings, testAndSaveSettings, t, showToast])
 
   // Determine connection status and API key hierarchy
   const getConnectionStatus = () => {
@@ -253,25 +230,24 @@ export default observer(function TMDBSettingsScreen() {
           />
         </View>
 
-        {/* Action Buttons */}
+        {/* Action Button */}
         <View style={styles.actionsSection}>
           <Button
-            title={t('settings.providers.tmdb.validate_connection')}
-            onPress={handleValidateConnection}
-            variant="outline"
-            disabled={isTesting}
-            loading={isTesting}
-          />
-
-          <Button
-            title={t('settings.providers.tmdb.save_settings')}
-            onPress={handleSaveSettings}
+            title={t('settings.providers.tmdb.validate_and_save')}
+            onPress={handleValidateAndSave}
             variant="primary"
-            disabled={!hasChanges || isSaving}
-            loading={isSaving}
+            disabled={isTesting || isSaving}
+            loading={isTesting || isSaving}
           />
         </View>
       </ScrollView>
+
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
     </SafeAreaView>
   )
 })

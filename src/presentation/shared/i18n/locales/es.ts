@@ -138,6 +138,7 @@ export const es: TranslationKey = {
         reset_settings: 'Restablecer a Predeterminados',
         test_connection: 'Probar Conexión',
         validate_connection: 'Validar Conexión',
+        validate_and_save: 'Validar y Guardar',
         setup_guide: 'Guía de Configuración',
         setup_guide_description: 'Cómo obtener tus credenciales de API de TMDB',
         setup_steps: {
@@ -155,7 +156,9 @@ export const es: TranslationKey = {
           connection_failed: 'Error al conectar con la API de TMDB',
           connection_success: 'Conectado exitosamente a la API de TMDB',
           settings_saved: 'Configuración de TMDB guardada exitosamente',
-          settings_reset: 'Configuración de TMDB restablecida a predeterminados'
+          settings_reset: 'Configuración de TMDB restablecida a predeterminados',
+          no_custom_credentials: 'Por favor ingresa tu clave API o token Bearer para validar',
+          invalid_credentials: 'Credenciales de API inválidas. Por favor verifica tu clave API o token Bearer'
         }
       }
     },
