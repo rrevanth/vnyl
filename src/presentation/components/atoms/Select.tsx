@@ -5,22 +5,65 @@ import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme'
 
+/**
+ * Option interface for Select component
+ */
 export interface SelectOption {
+  /** Display text for the option */
   label: string
+  /** Value associated with the option */
   value: string
 }
 
+/**
+ * Select component props interface
+ */
 interface SelectProps {
+  /** Optional label displayed above the select */
   label?: string
+  /** Optional description text displayed below the label */
   description?: string
+  /** Array of selectable options */
   options: SelectOption[]
+  /** Currently selected value */
   selectedValue: string
+  /** Function called when selection changes */
   onValueChange: (value: string) => void
+  /** Placeholder text when no option is selected */
   placeholder?: string
+  /** Error message to display */
   error?: string
+  /** Whether the select is disabled */
   disabled?: boolean
 }
 
+/**
+ * Modal-based select component with dropdown functionality
+ * 
+ * Features:
+ * - Modal-based dropdown for better mobile UX
+ * - Supports custom options with label/value pairs
+ * - Error state styling and messaging
+ * - Disabled state with appropriate styling
+ * - Label and description support
+ * - Theme-aware styling for light/dark modes
+ * - Scrollable options list for large datasets
+ * - Accessible with proper roles and labels
+ * 
+ * @example
+ * ```tsx
+ * <Select
+ *   label="Language"
+ *   options={[
+ *     { label: 'English', value: 'en' },
+ *     { label: 'Spanish', value: 'es' }
+ *   ]}
+ *   selectedValue={currentLanguage}
+ *   onValueChange={setLanguage}
+ *   placeholder="Select a language"
+ * />
+ * ```
+ */
 export const Select: React.FC<SelectProps> = observer(({
   label,
   description,

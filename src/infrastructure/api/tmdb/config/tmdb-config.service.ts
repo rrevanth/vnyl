@@ -231,6 +231,7 @@ export class TMDBConfigService implements ITMDBConfigService {
       timeout: config.timeout,
       retries: config.retries,
       retryDelay: 1000,
+      logger: this.logger,
       defaultHeaders: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

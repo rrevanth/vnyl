@@ -59,12 +59,15 @@ export interface ITMDBService {
 export class TMDBService implements ITMDBService {
   public readonly client: ITMDBApiClient
   public readonly config: ITMDBConfigService
+  private readonly logger: ILoggingService
 
   constructor(
     environmentService: IEnvironmentService,
     logger: ILoggingService,
     userPreferenceService: IUserPreferenceService
   ) {
+    this.logger = logger
+    
     // Create configuration service
     this.config = createTMDBConfigService(environmentService, logger, userPreferenceService)
 
@@ -85,7 +88,9 @@ export class TMDBService implements ITMDBService {
     } catch (error) {
       // Log error but don't fail initialization - use defaults
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      console.warn('Failed to fetch TMDB image configuration, using defaults:', errorInstance.message)
+      this.logger.warn('Failed to fetch TMDB image configuration, using defaults', errorInstance, {
+        context: 'tmdb_service_initialization'
+      })
     }
   }
 

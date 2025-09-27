@@ -5,16 +5,49 @@ import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme'
 
+/**
+ * Button component props interface
+ */
 interface ButtonProps {
+  /** Button text content */
   title: string
+  /** Function called when button is pressed */
   onPress: () => void
+  /** Visual style variant of the button */
   variant?: 'primary' | 'secondary' | 'outline'
+  /** Size variant for the button */
   size?: 'sm' | 'md' | 'lg'
+  /** Whether button is disabled */
   disabled?: boolean
+  /** Whether to show loading spinner */
   loading?: boolean
+  /** Whether button should take full width of container */
   fullWidth?: boolean
 }
 
+/**
+ * Reusable button component with multiple variants, sizes, and states
+ * 
+ * Features:
+ * - Multiple visual variants (primary, secondary, outline)
+ * - Size variants (sm, md, lg) with responsive scaling
+ * - Loading state with activity indicator
+ * - Disabled state with appropriate styling
+ * - Full width option for layout flexibility
+ * - Automatic theme integration for light/dark modes
+ * - Accessibility support with proper roles and labels
+ * 
+ * @example
+ * ```tsx
+ * <Button
+ *   title="Save Changes"
+ *   onPress={handleSave}
+ *   variant="primary"
+ *   size="md"
+ *   loading={isSaving}
+ * />
+ * ```
+ */
 export const Button: React.FC<ButtonProps> = observer(({
   title,
   onPress,

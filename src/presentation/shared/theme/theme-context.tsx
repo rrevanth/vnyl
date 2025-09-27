@@ -1,6 +1,6 @@
 import type { ThemePreference } from '@/src/domain/entities'
 import type { GetOrCreateUserUseCase, UpdateUserThemeUseCase } from '@/src/domain/usecases'
-import { useGetOrCreateUserUseCase, useUpdateUserThemeUseCase } from '@/src/infrastructure/di'
+import { useGetOrCreateUserUseCase, useUpdateUserThemeUseCase, useLogging } from '@/src/infrastructure/di'
 import { getUserPreferencesObservable } from '@/src/presentation/shared/providers/user-preferences-provider'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
@@ -58,10 +58,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
   // Safely try to get services, handling DI container race condition
   let getOrCreateUserUseCase: GetOrCreateUserUseCase | null = null
   let updateUserThemeUseCase: UpdateUserThemeUseCase | null = null
+  let logger = null
 
   try {
     getOrCreateUserUseCase = useGetOrCreateUserUseCase()
     updateUserThemeUseCase = useUpdateUserThemeUseCase()
+    logger = useLogging()
     servicesState.ready.set(true)
   } catch {
     // Services not ready yet, continue with fallback theme
@@ -153,11 +155,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = observer(({
         const updatedThemePreference = themeModeToPreference(mode)
         await updateThemeUseCase.execute(updatedThemePreference)
       }
-    } catch {
+    } catch (error) {
       // Handle error gracefully - UI layer doesn't need detailed error handling
-      console.warn('ThemeProvider: Failed to update user theme preference')
+      if (logger) {
+        const errorInstance = error instanceof Error ? error : new Error(String(error))
+        logger.warn('ThemeProvider: Failed to update user theme preference', errorInstance)
+      }
     }
-  }, [])
+  }, [logger])
 
   const toggleTheme = useCallback(() => {
     const newMode = themeState.mode.peek() === 'light' ? 'dark' : 'light'

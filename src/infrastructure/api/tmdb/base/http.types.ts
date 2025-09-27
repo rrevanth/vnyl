@@ -4,7 +4,13 @@
  * Type definitions for the base HTTP client with axios and retry logic
  */
 
-import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import type { AxiosResponse, InternalAxiosRequestConfig, AxiosError } from 'axios'
+import type { ILoggingService } from '@/src/domain/services/logging.service.interface'
+
+/**
+ * Type for request data that can be sent in HTTP requests
+ */
+export type RequestData = Record<string, unknown> | FormData | string | null | undefined
 
 /**
  * Configuration for HTTP client
@@ -20,6 +26,8 @@ export interface HttpClientConfig {
   retryDelay?: number
   /** Additional headers to include in all requests */
   defaultHeaders?: Record<string, string>
+  /** Logger instance for structured logging */
+  logger: ILoggingService
 }
 
 /**
@@ -66,7 +74,7 @@ export class HttpError extends Error {
     }
   }
 
-  static fromAxiosError(error: any): HttpError {
+  static fromAxiosError(error: AxiosError): HttpError {
     const details: HttpErrorDetails = {
       message: error.message || 'Unknown HTTP error',
       isTimeout: error.code === 'ECONNABORTED',
@@ -103,4 +111,4 @@ export type RequestInterceptor = (config: InternalAxiosRequestConfig) => Interna
 /**
  * Error interceptor function type
  */
-export type ErrorInterceptor = (error: any) => any
+export type ErrorInterceptor = (error: unknown) => unknown

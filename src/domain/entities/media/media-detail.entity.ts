@@ -14,6 +14,7 @@ import {
   ImageType
 } from '@/src/domain/entities/media/content-types'
 import { ExternalIds } from '@/src/domain/entities/media/external-ids.entity'
+import { ProductionCompany } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 
 /**
  * Media detail entity
@@ -288,22 +289,6 @@ export interface Keyword {
   readonly name: string
 }
 
-/**
- * Production company information
- */
-export interface ProductionCompany {
-  /** Company ID */
-  readonly id: number
-
-  /** Company name */
-  readonly name: string
-
-  /** Company logo path */
-  readonly logoPath?: string
-
-  /** Origin country */
-  readonly originCountry?: CountryCode
-}
 
 /**
  * Cast member information

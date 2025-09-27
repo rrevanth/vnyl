@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { useGetOrCreateUserUseCase, useLogging } from '@/src/infrastructure/di'
+import type { GetOrCreateUserUseCase } from '@/src/domain/usecases'
+import type { ILoggingService } from '@/src/domain/services'
 import type {
   UserPreferences,
   ThemePreference,
@@ -52,8 +54,8 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
   children
 }) => {
   // Safely try to get services, handling DI container race condition
-  let getOrCreateUserUseCase: any = null
-  let logger: any = null
+  let getOrCreateUserUseCase: GetOrCreateUserUseCase | null = null
+  let logger: ILoggingService | null = null
 
   try {
     getOrCreateUserUseCase = useGetOrCreateUserUseCase()
@@ -89,7 +91,8 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
         userPreferencesState.ready.set(true)
         logger.info('UserPreferencesProvider: User preferences state updated successfully')
       } catch (error) {
-        logger.error('UserPreferencesProvider: Failed to load user preferences', error)
+        const errorInstance = error instanceof Error ? error : new Error(String(error))
+        logger.error('UserPreferencesProvider: Failed to load user preferences', errorInstance)
         userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
         // Continue with default preferences
         logger.info('UserPreferencesProvider: Falling back to default preferences')
@@ -121,7 +124,8 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = o
       })
       userPreferencesState.preferences.set(user.preferences)
     } catch (error) {
-      logger.error('UserPreferencesProvider: Failed to refresh user preferences', error)
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      logger.error('UserPreferencesProvider: Failed to refresh user preferences', errorInstance)
       userPreferencesState.error.set(error instanceof Error ? error : new Error(String(error)))
     } finally {
       userPreferencesState.isLoading.set(false)

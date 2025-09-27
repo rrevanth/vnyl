@@ -5,6 +5,7 @@
 
 import { MediaType, Genre, LanguageCode, CountryCode, ContentRating, MediaStatus } from '@/src/domain/entities/media/content-types'
 import { ExternalIds } from '@/src/domain/entities/media/external-ids.entity'
+import { ProductionCompany } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 
 /**
  * Catalog item entity
@@ -185,22 +186,6 @@ export interface CollectionCatalogItem extends CatalogItem {
   readonly totalRuntime?: number
 }
 
-/**
- * Production company information
- */
-export interface ProductionCompany {
-  /** Company ID */
-  readonly id: number
-
-  /** Company name */
-  readonly name: string
-
-  /** Company logo URL */
-  readonly logoUrl?: string
-
-  /** Origin country */
-  readonly originCountry?: CountryCode
-}
 
 /**
  * Network information for TV series

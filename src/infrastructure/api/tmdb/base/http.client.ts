@@ -13,14 +13,17 @@ import type {
   RequestInterceptor,
   ErrorInterceptor
 } from './http.types'
-import { HttpError } from './http.types'
+import { HttpError, RequestData } from './http.types'
+import type { ILoggingService } from '@/src/domain/services/logging.service.interface'
 
 export class HttpClient {
   private readonly client: AxiosInstance
   private readonly config: HttpClientConfig
+  private readonly logger: ILoggingService
 
   constructor(config: HttpClientConfig) {
     this.config = config
+    this.logger = config.logger
     this.client = this.createAxiosInstance()
     this.setupRetryLogic()
     this.setupInterceptors()
@@ -51,10 +54,11 @@ export class HttpClient {
                (error.response?.status !== undefined && error.response.status >= 500)
       },
       onRetry: (retryCount, error) => {
-        console.warn(`HTTP request retry attempt ${retryCount}:`, {
+        this.logger.warn(`HTTP request retry attempt ${retryCount}`, error, {
           url: error.config?.url,
           method: error.config?.method,
-          status: error.response?.status
+          status: error.response?.status,
+          retryCount
         })
       }
     })
@@ -156,7 +160,7 @@ export class HttpClient {
   /**
    * Perform POST request
    */
-  async post<T = any>(url: string, data?: any, options?: RequestOptions): Promise<AxiosResponse<T>> {
+  async post<T = unknown>(url: string, data?: RequestData, options?: RequestOptions): Promise<AxiosResponse<T>> {
     const config = this.buildRequestConfig('POST', url, options)
     return this.client.post<T>(url, data, config)
   }
@@ -164,7 +168,7 @@ export class HttpClient {
   /**
    * Perform PUT request
    */
-  async put<T = any>(url: string, data?: any, options?: RequestOptions): Promise<AxiosResponse<T>> {
+  async put<T = unknown>(url: string, data?: RequestData, options?: RequestOptions): Promise<AxiosResponse<T>> {
     const config = this.buildRequestConfig('PUT', url, options)
     return this.client.put<T>(url, data, config)
   }
@@ -172,7 +176,7 @@ export class HttpClient {
   /**
    * Perform PATCH request
    */
-  async patch<T = any>(url: string, data?: any, options?: RequestOptions): Promise<AxiosResponse<T>> {
+  async patch<T = unknown>(url: string, data?: RequestData, options?: RequestOptions): Promise<AxiosResponse<T>> {
     const config = this.buildRequestConfig('PATCH', url, options)
     return this.client.patch<T>(url, data, config)
   }

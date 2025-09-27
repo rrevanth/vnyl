@@ -111,17 +111,18 @@ export interface Genre {
 }
 
 /**
- * Production company
+ * Production company (canonical version)
+ * Used across all domain entities for consistency
  */
 export interface ProductionCompany {
   /** Company ID */
-  id: number
-  /** Company logo path */
-  logo_path: string | null
+  readonly id: number
   /** Company name */
-  name: string
+  readonly name: string
+  /** Company logo URL */
+  readonly logoUrl?: string
   /** Origin country */
-  origin_country: string
+  readonly originCountry?: CountryCode
 }
 
 /**

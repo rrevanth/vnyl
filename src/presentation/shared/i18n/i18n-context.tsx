@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { getLocales } from 'expo-localization'
-import { useGetOrCreateUserUseCase, useUpdateUserLocaleUseCase } from '@/src/infrastructure/di'
+import { useGetOrCreateUserUseCase, useUpdateUserLocaleUseCase, useLogging } from '@/src/infrastructure/di'
 import type { Locale, I18nContextValue, TranslationKey } from './types'
 import { en, es } from './locales'
 
@@ -24,10 +24,13 @@ const i18nState = observable<{
 })
 
 // Helper function to get nested object value by string path
-const getNestedValue = (obj: any, path: string): string => {
-  return path.split('.').reduce((current, key) => {
-    return current && current[key] !== undefined ? current[key] : path
-  }, obj)
+const getNestedValue = (obj: Record<string, unknown>, path: string): string => {
+  return path.split('.').reduce((current: unknown, key: string) => {
+    if (current && typeof current === 'object' && current !== null && key in current) {
+      return (current as Record<string, unknown>)[key]
+    }
+    return path
+  }, obj) as string
 }
 
 interface I18nProviderProps {
@@ -41,6 +44,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
 }) => {
   const getOrCreateUserUseCase = useGetOrCreateUserUseCase()
   const updateUserLocaleUseCase = useUpdateUserLocaleUseCase()
+  const logger = useLogging()
 
   // Initialize locale from user preferences or device settings
   useEffect(() => {
@@ -77,15 +81,21 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
           currency: 'USD'
         }
         await updateUserLocaleUseCase.execute(newLocalePreferences)
-      } catch {
+      } catch (error) {
         // Fallback to default if everything fails
+        const errorInstance = error instanceof Error ? error : new Error(String(error))
+        logger.warn('Failed to initialize locale from user preferences, using fallback', errorInstance, {
+          context: 'i18n_initialization',
+          fallbackLocale,
+          deviceLocale: getLocales()[0]?.languageCode
+        })
         i18nState.locale.set(fallbackLocale)
         i18nState.translations.set(translations[fallbackLocale])
       }
     }
 
     initializeLocale()
-  }, [getOrCreateUserUseCase, updateUserLocaleUseCase, fallbackLocale])
+  }, [getOrCreateUserUseCase, updateUserLocaleUseCase, fallbackLocale, logger])
 
   const setLocale = useCallback(async (locale: Locale) => {
     try {
@@ -105,14 +115,20 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
         currency: 'USD'
       }
       await updateUserLocaleUseCase.execute(newLocalePreferences)
-    } catch {
+    } catch (error) {
       // Handle error gracefully - UI layer doesn't need detailed error handling
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      logger.warn('Failed to update user locale preferences', errorInstance, {
+        context: 'i18n_locale_update',
+        requestedLocale: locale,
+        currentLocale: i18nState.locale.peek()
+      })
     }
-  }, [updateUserLocaleUseCase])
+  }, [updateUserLocaleUseCase, logger])
 
   const t = useCallback((key: string): string => {
     const currentTranslations = i18nState.translations.peek()
-    return getNestedValue(currentTranslations, key)
+    return getNestedValue(currentTranslations as unknown as Record<string, unknown>, key)
   }, [])
 
   const formatMessage = useCallback((key: string, values?: Record<string, string | number>): string => {
