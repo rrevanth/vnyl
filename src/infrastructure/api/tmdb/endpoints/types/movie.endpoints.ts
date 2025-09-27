@@ -7,7 +7,6 @@
 import type { 
   PaginatedResponse, 
   PaginationParams, 
-  DateRangeParams,
   Genre,
   ProductionCompany,
   ProductionCountry,
@@ -22,7 +21,6 @@ import type {
   CrewMember,
   Keyword,
   RegionWatchProviders,
-  DateString,
   CountryCode,
   LanguageCode
 } from './base.types'

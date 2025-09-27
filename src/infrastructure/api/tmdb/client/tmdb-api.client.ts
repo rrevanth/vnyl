@@ -36,6 +36,23 @@ import type {
 // Import endpoint implementations
 import { createConfigurationEndpoints } from '../endpoints/implementations/configuration.endpoints.impl'
 import { createMovieEndpoints } from '../endpoints/implementations/movie.endpoints.impl'
+import { createTVEndpoints } from '../endpoints/implementations/tv.endpoints.impl'
+import { createPersonEndpoints } from '../endpoints/implementations/person.endpoints.impl'
+import { createSearchEndpoints } from '../endpoints/implementations/search.endpoints.impl'
+import { createDiscoverEndpoints } from '../endpoints/implementations/discover.endpoints.impl'
+import { createTrendingEndpoints } from '../endpoints/implementations/trending.endpoints.impl'
+import { createCollectionEndpoints } from '../endpoints/implementations/collection.endpoints.impl'
+import { createCompanyEndpoints } from '../endpoints/implementations/company.endpoints.impl'
+import { createNetworkEndpoints } from '../endpoints/implementations/network.endpoints.impl'
+import { createGenreEndpoints } from '../endpoints/implementations/genre.endpoints.impl'
+import { createKeywordEndpoints } from '../endpoints/implementations/keyword.endpoints.impl'
+import { createWatchProviderEndpoints } from '../endpoints/implementations/watch-provider.endpoints.impl'
+import { createCertificationEndpoints } from '../endpoints/implementations/certification.endpoints.impl'
+import { createCreditEndpoints } from '../endpoints/implementations/credit.endpoints.impl'
+import { createReviewEndpoints } from '../endpoints/implementations/review.endpoints.impl'
+import { createListEndpoints } from '../endpoints/implementations/list.endpoints.impl'
+import { createAuthenticationEndpoints } from '../endpoints/implementations/authentication.endpoints.impl'
+import { createAccountEndpoints } from '../endpoints/implementations/account.endpoints.impl'
 
 /**
  * Comprehensive TMDB API client interface
@@ -181,25 +198,23 @@ export class TMDBApiClient implements ITMDBApiClient {
     // Initialize endpoint groups with actual implementations
     this.configuration = createConfigurationEndpoints(boundRequest)
     this.movies = createMovieEndpoints(boundRequest)
-    
-    // Initialize remaining endpoint groups with placeholders (will be implemented)
-    this.tv = this.createTVEndpoints()
-    this.people = this.createPersonEndpoints()
-    this.search = this.createSearchEndpoints()
-    this.discover = this.createDiscoverEndpoints()
-    this.collections = this.createCollectionEndpoints()
-    this.companies = this.createCompanyEndpoints()
-    this.keywords = this.createKeywordEndpoints()
-    this.networks = this.createNetworkEndpoints()
-    this.genres = this.createGenreEndpoints()
-    this.account = this.createAccountEndpoints()
-    this.authentication = this.createAuthenticationEndpoints()
-    this.certifications = this.createCertificationEndpoints()
-    this.credits = this.createCreditEndpoints()
-    this.lists = this.createListEndpoints()
-    this.reviews = this.createReviewEndpoints()
-    this.trending = this.createTrendingEndpoints()
-    this.watchProviders = this.createWatchProviderEndpoints()
+    this.tv = createTVEndpoints(boundRequest)
+    this.people = createPersonEndpoints(boundRequest)
+    this.search = createSearchEndpoints(boundRequest)
+    this.discover = createDiscoverEndpoints(boundRequest)
+    this.trending = createTrendingEndpoints(boundRequest)
+    this.collections = createCollectionEndpoints(boundRequest)
+    this.companies = createCompanyEndpoints(boundRequest)
+    this.keywords = createKeywordEndpoints(boundRequest)
+    this.networks = createNetworkEndpoints(boundRequest)
+    this.genres = createGenreEndpoints(boundRequest)
+    this.account = createAccountEndpoints(boundRequest)
+    this.authentication = createAuthenticationEndpoints(boundRequest)
+    this.certifications = createCertificationEndpoints(boundRequest)
+    this.credits = createCreditEndpoints(boundRequest)
+    this.lists = createListEndpoints(boundRequest)
+    this.reviews = createReviewEndpoints(boundRequest)
+    this.watchProviders = createWatchProviderEndpoints(boundRequest)
   }
 
   /**
@@ -321,86 +336,7 @@ export class TMDBApiClient implements ITMDBApiClient {
     }
 
     return finalParams
-  }
-
-  // Endpoint group factory methods - these will create the actual endpoint implementations
-  
-  private createMovieEndpoints(): TMDBMovieEndpoints {
-    // Will be implemented in separate files
-    return {} as TMDBMovieEndpoints
-  }
-
-  private createTVEndpoints(): TMDBTVEndpoints {
-    return {} as TMDBTVEndpoints
-  }
-
-  private createPersonEndpoints(): TMDBPersonEndpoints {
-    return {} as TMDBPersonEndpoints
-  }
-
-  private createSearchEndpoints(): TMDBSearchEndpoints {
-    return {} as TMDBSearchEndpoints
-  }
-
-  private createDiscoverEndpoints(): TMDBDiscoverEndpoints {
-    return {} as TMDBDiscoverEndpoints
-  }
-
-  private createCollectionEndpoints(): TMDBCollectionEndpoints {
-    return {} as TMDBCollectionEndpoints
-  }
-
-  private createCompanyEndpoints(): TMDBCompanyEndpoints {
-    return {} as TMDBCompanyEndpoints
-  }
-
-  private createKeywordEndpoints(): TMDBKeywordEndpoints {
-    return {} as TMDBKeywordEndpoints
-  }
-
-  private createNetworkEndpoints(): TMDBNetworkEndpoints {
-    return {} as TMDBNetworkEndpoints
-  }
-
-  private createGenreEndpoints(): TMDBGenreEndpoints {
-    return {} as TMDBGenreEndpoints
-  }
-
-  private createConfigurationEndpoints(): TMDBConfigurationEndpoints {
-    return {} as TMDBConfigurationEndpoints
-  }
-
-  private createAccountEndpoints(): TMDBAccountEndpoints {
-    return {} as TMDBAccountEndpoints
-  }
-
-  private createAuthenticationEndpoints(): TMDBAuthenticationEndpoints {
-    return {} as TMDBAuthenticationEndpoints
-  }
-
-  private createCertificationEndpoints(): TMDBCertificationEndpoints {
-    return {} as TMDBCertificationEndpoints
-  }
-
-  private createCreditEndpoints(): TMDBCreditEndpoints {
-    return {} as TMDBCreditEndpoints
-  }
-
-  private createListEndpoints(): TMDBListEndpoints {
-    return {} as TMDBListEndpoints
-  }
-
-  private createReviewEndpoints(): TMDBReviewEndpoints {
-    return {} as TMDBReviewEndpoints
-  }
-
-  private createTrendingEndpoints(): TMDBTrendingEndpoints {
-    return {} as TMDBTrendingEndpoints
-  }
-
-  private createWatchProviderEndpoints(): TMDBWatchProviderEndpoints {
-    return {} as TMDBWatchProviderEndpoints
-  }
+}
 }
 
 /**

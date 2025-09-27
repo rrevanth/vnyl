@@ -9,6 +9,7 @@ import { createTMDBConfigService } from './config/tmdb-config.service'
 import { createTMDBApiClient } from './client/tmdb-api.client'
 import type { IEnvironmentService } from '@/src/domain/services/environment.service.interface'
 import type { ILoggingService } from '@/src/domain/services/logging.service.interface'
+import type { IUserPreferenceService } from '@/src/domain/services/user-preference.service.interface'
 import type { ITMDBApiClient } from './client/tmdb-api.client'
 import type { ITMDBConfigService } from './config/tmdb-config.service'
 
@@ -36,10 +37,11 @@ export class TMDBService implements ITMDBService {
 
   constructor(
     environmentService: IEnvironmentService,
-    logger: ILoggingService
+    logger: ILoggingService,
+    userPreferenceService: IUserPreferenceService
   ) {
     // Create configuration service
-    this.config = createTMDBConfigService(environmentService, logger)
+    this.config = createTMDBConfigService(environmentService, logger, userPreferenceService)
 
     // Create HTTP client with TMDB configuration
     const httpClient = createHttpClient(this.config.getHttpConfig())
@@ -68,9 +70,10 @@ export class TMDBService implements ITMDBService {
  */
 export const createTMDBService = (
   environmentService: IEnvironmentService,
-  logger: ILoggingService
+  logger: ILoggingService,
+  userPreferenceService: IUserPreferenceService
 ): ITMDBService => {
-  return new TMDBService(environmentService, logger)
+  return new TMDBService(environmentService, logger, userPreferenceService)
 }
 
 /**

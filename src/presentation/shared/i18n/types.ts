@@ -5,6 +5,7 @@ export interface TranslationKey {
   common: {
     loading: string
     error: string
+    success: string
     retry: string
     cancel: string
     confirm: string
@@ -96,6 +97,69 @@ export interface TranslationKey {
       info: {
         title: string
         description: string
+      }
+      tmdb: {
+        title: string
+        description: string
+        status: {
+          connected_bearer_token: string
+          connected_api_key: string
+          connected_default: string
+          hierarchy_description: string
+          custom_bearer_token: string
+          custom_api_key: string
+          default_api_key: string
+        }
+        authentication: string
+        authentication_description: string
+        api_key: string
+        api_key_description: string
+        api_key_placeholder: string
+        bearer_token: string
+        bearer_token_description: string
+        bearer_token_placeholder: string
+        regional_settings: string
+        regional_description: string
+        preferences: string
+        preferences_description: string
+        content_settings: string
+        content_description: string
+        language: string
+        language_description: string
+        language_placeholder: string
+        country: string
+        country_description: string
+        country_placeholder: string
+        region: string
+        region_description: string
+        include_adult: string
+        include_adult_description: string
+        image_quality: string
+        image_quality_description: string
+        image_quality_placeholder: string
+        save_settings: string
+        reset_settings: string
+        test_connection: string
+        validate_connection: string
+        setup_guide: string
+        setup_guide_description: string
+        setup_steps: {
+          title: string
+          step_1: string
+          step_2: string
+          step_3: string
+          step_4: string
+          step_5: string
+        }
+        validation: {
+          api_key_required: string
+          api_key_invalid: string
+          bearer_token_invalid: string
+          connection_failed: string
+          connection_success: string
+          settings_saved: string
+          settings_reset: string
+        }
       }
     }
     about: {

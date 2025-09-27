@@ -1,9 +1,9 @@
-import React from 'react'
-import { View, Text, TextInput as RNTextInput, StyleSheet } from 'react-native'
-import type { ViewStyle, TextStyle, TextInputProps as RNTextInputProps } from 'react-native'
-import { observer } from '@legendapp/state/react'
-import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme'
+import { useTheme } from '@/src/presentation/shared/theme'
+import { observer } from '@legendapp/state/react'
+import React from 'react'
+import type { TextInputProps as RNTextInputProps, TextStyle, ViewStyle } from 'react-native'
+import { TextInput as RNTextInput, StyleSheet, Text, View } from 'react-native'
 
 interface TextInputProps extends Omit<RNTextInputProps, 'style'> {
   label?: string
@@ -33,6 +33,7 @@ export const TextInput: React.FC<TextInputProps> = observer(({
           style={styles.input}
           placeholderTextColor={theme.colors.text.tertiary}
           selectionColor={theme.colors.interactive.primary}
+          enablesReturnKeyAutomatically={false}
           {...textInputProps}
         />
       </View>

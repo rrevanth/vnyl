@@ -6,9 +6,11 @@ import type {
   ThemePreference,
   LocalePreferences,
   DisplaySettings,
-  HomeScreenLayoutPreference
+  HomeScreenLayoutPreference,
+  ProviderSettings,
+  TMDBSettings
 } from '@/src/domain/entities'
-import { DEFAULT_USER_PREFERENCES } from '@/src/domain/entities'
+import { DEFAULT_USER_PREFERENCES, DEFAULT_TMDB_SETTINGS } from '@/src/domain/entities'
 import type { IUserPreferenceService, ILoggingService, IEnvironmentService } from '@/src/domain/services'
 import type { IUserRepository } from '@/src/domain/repositories'
 
@@ -112,6 +114,15 @@ export class UserPreferenceService implements IUserPreferenceService {
     return preferences.providerPreferences ?? DEFAULT_USER_PREFERENCES.providerPreferences
   }
 
+  getProviderSettings(): ProviderSettings {
+    const preferences = this.getPreferences()
+    if (!preferences) {
+      this.logger.debug('No preferences available, returning default provider settings')
+      return DEFAULT_USER_PREFERENCES.providerSettings
+    }
+    return preferences.providerSettings ?? DEFAULT_USER_PREFERENCES.providerSettings
+  }
+
   getNotificationPreferences(): NotificationPreferences {
     const preferences = this.getPreferences()
     if (!preferences) {
@@ -152,5 +163,10 @@ export class UserPreferenceService implements IUserPreferenceService {
   getHomeScreenLayout(): HomeScreenLayoutPreference {
     const preferences = this.getPreferences()
     return preferences?.homeScreenLayout ?? DEFAULT_USER_PREFERENCES.homeScreenLayout
+  }
+
+  getTMDBSettings(): TMDBSettings {
+    const providerSettings = this.getProviderSettings()
+    return providerSettings?.tmdb ?? DEFAULT_TMDB_SETTINGS
   }
 }

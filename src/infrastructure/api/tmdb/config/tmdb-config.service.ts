@@ -7,6 +7,7 @@
 
 import type { IEnvironmentService } from '@/src/domain/services/environment.service.interface'
 import type { ILoggingService } from '@/src/domain/services/logging.service.interface'
+import type { IUserPreferenceService } from '@/src/domain/services/user-preference.service.interface'
 import type { HttpClientConfig } from '../base/http.types'
 
 /**
@@ -126,7 +127,8 @@ export class TMDBConfigService implements ITMDBConfigService {
 
   constructor(
     private readonly environmentService: IEnvironmentService,
-    private readonly logger: ILoggingService
+    private readonly logger: ILoggingService,
+    private readonly userPreferenceService: IUserPreferenceService
   ) {
     this.config = this.initializeConfig()
     this.loadUserPreferences()
@@ -162,13 +164,53 @@ export class TMDBConfigService implements ITMDBConfigService {
   }
 
   private loadUserPreferences(): void {
-    // In a real app, this would load from storage service
-    // For now, we'll use defaults that can be overridden
-    this.userPreferences = {
-      language: this.config.language,
-      region: this.config.region,
-      includeAdult: this.config.includeAdult,
-      imageQuality: 'high'
+    try {
+      if (this.userPreferenceService.isReady()) {
+        const tmdbSettings = this.userPreferenceService.getTMDBSettings()
+        
+        this.userPreferences = {
+          language: tmdbSettings.language,
+          region: tmdbSettings.region,
+          includeAdult: tmdbSettings.includeAdult,
+          imageQuality: tmdbSettings.imageQuality
+        }
+        
+        // Override config with user's API credentials if provided
+        if (tmdbSettings.apiKey) {
+          this.config.apiKey = tmdbSettings.apiKey
+        }
+        if (tmdbSettings.bearerToken) {
+          this.config.bearerToken = tmdbSettings.bearerToken
+        }
+        
+        this.logger.debug('TMDB user preferences loaded successfully', undefined, {
+          tmdbLanguage: this.userPreferences.language,
+          tmdbRegion: this.userPreferences.region,
+          includeAdult: this.userPreferences.includeAdult,
+          imageQuality: this.userPreferences.imageQuality,
+          hasApiKey: !!tmdbSettings.apiKey,
+          hasBearerToken: !!tmdbSettings.bearerToken
+        })
+      } else {
+        this.logger.debug('User preference service not ready, using default TMDB preferences')
+        this.userPreferences = {
+          language: this.config.language,
+          region: this.config.region,
+          includeAdult: this.config.includeAdult,
+          imageQuality: 'high'
+        }
+      }
+    } catch (error) {
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      this.logger.error('Failed to load TMDB user preferences', errorInstance, {
+        context: 'TMDBConfigService.loadUserPreferences'
+      })
+      this.userPreferences = {
+        language: this.config.language,
+        region: this.config.region,
+        includeAdult: this.config.includeAdult,
+        imageQuality: 'high'
+      }
     }
   }
 
@@ -206,7 +248,8 @@ export class TMDBConfigService implements ITMDBConfigService {
       preferences: this.userPreferences
     })
 
-    // In a real app, persist to storage service here
+    // TODO: Persist to user preference service here
+    // This would update the user preferences and trigger a cache refresh
   }
 
   getPreferences(): TMDBUserPreferences {
@@ -320,7 +363,8 @@ export class TMDBConfigService implements ITMDBConfigService {
  */
 export const createTMDBConfigService = (
   environmentService: IEnvironmentService,
-  logger: ILoggingService
+  logger: ILoggingService,
+  userPreferenceService: IUserPreferenceService
 ): ITMDBConfigService => {
-  return new TMDBConfigService(environmentService, logger)
+  return new TMDBConfigService(environmentService, logger, userPreferenceService)
 }

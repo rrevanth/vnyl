@@ -135,13 +135,14 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
-  // Register TMDB Service (depends on environment and logging)
+  // Register TMDB Service (depends on environment, logging, and user preferences)
   container.registerSingleton<ITMDBService>(
     TOKENS.TMDB_SERVICE,
     () => {
       const environmentService = container.resolve<IEnvironmentService>(TOKENS.ENVIRONMENT_SERVICE)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      return createTMDBService(environmentService, logger)
+      const userPreferenceService = container.resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
+      return createTMDBService(environmentService, logger, userPreferenceService)
     }
   )
 

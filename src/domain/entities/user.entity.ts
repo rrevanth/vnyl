@@ -1,4 +1,6 @@
 import type { Locale } from '@/src/presentation/shared/i18n'
+import type { TMDBSettings } from './provider-configs.entity'
+import { DEFAULT_TMDB_SETTINGS } from './provider-configs.entity'
 
 export type { Locale } from '@/src/presentation/shared/i18n'
 
@@ -62,9 +64,10 @@ export interface ProviderPreferences {
   enabledProviders: Record<string, boolean>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+ 
 export interface ProviderSettings {
-  // Provider-specific settings will be added here as needed
+  /** TMDB (The Movie Database) provider settings */
+  tmdb?: TMDBSettings
 }
 
 export type HomeScreenLayoutPreference = 'grid' | 'list' | 'carousel'
@@ -101,7 +104,9 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
     regionSettings: 'US',
     enabledProviders: {}
   },
-  providerSettings: {},
+  providerSettings: {
+    tmdb: DEFAULT_TMDB_SETTINGS
+  },
   homeScreenLayout: 'grid',
   notificationSettings: {
     enabled: true,
