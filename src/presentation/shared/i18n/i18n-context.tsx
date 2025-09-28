@@ -136,7 +136,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
 
     if (values) {
       Object.entries(values).forEach(([placeholder, value]) => {
-        message = message.replace(new RegExp(`{${placeholder}}`, 'g'), String(value))
+        message = message.replace(new RegExp(`{{${placeholder}}}`, 'g'), String(value))
       })
     }
 
