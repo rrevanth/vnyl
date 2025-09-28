@@ -172,15 +172,9 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
             {catalog.name}
           </Text>
           
-          <View style={styles.metadata}>
-            <Text style={styles.itemCount}>
-              {formatMessage('catalog.item_count', { count: catalog.items.length })}
-            </Text>
-            
-            <Text style={styles.lastUpdated}>
-              {formatMessage('catalog.last_updated', { date: catalog.updatedAt.toLocaleDateString() })}
-            </Text>
-          </View>
+          <Text style={styles.itemCount}>
+            {formatMessage('catalog.item_count', { count: catalog.items.length })}
+          </Text>
         </View>
         
         {onSeeAllPress && (
@@ -247,20 +241,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     lineHeight: moderateScale(20),
     marginBottom: theme.spacing.xs,
   },
-  metadata: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
   itemCount: {
     color: theme.colors.text.secondary,
     fontSize: moderateScale(12),
     fontWeight: '500',
-  },
-  lastUpdated: {
-    color: theme.colors.text.secondary,
-    fontSize: moderateScale(12),
-    fontWeight: '400',
   },
   seeAllButton: {
     paddingVertical: theme.spacing.xs,
