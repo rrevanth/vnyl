@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { getLocales } from 'expo-localization'
-import { useGetOrCreateUserUseCase, useUpdateUserLocaleUseCase, useLogging } from '@/src/infrastructure/di'
+import { useGetOrCreateUserUseCase, useUpdateUserLocaleUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import type { Locale, I18nContextValue, TranslationKey } from './types'
 import { en, es } from './locales'
 
@@ -44,7 +44,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
 }) => {
   const getOrCreateUserUseCase = useGetOrCreateUserUseCase()
   const updateUserLocaleUseCase = useUpdateUserLocaleUseCase()
-  const logger = useLogging()
+  const logger = useSafeLogging()
 
   // Initialize locale from user preferences or device settings
   useEffect(() => {
@@ -84,7 +84,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
       } catch (error) {
         // Fallback to default if everything fails
         const errorInstance = error instanceof Error ? error : new Error(String(error))
-        logger.warn('Failed to initialize locale from user preferences, using fallback', errorInstance, {
+        logger?.warn('Failed to initialize locale from user preferences, using fallback', errorInstance, {
           context: 'i18n_initialization',
           fallbackLocale,
           deviceLocale: getLocales()[0]?.languageCode
@@ -118,7 +118,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
     } catch (error) {
       // Handle error gracefully - UI layer doesn't need detailed error handling
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      logger.warn('Failed to update user locale preferences', errorInstance, {
+      logger?.warn('Failed to update user locale preferences', errorInstance, {
         context: 'i18n_locale_update',
         requestedLocale: locale,
         currentLocale: i18nState.locale.peek()

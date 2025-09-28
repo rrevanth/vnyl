@@ -24,9 +24,27 @@ export const useServiceAvailable = (token: ServiceToken): boolean => {
   return container.isRegistered(token)
 }
 
-// Infrastructure Service Hooks
+/**
+ * Safe DI hook that returns service only when available
+ */
+export const useSafeDI = <T>(token: ServiceToken): T | null => {
+  if (!container.isRegistered(token)) {
+    return null
+  }
+  try {
+    return container.resolve<T>(token)
+  } catch {
+    return null
+  }
+}
+
+// Infrastructure Service Hooks - Safe versions
 export const useLogging = (): ILoggingService => {
   return useDI<ILoggingService>(TOKENS.LOGGING_SERVICE)
+}
+
+export const useSafeLogging = (): ILoggingService | null => {
+  return useSafeDI<ILoggingService>(TOKENS.LOGGING_SERVICE)
 }
 
 export const useStorage = (): IStorageService => {
@@ -108,12 +126,20 @@ export const useUserPreferences = () => {
   }
 }
 
-// Catalog Use Case Hooks
+// Catalog Use Case Hooks - Safe versions
 export const useGetAllCatalogsUseCase = (): GetAllCatalogsUseCase => {
   return useDI<GetAllCatalogsUseCase>(TOKENS.GET_ALL_CATALOGS_USE_CASE)
 }
 
+export const useSafeGetAllCatalogsUseCase = (): GetAllCatalogsUseCase | null => {
+  return useSafeDI<GetAllCatalogsUseCase>(TOKENS.GET_ALL_CATALOGS_USE_CASE)
+}
+
 export const useLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase => {
   return useDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
+}
+
+export const useSafeLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase | null => {
+  return useSafeDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
 }
 

@@ -14,7 +14,7 @@
 import { useCallback, useMemo } from 'react'
 import { router } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { useLogging } from '@/src/infrastructure/di'
+import { useSafeLogging } from '@/src/infrastructure/di'
 import { useScrollTabBar } from '@/src/presentation/shared/hooks/useScrollTabBar'
 import { useHomeScreenController } from '@/src/presentation/shared/hooks/useHomeScreenController'
 import { useHomeCatalogs } from '@/src/presentation/shared/hooks/useHomeCatalogs'
@@ -108,7 +108,7 @@ interface UseIntegratedHomeScreenResult {
 export const useIntegratedHomeScreen = (
   options: UseIntegratedHomeScreenOptions = {}
 ): UseIntegratedHomeScreenResult => {
-  const logger = useLogging()
+  const logger = useSafeLogging()
   const queryClient = useQueryClient()
   const { handleScroll } = useScrollTabBar()
   
@@ -167,7 +167,7 @@ export const useIntegratedHomeScreen = (
    * Enhanced refresh that coordinates both query and controller
    */
   const refresh = useCallback(async (): Promise<void> => {
-    logger.info('IntegratedHomeScreen: Starting coordinated refresh')
+    logger?.info('IntegratedHomeScreen: Starting coordinated refresh')
     
     try {
       // Invalidate TanStack Query cache and refetch
@@ -177,10 +177,10 @@ export const useIntegratedHomeScreen = (
       // Also refresh controller state as backup
       await controllerActions.refresh()
       
-      logger.info('IntegratedHomeScreen: Coordinated refresh completed')
+      logger?.info('IntegratedHomeScreen: Coordinated refresh completed')
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      logger.error('IntegratedHomeScreen: Refresh failed', errorInstance)
+      logger?.error('IntegratedHomeScreen: Refresh failed', errorInstance)
       throw errorInstance
     }
   }, [logger, queryInvalidate, queryRefetch, controllerActions])
@@ -193,7 +193,7 @@ export const useIntegratedHomeScreen = (
     providerId: string, 
     page: number
   ): Promise<void> => {
-    logger.info('IntegratedHomeScreen: Loading more items', { catalogId, providerId, page })
+    logger?.info('IntegratedHomeScreen: Loading more items', { catalogId, providerId, page })
     
     try {
       // Use controller's load more functionality
@@ -209,10 +209,10 @@ export const useIntegratedHomeScreen = (
         queryKey: vnylQueryKeys.catalogs.all 
       })
       
-      logger.info('IntegratedHomeScreen: Load more completed successfully')
+      logger?.info('IntegratedHomeScreen: Load more completed successfully')
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      logger.error('IntegratedHomeScreen: Load more failed', errorInstance)
+      logger?.error('IntegratedHomeScreen: Load more failed', errorInstance)
       throw errorInstance
     }
   }, [logger, controllerActions, queryClient])
@@ -221,7 +221,7 @@ export const useIntegratedHomeScreen = (
    * Comprehensive cache invalidation
    */
   const invalidateCache = useCallback(async (): Promise<void> => {
-    logger.info('IntegratedHomeScreen: Invalidating all caches')
+    logger?.info('IntegratedHomeScreen: Invalidating all caches')
     
     // Invalidate all catalog-related queries
     await Promise.all([
@@ -229,14 +229,14 @@ export const useIntegratedHomeScreen = (
       queryClient.invalidateQueries({ queryKey: ['catalog-pagination'] })
     ])
     
-    logger.info('IntegratedHomeScreen: Cache invalidation completed')
+    logger?.info('IntegratedHomeScreen: Cache invalidation completed')
   }, [logger, queryClient])
 
   /**
    * Enhanced item press with analytics
    */
   const handleItemPress = useCallback((item: CatalogItem) => {
-    logger.debug('IntegratedHomeScreen: Item pressed', undefined, { 
+    logger?.debug('IntegratedHomeScreen: Item pressed', undefined, { 
       title: item.title, 
       mediaType: item.mediaType, 
       externalIds: item.externalIds 
@@ -253,7 +253,7 @@ export const useIntegratedHomeScreen = (
    * Add to watchlist with optimistic updates
    */
   const handleAddToWatchlist = useCallback((item: CatalogItem) => {
-    logger.debug('IntegratedHomeScreen: Added to watchlist', undefined, { title: item.title })
+    logger?.debug('IntegratedHomeScreen: Added to watchlist', undefined, { title: item.title })
     // TODO: Implement watchlist functionality via use case with optimistic updates
   }, [logger])
 
@@ -261,7 +261,7 @@ export const useIntegratedHomeScreen = (
    * More options press handler
    */
   const handleMorePress = useCallback((item: CatalogItem) => {
-    logger.debug('IntegratedHomeScreen: More options pressed', undefined, { title: item.title })
+    logger?.debug('IntegratedHomeScreen: More options pressed', undefined, { title: item.title })
     // Handled by ContextMenu in components
   }, [logger])
 
@@ -269,7 +269,7 @@ export const useIntegratedHomeScreen = (
    * See all press with enhanced navigation
    */
   const handleSeeAllPress = useCallback((title: string, catalog?: Catalog) => {
-    logger.debug('IntegratedHomeScreen: See all pressed', undefined, { title, catalogId: catalog?.id })
+    logger?.debug('IntegratedHomeScreen: See all pressed', undefined, { title, catalogId: catalog?.id })
     
     if (catalog) {
       router.push(`/grid/${catalog.id}` as any)

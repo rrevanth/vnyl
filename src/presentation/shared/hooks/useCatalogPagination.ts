@@ -9,7 +9,7 @@
 
 import { useInfiniteQuery, useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
-import { useLoadMoreCatalogItemsUseCase, useLogging } from '@/src/infrastructure/di'
+import { useSafeLoadMoreCatalogItemsUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import type { LoadMoreCatalogItemsRequest, LoadMoreCatalogItemsResult } from '@/src/domain/usecases/load-more-catalog-items.usecase'
 import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import type { PaginationInfo } from '@/src/domain/entities/media/catalog.entity'
@@ -85,8 +85,8 @@ export const useCatalogPagination = (
   providerId: string,
   options: UseCatalogPaginationOptions = {}
 ): UseCatalogPaginationResult => {
-  const loadMoreCatalogItemsUseCase = useLoadMoreCatalogItemsUseCase()
-  const logger = useLogging()
+  const loadMoreCatalogItemsUseCase = useSafeLoadMoreCatalogItemsUseCase()
+  const logger = useSafeLogging()
   const queryClient = useQueryClient()
   
   // Merge options with defaults
@@ -115,8 +115,12 @@ export const useCatalogPagination = (
   } = useInfiniteQuery<LoadMoreCatalogItemsResult, Error, InfiniteData<LoadMoreCatalogItemsResult>, readonly unknown[], number>({
     queryKey,
     queryFn: async ({ pageParam }: { pageParam?: number } = {}): Promise<LoadMoreCatalogItemsResult> => {
+      if (!loadMoreCatalogItemsUseCase) {
+        throw new Error('Pagination service not available. Please wait for app initialization.')
+      }
+
       const page = pageParam ?? paginationOptions.initialPage!
-      logger.info('CatalogPagination: Fetching page', { 
+      logger?.info('CatalogPagination: Fetching page', { 
         catalogId, 
         providerId, 
         page,
@@ -133,7 +137,7 @@ export const useCatalogPagination = (
 
         const result = await loadMoreCatalogItemsUseCase.execute(request)
         
-        logger.info('CatalogPagination: Page loaded successfully', {
+        logger?.info('CatalogPagination: Page loaded successfully', {
           catalogId,
           providerId,
           page,
@@ -145,7 +149,7 @@ export const useCatalogPagination = (
         return result
       } catch (error) {
         const errorInstance = error instanceof Error ? error : new Error(String(error))
-        logger.error('CatalogPagination: Page load failed', errorInstance, {
+        logger?.error('CatalogPagination: Page load failed', errorInstance, {
           catalogId,
           providerId,
           page
@@ -165,7 +169,7 @@ export const useCatalogPagination = (
       // Support backward pagination if needed
       return allPages.length > 1 ? 1 : undefined
     },
-    enabled: paginationOptions.enabled,
+    enabled: paginationOptions.enabled && !!loadMoreCatalogItemsUseCase,
     retry: paginationOptions.retry,
     staleTime: paginationOptions.staleTime,
     gcTime: paginationOptions.cacheTime
@@ -200,7 +204,7 @@ export const useCatalogPagination = (
 
   // Invalidate query cache
   const invalidate = useCallback(async (): Promise<void> => {
-    logger.info('CatalogPagination: Invalidating pagination cache', { catalogId, providerId })
+    logger?.info('CatalogPagination: Invalidating pagination cache', { catalogId, providerId })
     await queryClient.invalidateQueries({ queryKey })
   }, [queryClient, queryKey, catalogId, providerId, logger])
 

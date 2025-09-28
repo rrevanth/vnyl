@@ -3,6 +3,7 @@ import type { TranslationKey } from '../types'
 export const en: TranslationKey = {
   common: {
     loading: 'Loading...',
+    loading_more: 'Loading more...',
     error: 'Error',
     success: 'Success',
     retry: 'Retry',
@@ -20,6 +21,27 @@ export const en: TranslationKey = {
     search: 'Search',
     library: 'Library',
     settings: 'Settings'
+  },
+
+  home: {
+    welcome: 'Welcome to VNYL',
+    discover_content: 'Discover amazing movies and TV shows',
+    providers_active: '{{count}} of {{total}} providers active',
+    total_items: '{{count}} items available',
+    top_ten: 'Top 10',
+    top_ten_description: 'Most popular content across all providers',
+    award_winners: 'Award Winners',
+    award_winners_description: 'Critically acclaimed movies and shows',
+    no_catalogs: 'No Content Available',
+    no_catalogs_description: 'Configure your providers in settings to discover content',
+    error: 'Unable to Load Content',
+    generic_error: 'Something went wrong while loading content'
+  },
+
+  catalog: {
+    item_count: '{{count}} items',
+    last_updated: 'Updated {{date}}',
+    see_all: 'See All'
   },
 
   settings: {
@@ -189,6 +211,8 @@ export const en: TranslationKey = {
   },
 
   media: {
+    movie: 'Movie',
+    tv: 'TV Show',
     title: 'Title',
     description: 'Description',
     cast: 'Cast',

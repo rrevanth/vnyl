@@ -10,7 +10,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
-import { useGetAllCatalogsUseCase, useLogging } from '@/src/infrastructure/di'
+import { useSafeGetAllCatalogsUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
 import { vnylQueryKeys } from '@/src/presentation/shared/queries/vnyl-query-client'
 import type { GetAllCatalogsResult } from '@/src/domain/usecases/get-all-catalogs.usecase'
@@ -87,8 +87,8 @@ const DEFAULT_OPTIONS: UseHomeCatalogsOptions = {
  * caching, background updates, and error handling.
  */
 export const useHomeCatalogs = (options: UseHomeCatalogsOptions = {}): UseHomeCatalogsResult => {
-  const getAllCatalogsUseCase = useGetAllCatalogsUseCase()
-  const logger = useLogging()
+  const getAllCatalogsUseCase = useSafeGetAllCatalogsUseCase()
+  const logger = useSafeLogging()
   const queryClient = useQueryClient()
   const userPreferencesContext = useUserPreferences()
   
@@ -121,7 +121,11 @@ export const useHomeCatalogs = (options: UseHomeCatalogsOptions = {}): UseHomeCa
   } = useQuery({
     queryKey,
     queryFn: async (): Promise<GetAllCatalogsResult> => {
-      logger.info('HomeCatalogs: Fetching catalogs via TanStack Query', {
+      if (!getAllCatalogsUseCase) {
+        throw new Error('Catalog service not available. Please wait for app initialization.')
+      }
+
+      logger?.info('HomeCatalogs: Fetching catalogs via TanStack Query', {
         layout: userPreferencesContext.preferences.homeScreenLayout,
         enabledProviders: userPreferencesContext.preferences.providerPreferences.enabledProviders
       })
@@ -129,7 +133,7 @@ export const useHomeCatalogs = (options: UseHomeCatalogsOptions = {}): UseHomeCa
       try {
         const result = await getAllCatalogsUseCase.execute()
         
-        logger.info('HomeCatalogs: Query successful', {
+        logger?.info('HomeCatalogs: Query successful', {
           catalogCount: result.catalogs?.length || 0,
           totalItems: result.catalogs?.reduce((sum, catalog) => sum + catalog.items.length, 0) || 0,
           successfulProviders: result.successfulProviders,
@@ -139,11 +143,11 @@ export const useHomeCatalogs = (options: UseHomeCatalogsOptions = {}): UseHomeCa
         return result
       } catch (error) {
         const errorInstance = error instanceof Error ? error : new Error(String(error))
-        logger.error('HomeCatalogs: Query failed', errorInstance)
+        logger?.error('HomeCatalogs: Query failed', errorInstance)
         throw errorInstance
       }
     },
-    enabled: !userPreferencesContext.isLoading,
+    enabled: !userPreferencesContext.isLoading && !!getAllCatalogsUseCase,
     retry: queryOptions.retry,
     staleTime: queryOptions.staleTime,
     gcTime: queryOptions.cacheTime,
@@ -169,7 +173,7 @@ export const useHomeCatalogs = (options: UseHomeCatalogsOptions = {}): UseHomeCa
 
   // Invalidate query cache
   const invalidate = useCallback(async (): Promise<void> => {
-    logger.info('HomeCatalogs: Invalidating query cache')
+    logger?.info('HomeCatalogs: Invalidating query cache')
     await queryClient.invalidateQueries({ queryKey: vnylQueryKeys.catalogs.all })
   }, [queryClient, logger])
 

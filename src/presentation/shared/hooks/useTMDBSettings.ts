@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect } from 'react'
 import { useTranslation } from '@/src/presentation/shared/i18n'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
-import { useUpdateUserPreferencesUseCase, useLogging } from '@/src/infrastructure/di'
+import { useUpdateUserPreferencesUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import { createHttpClient } from '@/src/infrastructure/api/tmdb/base/http.client'
 import type { TMDBSettings } from '@/src/domain/entities'
 import { DEFAULT_TMDB_SETTINGS } from '@/src/domain/entities'
@@ -16,7 +16,7 @@ export const useTMDBSettings = () => {
   const { t } = useTranslation()
   const userPreferencesContext = useUserPreferences()
   const updateUserPreferencesUseCase = useUpdateUserPreferencesUseCase()
-  const logger = useLogging()
+  const logger = useSafeLogging()
   const [settings, setSettings] = useState<TMDBSettings>(DEFAULT_TMDB_SETTINGS)
   const [isLoading, setIsLoading] = useState(true)
   const [isTesting, setIsTesting] = useState(false)
@@ -80,11 +80,15 @@ export const useTMDBSettings = () => {
     
     try {
       // Create a temporary HTTP client with custom credentials for testing
-      const testConfig = {
+      const testConfig: any = {
         baseURL: 'https://api.themoviedb.org/3',
         timeout: 10000,
-        defaultHeaders: {} as Record<string, string>,
-        logger
+        defaultHeaders: {} as Record<string, string>
+      }
+      
+      // Only add logger if available
+      if (logger) {
+        testConfig.logger = logger
       }
       
       if (credentialsToTest.bearerToken) {
@@ -169,7 +173,7 @@ export const useTMDBSettings = () => {
     } catch (error) {
       // Fallback to defaults on error
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      logger.warn('Failed to load TMDB settings from user preferences, using defaults', errorInstance, {
+      logger?.warn('Failed to load TMDB settings from user preferences, using defaults', errorInstance, {
         context: 'tmdb_settings_load',
         hasProviderSettings: !!userPreferencesContext.preferences.providerSettings
       })

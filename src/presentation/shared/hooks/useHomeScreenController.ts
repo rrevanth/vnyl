@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useGetAllCatalogsUseCase, useLoadMoreCatalogItemsUseCase, useLogging } from '@/src/infrastructure/di'
+import { useSafeGetAllCatalogsUseCase, useSafeLoadMoreCatalogItemsUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
 import type { GetAllCatalogsResult } from '@/src/domain/usecases/get-all-catalogs.usecase'
 import type { LoadMoreCatalogItemsRequest, LoadMoreCatalogItemsResult } from '@/src/domain/usecases/load-more-catalog-items.usecase'
@@ -53,9 +53,9 @@ export interface UseHomeScreenControllerReturn {
  * Ready for TanStack Query integration while maintaining use case orchestration
  */
 export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
-  const getAllCatalogsUseCase = useGetAllCatalogsUseCase()
-  const loadMoreCatalogItemsUseCase = useLoadMoreCatalogItemsUseCase()
-  const logger = useLogging()
+  const getAllCatalogsUseCase = useSafeGetAllCatalogsUseCase()
+  const loadMoreCatalogItemsUseCase = useSafeLoadMoreCatalogItemsUseCase()
+  const logger = useSafeLogging()
   const userPreferencesContext = useUserPreferences()
 
   // State management
@@ -76,7 +76,7 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
   // Error handling with proper typing
   const handleError = useCallback((error: unknown, context: string) => {
     const errorInstance = error instanceof Error ? error : new Error(String(error))
-    logger.error(`HomeScreen: ${context}`, errorInstance)
+    logger?.error(`HomeScreen: ${context}`, errorInstance)
     updateState({ 
       error: errorInstance.message,
       isLoading: false,
@@ -87,8 +87,13 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
 
   // Load initial catalogs
   const loadCatalogs = useCallback(async () => {
+    if (!getAllCatalogsUseCase) {
+      updateState({ error: 'Catalogs service not available', isLoading: false })
+      return
+    }
+
     try {
-      logger.info('HomeScreen: Loading catalogs', {
+      logger?.info('HomeScreen: Loading catalogs', {
         layout: userPreferencesContext.preferences.homeScreenLayout,
         enabledProviders: userPreferencesContext.preferences.providerPreferences.enabledProviders
       })
@@ -106,7 +111,7 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
           isLoading: false
         })
 
-        logger.info('HomeScreen: Catalogs loaded successfully', {
+        logger?.info('HomeScreen: Catalogs loaded successfully', {
           catalogCount: result.catalogs.length,
           totalItems: result.catalogs.reduce((sum, catalog) => sum + catalog.items.length, 0),
           hasMore: hasMoreItems,
@@ -130,8 +135,13 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
 
   // Load more items for a specific catalog
   const loadMoreItems = useCallback(async (catalogId: string, providerId: string, page: number) => {
+    if (!loadMoreCatalogItemsUseCase) {
+      updateState({ error: 'Load more service not available', isLoadingMore: false })
+      return
+    }
+
     try {
-      logger.info('HomeScreen: Loading more items', { catalogId, providerId, page })
+      logger?.info('HomeScreen: Loading more items', { catalogId, providerId, page })
 
       updateState({ isLoadingMore: true, error: null })
 
@@ -168,7 +178,7 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
           }
         })
 
-        logger.info('HomeScreen: More items loaded successfully', {
+        logger?.info('HomeScreen: More items loaded successfully', {
           catalogId,
           providerId,
           newItemsCount: result.items.length,
@@ -191,7 +201,7 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
   // Refresh all catalogs
   const refresh = useCallback(async () => {
     try {
-      logger.info('HomeScreen: Refreshing catalogs')
+      logger?.info('HomeScreen: Refreshing catalogs')
       
       updateState({ refreshing: true, error: null })
 
@@ -201,7 +211,7 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
 
       updateState({ refreshing: false })
       
-      logger.info('HomeScreen: Refresh completed successfully')
+      logger?.info('HomeScreen: Refresh completed successfully')
     } catch (error) {
       handleError(error, 'failed to refresh catalogs')
     }

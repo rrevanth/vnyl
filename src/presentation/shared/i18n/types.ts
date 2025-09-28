@@ -4,6 +4,7 @@ export interface TranslationKey {
   // Common
   common: {
     loading: string
+    loading_more: string
     error: string
     success: string
     retry: string
@@ -22,6 +23,29 @@ export interface TranslationKey {
     search: string
     library: string
     settings: string
+  }
+
+  // Home
+  home: {
+    welcome: string
+    discover_content: string
+    providers_active: string
+    total_items: string
+    top_ten: string
+    top_ten_description: string
+    award_winners: string
+    award_winners_description: string
+    no_catalogs: string
+    no_catalogs_description: string
+    error: string
+    generic_error: string
+  }
+
+  // Catalog
+  catalog: {
+    item_count: string
+    last_updated: string
+    see_all: string
   }
 
   // Settings
@@ -195,6 +219,8 @@ export interface TranslationKey {
 
   // Media
   media: {
+    movie: string
+    tv: string
     title: string
     description: string
     cast: string
