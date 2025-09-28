@@ -197,11 +197,30 @@ export const useIntegratedHomeScreen = (
     logger?.info('IntegratedHomeScreen: Loading more items', { catalogId, providerId, page })
     
     try {
+      // Get the current query key to update the cache
+      const filters = JSON.stringify({
+        layout: preferences.layout,
+        enabledProviders: preferences.enabledProviders,
+        regionSettings: preferences.regionSettings
+      })
+      const queryKey = vnylQueryKeys.catalogs.list(filters)
+      
       // Use controller's load more functionality
       await controllerActions.loadMoreItems(catalogId, providerId, page)
       
-      // No need to invalidate queries - the controller already updates local state with new items
-      // Invalidating would cause a full page refresh instead of just appending items
+      // Update TanStack Query cache directly instead of invalidating
+      queryClient.setQueryData(queryKey, (oldData: Catalog[] | undefined) => {
+        if (!oldData) return oldData
+        
+        // Find the updated catalog from controller state and use it
+        const updatedCatalogFromController = controllerState.catalogs.find(c => c.id === catalogId)
+        if (!updatedCatalogFromController) return oldData
+        
+        // Replace the catalog in the query data with the updated one
+        return oldData.map(existingCatalog => 
+          existingCatalog.id === catalogId ? updatedCatalogFromController : existingCatalog
+        )
+      })
       
       logger?.info('IntegratedHomeScreen: Load more completed successfully')
     } catch (error) {
@@ -209,7 +228,7 @@ export const useIntegratedHomeScreen = (
       logger?.error('IntegratedHomeScreen: Load more failed', errorInstance)
       throw errorInstance
     }
-  }, [logger, controllerActions])
+  }, [logger, controllerActions, queryClient, preferences, controllerState.catalogs])
 
   /**
    * Load more items using catalog object directly (avoids catalog lookup issues)
@@ -227,20 +246,30 @@ export const useIntegratedHomeScreen = (
     })
     
     try {
-      // Use the catalogContext.catalogId (original ID) instead of the modified unique catalog.id
-      const originalCatalogId = catalog.catalogContext?.catalogId || catalog.catalogContext?.catalogType || 'unknown'
-      
-      logger?.debug('IntegratedHomeScreen: Using catalog object directly for load more', undefined, {
-        uniqueCatalogId: catalog.id,
-        originalCatalogId,
-        catalogType: catalog.catalogContext?.catalogType
+      // Get the current query key to update the cache
+      const filters = JSON.stringify({
+        layout: preferences.layout,
+        enabledProviders: preferences.enabledProviders,
+        regionSettings: preferences.regionSettings
       })
+      const queryKey = vnylQueryKeys.catalogs.list(filters)
       
-      // Use controller's new loadMoreItemsWithCatalog method to avoid catalog lookup
+      // Use controller's new loadMoreItemsWithCatalog method to get new items
       await controllerActions.loadMoreItemsWithCatalog(catalog, providerId, page)
       
-      // No need to invalidate queries - the controller already updates local state with new items
-      // Invalidating would cause a full page refresh instead of just appending items
+      // Update TanStack Query cache directly instead of invalidating
+      queryClient.setQueryData(queryKey, (oldData: Catalog[] | undefined) => {
+        if (!oldData) return oldData
+        
+        // Find the updated catalog from controller state and use it
+        const updatedCatalogFromController = controllerState.catalogs.find(c => c.id === catalog.id)
+        if (!updatedCatalogFromController) return oldData
+        
+        // Replace the catalog in the query data with the updated one
+        return oldData.map(existingCatalog => 
+          existingCatalog.id === catalog.id ? updatedCatalogFromController : existingCatalog
+        )
+      })
       
       logger?.info('IntegratedHomeScreen: Load more with catalog completed successfully')
     } catch (error) {
@@ -251,7 +280,7 @@ export const useIntegratedHomeScreen = (
       })
       throw errorInstance
     }
-  }, [logger, controllerActions])
+  }, [logger, controllerActions, queryClient, preferences, controllerState.catalogs])
 
   /**
    * Comprehensive cache invalidation
