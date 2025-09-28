@@ -138,7 +138,17 @@ export class TMDBConfigService implements ITMDBConfigService {
     const apiKey = this.environmentService.getTmdbApiKey()
     const baseURL = this.environmentService.getTmdbBaseUrl()!
 
+    this.logger.debug('TMDB Config Service: Initializing configuration', undefined, {
+      hasApiKey: !!apiKey,
+      baseURL,
+      environmentService: typeof this.environmentService
+    })
+
     if (!apiKey) {
+      this.logger.error('TMDB Config Service: API key not found', new Error('TMDB API key not found in environment variables'), {
+        checkedVariable: 'EXPO_PUBLIC_TMDB_API_KEY',
+        suggestion: 'Create a .env file with EXPO_PUBLIC_TMDB_API_KEY=your_api_key_here'
+      })
       throw new Error('TMDB API key not found in environment variables')
     }
 

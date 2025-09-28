@@ -243,21 +243,9 @@ export const useIntegratedHomeScreen = (
     })
     
     if (item.mediaType === 'person') {
-      router.push({ 
-        pathname: '/person/[id]', 
-        params: { 
-          id: item.id,
-          catalogItem: JSON.stringify(item)
-        } 
-      })
+      router.push(`/person/${item.id}` as any)
     } else {
-      router.push({ 
-        pathname: '/media/[id]', 
-        params: { 
-          id: item.id,
-          catalogItem: JSON.stringify(item)
-        } 
-      })
+      router.push(`/media/${item.id}` as any)
     }
   }, [logger])
 
@@ -284,12 +272,9 @@ export const useIntegratedHomeScreen = (
     logger.debug('IntegratedHomeScreen: See all pressed', undefined, { title, catalogId: catalog?.id })
     
     if (catalog) {
-      router.push({
-        pathname: '/grid/[catalogId]',
-        params: { catalogId: catalog.id }
-      })
+      router.push(`/grid/${catalog.id}` as any)
     } else {
-      router.push('/grid/all')
+      router.push('/grid/all' as any)
     }
   }, [logger])
 

@@ -17,7 +17,13 @@ export class EnvironmentService implements IEnvironmentService {
   }
 
   getTmdbApiKey(): string | undefined {
-    return this.get('EXPO_PUBLIC_TMDB_API_KEY')
+    const apiKey = this.get('EXPO_PUBLIC_TMDB_API_KEY')
+    this.logger.debug('Environment service: TMDB API key lookup', undefined, {
+      hasApiKey: !!apiKey,
+      keyLength: apiKey ? apiKey.length : 0,
+      keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none'
+    })
+    return apiKey
   }
 
   getTmdbBaseUrl(): string {

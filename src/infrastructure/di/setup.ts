@@ -2,6 +2,8 @@ import { DIContainer } from './container'
 import { TOKENS } from './tokens'
 import { ILoggingService, IStorageService, IApiClient, IConfigClient, ApiConfig, IUserPreferenceService, IEnvironmentService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
+import { IProviderRegistry } from '@/src/domain/providers/base/provider-registry.interface'
+import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
 import {
   GetOrCreateUserUseCase,
   UpdateUserPreferencesUseCase,
@@ -18,13 +20,13 @@ import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
 import { createTMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
-import { createTMDBCatalogProvider } from '@/src/infrastructure/providers/tmdb-catalog.provider'
-import type { ITMDBCatalogProvider } from '@/src/infrastructure/providers/tmdb-catalog.provider'
-import { ICatalogCapability } from '@/src/domain/providers/catalog/catalog-capability.interface'
+import { ProviderRegistry } from '@/src/infrastructure/providers/provider-registry.impl'
+import { TMDBProviderSource } from '@/src/infrastructure/providers/tmdb-provider-source'
+import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 
 const container = new DIContainer()
 
-export const initializeDI = (apiConfig: ApiConfig): void => {
+export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
   // Register Logging Service First (no dependencies)
   container.registerSingleton<ILoggingService>(
     TOKENS.LOGGING_SERVICE,
@@ -72,7 +74,6 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       return new UserPreferenceService(userRepository, logger, environmentService)
     }
   )
-
 
   // Register Config Client (depends on logging and user preferences)
   container.registerSingleton<IConfigClient>(
@@ -151,25 +152,61 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
-  // Register TMDB Catalog Provider (depends on TMDB service and logging)
-  container.registerSingleton<ITMDBCatalogProvider>(
-    TOKENS.TMDB_CATALOG_PROVIDER,
+  // Register Provider Registry (depends on logging)
+  container.registerSingleton<IProviderRegistry>(
+    TOKENS.PROVIDER_REGISTRY,
     () => {
-      const tmdbService = container.resolve<ITMDBService>(TOKENS.TMDB_SERVICE)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      return createTMDBCatalogProvider(tmdbService, logger)
+      return new ProviderRegistry(logger)
     }
   )
 
-  // Register Catalog Use Cases (depend on catalog providers and logging)
+  // Register TMDB Provider Source (depends on registry, container, and logging)
+  container.registerSingleton<TMDBProviderSource>(
+    TOKENS.TMDB_PROVIDER_SOURCE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new TMDBProviderSource(registry, container, logger)
+    }
+  )
+
+  // Initialize Provider Sources (register their providers with the registry)
+  const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+  logger.info('DI Container: Initializing provider sources')
+
+  try {
+    const tmdbProviderSource = container.resolve<TMDBProviderSource>(TOKENS.TMDB_PROVIDER_SOURCE)
+    const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+
+    // Initialize and register TMDB providers
+    await tmdbProviderSource.initialize()
+    await tmdbProviderSource.registerProviders(registry)
+
+    logger.info('DI Container: Provider sources initialized successfully', {
+      providerSources: ['TMDBProviderSource'],
+      registryStats: registry.getStats()
+    })
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    logger.error('DI Container: Failed to initialize provider sources', error instanceof Error ? error : new Error(String(error)), {
+      errorMessage
+    })
+    throw new Error(`Provider source initialization failed: ${errorMessage}`)
+  }
+
+  // Register Catalog Use Cases (depend on provider registry and logging)
   container.registerSingleton<GetAllCatalogsUseCase>(
     TOKENS.GET_ALL_CATALOGS_USE_CASE,
     () => {
-      const tmdbCatalogProvider = container.resolve<ITMDBCatalogProvider>(TOKENS.TMDB_CATALOG_PROVIDER)
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
       
-      // Create array of all catalog providers
-      const catalogProviders: ICatalogCapability[] = [tmdbCatalogProvider]
+      // Get all catalog providers from registry
+      const catalogProviders = registry.getAllProviders().filter(
+        provider => provider.capabilities.includes(ProviderCapability.CATALOG)
+      ) as ICatalogProvider[]
       
       return new GetAllCatalogsUseCase(catalogProviders, logger)
     }
@@ -178,20 +215,19 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
   container.registerSingleton<LoadMoreCatalogItemsUseCase>(
     TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE,
     () => {
-      const tmdbCatalogProvider = container.resolve<ITMDBCatalogProvider>(TOKENS.TMDB_CATALOG_PROVIDER)
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
       
-      // Create array of all catalog providers
-      const catalogProviders: ICatalogCapability[] = [tmdbCatalogProvider]
+      // Get all catalog providers from registry
+      const catalogProviders = registry.getAllProviders().filter(
+        provider => provider.capabilities.includes(ProviderCapability.CATALOG)
+      ) as ICatalogProvider[]
       
       return new LoadMoreCatalogItemsUseCase(catalogProviders, logger)
     }
   )
 
-
-
   // Log successful initialization
-  const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
   logger.info('DI Container initialized successfully', {
     services: [
       'LoggingService',
@@ -202,7 +238,8 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'ConfigClient',
       'ApiClient',
       'TMDBService',
-      'TMDBCatalogProvider',
+      'ProviderRegistry',
+      'TMDBProviderSource',
       'GetOrCreateUserUseCase',
       'UpdateUserPreferencesUseCase',
       'ResetUserPreferencesUseCase',

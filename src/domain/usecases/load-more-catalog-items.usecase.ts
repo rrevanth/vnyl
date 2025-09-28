@@ -8,7 +8,7 @@
 import { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { PaginationInfo } from '@/src/domain/entities/media/catalog.entity'
 import { CatalogContext } from '@/src/domain/entities/context/catalog-context.entity'
-import { ICatalogCapability } from '@/src/domain/providers/catalog/catalog-capability.interface'
+import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { ILoggingService } from '@/src/domain/services'
 
 /**
@@ -79,7 +79,7 @@ export interface LoadMetrics {
 
 export class LoadMoreCatalogItemsUseCase {
   constructor(
-    private readonly catalogProviders: ICatalogCapability[],
+    private readonly catalogProviders: ICatalogProvider[],
     private readonly logger: ILoggingService
   ) {}
 
@@ -234,14 +234,14 @@ export class LoadMoreCatalogItemsUseCase {
   /**
    * Finds a provider by its ID
    */
-  private findProviderById(providerId: string): ICatalogCapability | null {
+  private findProviderById(providerId: string): ICatalogProvider | null {
     return this.catalogProviders.find(provider => provider.id === providerId) || null
   }
 
   /**
    * Ensures the provider is properly initialized
    */
-  private async ensureProviderInitialized(provider: ICatalogCapability, requestId: string): Promise<void> {
+  private async ensureProviderInitialized(provider: ICatalogProvider, requestId: string): Promise<void> {
     try {
       await provider.initialize()
       this.logger.debug('Provider initialization confirmed', undefined, {

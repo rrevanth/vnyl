@@ -4,10 +4,10 @@ import { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
 
 /**
- * Catalog capability interface
+ * Catalog provider interface
  * Providers with this capability can provide catalogs of media content
  */
-export interface ICatalogCapability extends IProvider {
+export interface ICatalogProvider extends IProvider {
   /**
    * Get all available catalogs from this provider
    */

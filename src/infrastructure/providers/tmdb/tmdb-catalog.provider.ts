@@ -1,11 +1,11 @@
 /**
- * TMDB Catalog Provider Implementation
+ * TMDB Catalog Provider
  * 
- * Implements ICatalogCapability interface for TMDB service integration
- * Provides TMDB catalogs with proper context handling and data mapping
+ * Implementation of ICatalogProvider for The Movie Database (TMDB)
+ * Provides catalog functionality using TMDB's comprehensive API endpoints
  */
 
-import { ICatalogCapability } from '@/src/domain/providers/catalog/catalog-capability.interface'
+import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { Catalog, PaginationInfo, CatalogMetadata, CatalogUtils } from '@/src/domain/entities/media/catalog.entity'
 import { CatalogItem, CatalogItemUtils, MovieCatalogItem, TVCatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { MediaType, Genre } from '@/src/domain/entities/media/content-types'
@@ -18,34 +18,33 @@ import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types
 import type { TVShowSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
 import type { PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 
-export interface ITMDBCatalogProvider extends ICatalogCapability {
-  /** Provider identification */
-  readonly providerId: string
-  readonly providerName: string
-}
-
 /**
- * TMDB catalog provider constants
+ * TMDB catalog types with comprehensive endpoint support
  */
 export const TMDB_CATALOG_TYPES = {
+  // Movie catalogs
   POPULAR_MOVIES: 'popular_movies',
-  TOP_RATED_MOVIES: 'top_rated_movies', 
+  TOP_RATED_MOVIES: 'top_rated_movies',
+  UPCOMING_MOVIES: 'upcoming_movies',
+  NOW_PLAYING_MOVIES: 'now_playing_movies',
+  TRENDING_MOVIES: 'trending_movies',
+  
+  // TV catalogs
   POPULAR_TV: 'popular_tv',
   TOP_RATED_TV: 'top_rated_tv',
-  TRENDING_MOVIES: 'trending_movies',
+  AIRING_TODAY_TV: 'airing_today_tv',
+  ON_THE_AIR_TV: 'on_the_air_tv',
   TRENDING_TV: 'trending_tv'
 } as const
 
 export type TMDBCatalogType = typeof TMDB_CATALOG_TYPES[keyof typeof TMDB_CATALOG_TYPES]
 
 /**
- * TMDB catalog provider implementation
+ * TMDB Catalog Provider - Implementation of ICatalogProvider
  */
-export class TMDBCatalogProvider implements ITMDBCatalogProvider {
-  public readonly id = 'tmdb'
-  public readonly name = 'The Movie Database (TMDB)'
-  public readonly providerId = 'tmdb'
-  public readonly providerName = 'The Movie Database (TMDB)'
+export class TMDBCatalogProvider implements ICatalogProvider {
+  public readonly id = 'tmdb-catalog'
+  public readonly name = 'TMDB Catalog Provider'
   public readonly capabilities: ProviderCapability[] = [ProviderCapability.CATALOG]
   public readonly priority = 10
 
@@ -54,66 +53,66 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
     private readonly logger: ILoggingService
   ) {}
 
-  /**
-   * Initialize the provider
-   */
   async initialize(): Promise<void> {
     try {
       await this.tmdbService.initialize()
-      this.logger.info('TMDB catalog provider initialized successfully', { context: 'tmdb_catalog_provider' })
+      this.logger.info('TMDB catalog provider initialized successfully', { 
+        context: 'tmdb_catalog_provider' 
+      })
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      this.logger.error('Failed to initialize TMDB catalog provider', errorInstance, { context: 'tmdb_catalog_provider' })
-      throw new Error(`Failed to initialize TMDB catalog provider: ${errorInstance.message}`)
+      this.logger.error('Failed to initialize TMDB catalog provider', errorInstance, { 
+        context: 'tmdb_catalog_provider' 
+      })
+      throw new Error(`TMDB catalog provider initialization failed: ${errorInstance.message}`)
     }
   }
 
-  /**
-   * Get all available catalogs from TMDB
-   */
   async getAllCatalogs(): Promise<Catalog[]> {
     try {
-      this.logger.info('Fetching all TMDB catalogs', { context: 'tmdb_catalog_provider' })
+      this.logger.info('Fetching all TMDB catalogs', { 
+        context: 'tmdb_catalog_provider' 
+      })
 
-      const catalogs = await Promise.allSettled([
-        this.getCatalog(TMDB_CATALOG_TYPES.POPULAR_MOVIES, 1, 20),
-        this.getCatalog(TMDB_CATALOG_TYPES.TOP_RATED_MOVIES, 1, 20),
-        this.getCatalog(TMDB_CATALOG_TYPES.POPULAR_TV, 1, 20),
-        this.getCatalog(TMDB_CATALOG_TYPES.TOP_RATED_TV, 1, 20)
-      ])
-
-      const successfulCatalogs = catalogs
-        .filter((result): result is PromiseFulfilledResult<Catalog> => result.status === 'fulfilled')
-        .map(result => result.value)
-
-      // Log any failures
-      catalogs.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          const catalogTypes = Object.values(TMDB_CATALOG_TYPES)
-          const catalogType = catalogTypes[index]
-          this.logger.warn('Failed to fetch TMDB catalog', result.reason instanceof Error ? result.reason : new Error(String(result.reason)), {
+      const startTime = performance.now()
+      
+      // Get a sample of each catalog type with optimized API calls
+      const catalogPromises = Object.values(TMDB_CATALOG_TYPES).map(catalogType =>
+        this.getCatalog(catalogType, 1, 20).catch(error => {
+          this.logger.warn('Failed to fetch catalog sample', error instanceof Error ? error : new Error(String(error)), {
             context: 'tmdb_catalog_provider',
             catalogType
           })
-        }
-      })
+          return null
+        })
+      )
+
+      const catalogResults = await Promise.allSettled(catalogPromises)
+      
+      const successfulCatalogs = catalogResults
+        .filter((result): result is PromiseFulfilledResult<Catalog | null> => result.status === 'fulfilled')
+        .map(result => result.value)
+        .filter((catalog): catalog is Catalog => catalog !== null)
+
+      const fetchTime = performance.now() - startTime
 
       this.logger.info('Successfully fetched TMDB catalogs', {
         context: 'tmdb_catalog_provider',
-        catalogCount: successfulCatalogs.length
+        catalogCount: successfulCatalogs.length,
+        totalAttempted: Object.values(TMDB_CATALOG_TYPES).length,
+        fetchTime: Math.round(fetchTime)
       })
 
       return successfulCatalogs
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      this.logger.error('Failed to fetch all TMDB catalogs', errorInstance, { context: 'tmdb_catalog_provider' })
+      this.logger.error('Failed to fetch all TMDB catalogs', errorInstance, { 
+        context: 'tmdb_catalog_provider' 
+      })
       throw new Error(`Failed to fetch TMDB catalogs: ${errorInstance.message}`)
     }
   }
 
-  /**
-   * Get a specific catalog with pagination
-   */
   async getCatalog(catalogId: string, page: number = 1, limit: number = 20): Promise<Catalog> {
     try {
       this.logger.info('Fetching TMDB catalog', {
@@ -124,52 +123,7 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
       })
 
       const startTime = performance.now()
-      let response: PaginatedResponse<MovieSummary | TVShowSummary>
-      let mediaType: MediaType
-      let catalogName: string
-
-      // Fetch data based on catalog type
-      switch (catalogId) {
-        case TMDB_CATALOG_TYPES.POPULAR_MOVIES:
-          response = await this.tmdbService.client.movies.getPopular({ page })
-          mediaType = MediaType.MOVIE
-          catalogName = 'Popular Movies'
-          break
-
-        case TMDB_CATALOG_TYPES.TOP_RATED_MOVIES:
-          response = await this.tmdbService.client.movies.getTopRated({ page })
-          mediaType = MediaType.MOVIE
-          catalogName = 'Top Rated Movies'
-          break
-
-        case TMDB_CATALOG_TYPES.POPULAR_TV:
-          response = await this.tmdbService.client.tv.getPopular({ page })
-          mediaType = MediaType.TV_SERIES
-          catalogName = 'Popular TV Shows'
-          break
-
-        case TMDB_CATALOG_TYPES.TOP_RATED_TV:
-          response = await this.tmdbService.client.tv.getTopRated({ page })
-          mediaType = MediaType.TV_SERIES
-          catalogName = 'Top Rated TV Shows'
-          break
-
-        case TMDB_CATALOG_TYPES.TRENDING_MOVIES:
-          response = await this.tmdbService.getTrendingMovies() as PaginatedResponse<MovieSummary>
-          mediaType = MediaType.MOVIE
-          catalogName = 'Trending Movies'
-          break
-
-        case TMDB_CATALOG_TYPES.TRENDING_TV:
-          response = await this.tmdbService.getTrendingTV() as PaginatedResponse<TVShowSummary>
-          mediaType = MediaType.TV_SERIES
-          catalogName = 'Trending TV Shows'
-          break
-
-        default:
-          throw new Error(`Unsupported catalog type: ${catalogId}`)
-      }
-
+      const { response, mediaType, catalogName } = await this.fetchCatalogData(catalogId, page)
       const fetchTime = performance.now() - startTime
 
       // Create catalog context
@@ -182,17 +136,17 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
       }
 
       const catalogContext: CatalogContext = {
-        providerId: this.providerId,
-        providerName: this.providerName,
+        providerId: 'tmdb',
+        providerName: 'The Movie Database (TMDB)',
         catalogId,
         catalogName,
         catalogType: catalogId,
         pageInfo,
         lastFetchAt: new Date(),
-        requestId: `${this.providerId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        requestId: `tmdb-catalog-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }
 
-      // Convert TMDB items to catalog items
+      // Convert TMDB items to catalog items with essential data
       const items = response.results.slice(0, limit).map((item, index) => 
         this.mapTMDBItemToCatalogItem(item, catalogContext, index, mediaType)
       )
@@ -208,13 +162,13 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
       // Create catalog metadata
       const metadata: CatalogMetadata = {
         fetchTime,
-        cacheHit: false, // Always false for fresh API calls
+        cacheHit: false,
         itemCount: items.length,
         quality: this.calculateQualityScore(items)
       }
 
       const catalog: Catalog = {
-        id: CatalogUtils.createCatalogId(catalogId, this.providerId, { page, limit }),
+        id: CatalogUtils.createCatalogId(catalogId, 'tmdb', { page, limit }),
         name: catalogName,
         mediaType,
         items,
@@ -229,7 +183,8 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
         context: 'tmdb_catalog_provider',
         catalogId,
         itemCount: items.length,
-        fetchTime: Math.round(fetchTime)
+        fetchTime: Math.round(fetchTime),
+        quality: metadata.quality
       })
 
       return catalog
@@ -245,9 +200,6 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
     }
   }
 
-  /**
-   * Load more items for a specific catalog (pagination)
-   */
   async loadMoreItems(catalogId: string, page: number, limit: number = 20): Promise<CatalogItem[]> {
     try {
       this.logger.info('Loading more TMDB catalog items', {
@@ -258,6 +210,14 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
       })
 
       const catalog = await this.getCatalog(catalogId, page, limit)
+      
+      this.logger.info('Successfully loaded more TMDB catalog items', {
+        context: 'tmdb_catalog_provider',
+        catalogId,
+        page,
+        itemCount: catalog.items.length
+      })
+
       return catalog.items
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
@@ -271,23 +231,91 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
     }
   }
 
-  /**
-   * Get supported media types for this provider
-   */
   getSupportedMediaTypes(): MediaType[] {
     return [MediaType.MOVIE, MediaType.TV_SERIES]
   }
 
-  /**
-   * Get supported catalog types for this provider
-   */
   getSupportedCatalogTypes(): string[] {
     return Object.values(TMDB_CATALOG_TYPES)
   }
 
-  /**
-   * Maps TMDB API response to CatalogItem
-   */
+  private async fetchCatalogData(catalogId: string, page: number): Promise<{
+    response: PaginatedResponse<MovieSummary | TVShowSummary>
+    mediaType: MediaType
+    catalogName: string
+  }> {
+    const client = this.tmdbService.client
+
+    switch (catalogId) {
+      // Movie catalogs
+      case TMDB_CATALOG_TYPES.POPULAR_MOVIES:
+        return {
+          response: await client.movies.getPopular({ page }),
+          mediaType: MediaType.MOVIE,
+          catalogName: 'Popular Movies'
+        }
+      case TMDB_CATALOG_TYPES.TOP_RATED_MOVIES:
+        return {
+          response: await client.movies.getTopRated({ page }),
+          mediaType: MediaType.MOVIE,
+          catalogName: 'Top Rated Movies'
+        }
+      case TMDB_CATALOG_TYPES.UPCOMING_MOVIES:
+        return {
+          response: await client.movies.getUpcoming({ page }),
+          mediaType: MediaType.MOVIE,
+          catalogName: 'Upcoming Movies'
+        }
+      case TMDB_CATALOG_TYPES.NOW_PLAYING_MOVIES:
+        return {
+          response: await client.movies.getNowPlaying({ page }),
+          mediaType: MediaType.MOVIE,
+          catalogName: 'Now Playing Movies'
+        }
+      case TMDB_CATALOG_TYPES.TRENDING_MOVIES:
+        return {
+          response: await client.trending.getTrendingMovies('week'),
+          mediaType: MediaType.MOVIE,
+          catalogName: 'Trending Movies'
+        }
+      
+      // TV catalogs
+      case TMDB_CATALOG_TYPES.POPULAR_TV:
+        return {
+          response: await client.tv.getPopular({ page }),
+          mediaType: MediaType.TV_SERIES,
+          catalogName: 'Popular TV Shows'
+        }
+      case TMDB_CATALOG_TYPES.TOP_RATED_TV:
+        return {
+          response: await client.tv.getTopRated({ page }),
+          mediaType: MediaType.TV_SERIES,
+          catalogName: 'Top Rated TV Shows'
+        }
+      case TMDB_CATALOG_TYPES.AIRING_TODAY_TV:
+        return {
+          response: await client.tv.getAiringToday({ page }),
+          mediaType: MediaType.TV_SERIES,
+          catalogName: 'Airing Today'
+        }
+      case TMDB_CATALOG_TYPES.ON_THE_AIR_TV:
+        return {
+          response: await client.tv.getOnTheAir({ page }),
+          mediaType: MediaType.TV_SERIES,
+          catalogName: 'On The Air'
+        }
+      case TMDB_CATALOG_TYPES.TRENDING_TV:
+        return {
+          response: await client.trending.getTrendingTV('week'),
+          mediaType: MediaType.TV_SERIES,
+          catalogName: 'Trending TV Shows'
+        }
+
+      default:
+        throw new Error(`Unsupported catalog type: ${catalogId}`)
+    }
+  }
+
   private mapTMDBItemToCatalogItem(
     item: MovieSummary | TVShowSummary,
     catalogContext: CatalogContext,
@@ -303,7 +331,7 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
     )
 
     const baseItem = {
-      id: CatalogItemUtils.createCatalogItemId(mediaType, item.id, this.providerId),
+      id: CatalogItemUtils.createCatalogItemId(mediaType, item.id, 'tmdb'),
       mediaType,
       title: this.getTitle(item),
       originalTitle: this.getOriginalTitle(item),
@@ -337,35 +365,18 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
     }
   }
 
-  /**
-   * Gets title from TMDB item
-   */
   private getTitle(item: MovieSummary | TVShowSummary): string {
-    if ('title' in item) {
-      return item.title
-    }
-    if ('name' in item) {
-      return item.name
-    }
+    if ('title' in item) return item.title
+    if ('name' in item) return item.name
     return 'Unknown Title'
   }
 
-  /**
-   * Gets original title from TMDB item
-   */
   private getOriginalTitle(item: MovieSummary | TVShowSummary): string | undefined {
-    if ('original_title' in item) {
-      return item.original_title
-    }
-    if ('original_name' in item) {
-      return item.original_name
-    }
+    if ('original_title' in item) return item.original_title
+    if ('original_name' in item) return item.original_name
     return undefined
   }
 
-  /**
-   * Gets release date from TMDB item
-   */
   private getReleaseDate(item: MovieSummary | TVShowSummary): Date | undefined {
     let dateString: string | undefined
     
@@ -378,35 +389,22 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
     return dateString ? new Date(dateString) : undefined
   }
 
-  /**
-   * Gets poster URL from TMDB item
-   */
   private getPosterUrl(item: MovieSummary | TVShowSummary): string | null {
     return item.poster_path 
       ? this.tmdbService.config.getImageUrl(item.poster_path, 'poster')
       : null
   }
 
-  /**
-   * Gets backdrop URL from TMDB item
-   */
   private getBackdropUrl(item: MovieSummary | TVShowSummary): string | null {
     return item.backdrop_path 
       ? this.tmdbService.config.getImageUrl(item.backdrop_path, 'backdrop')
       : null
   }
 
-  /**
-   * Maps TMDB genre IDs to Genre enum values
-   * Note: This is a simplified mapping - in a real implementation,
-   * you'd want to fetch the genre list from TMDB and create a proper mapping
-   */
   private mapGenres(genreIds: number[]): Genre[] | undefined {
-    if (!genreIds || genreIds.length === 0) {
-      return undefined
-    }
+    if (!genreIds || genreIds.length === 0) return undefined
 
-    // Simplified genre mapping - in practice, you'd use TMDB's genre endpoints
+    // TMDB genre mapping
     const genreMap: Record<number, Genre> = {
       28: Genre.ACTION,
       12: Genre.ADVENTURE,
@@ -434,22 +432,12 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
       .filter((genre): genre is Genre => genre !== undefined)
   }
 
-  /**
-   * Creates external IDs for TMDB item
-   */
   private createExternalIds(tmdbId: number): ExternalIds {
-    return {
-      tmdb: tmdbId
-    }
+    return { tmdb: tmdbId }
   }
 
-  /**
-   * Calculates quality score for catalog items
-   */
   private calculateQualityScore(items: CatalogItem[]): number {
-    if (items.length === 0) {
-      return 0
-    }
+    if (items.length === 0) return 0
 
     let totalScore = 0
     let scoredItems = 0
@@ -499,11 +487,11 @@ export class TMDBCatalogProvider implements ITMDBCatalogProvider {
 }
 
 /**
- * Factory function to create TMDB catalog provider
+ * Factory function to create the TMDB catalog provider
  */
 export const createTMDBCatalogProvider = (
   tmdbService: ITMDBService,
   logger: ILoggingService
-): ITMDBCatalogProvider => {
+): TMDBCatalogProvider => {
   return new TMDBCatalogProvider(tmdbService, logger)
 }

@@ -27,4 +27,13 @@ export interface IProviderRegistry {
    * Get all registered providers
    */
   getAllProviders(): IProvider[]
+
+  /**
+   * Get registry statistics
+   */
+  getStats(): {
+    totalProviders: number
+    providersByCapability: Record<string, number>
+    providers: { id: string; name: string; capabilities: ProviderCapability[]; priority: number }[]
+  }
 }

@@ -23,8 +23,9 @@ export const TOKENS = {
   UPDATE_USER_THEME_USE_CASE: Symbol('UpdateUserThemeUseCase'),
   UPDATE_USER_LOCALE_USE_CASE: Symbol('UpdateUserLocaleUseCase'),
 
-  // Provider Services
-  TMDB_CATALOG_PROVIDER: Symbol('ITMDBCatalogProvider'),
+  // Provider Registry System
+  PROVIDER_REGISTRY: Symbol('IProviderRegistry'),
+  TMDB_PROVIDER_SOURCE: Symbol('TMDBProviderSource'),
   
   // Catalog Use Cases
   GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),

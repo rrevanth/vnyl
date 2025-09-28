@@ -6,7 +6,7 @@
  */
 
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
-import { ICatalogCapability } from '@/src/domain/providers/catalog/catalog-capability.interface'
+import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { ILoggingService } from '@/src/domain/services'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
 
@@ -45,7 +45,7 @@ export interface ProviderError {
 
 export class GetAllCatalogsUseCase {
   constructor(
-    private readonly catalogProviders: ICatalogCapability[],
+    private readonly catalogProviders: ICatalogProvider[],
     private readonly logger: ILoggingService
   ) {}
 
@@ -106,7 +106,7 @@ export class GetAllCatalogsUseCase {
 
       // Extract successfully initialized providers
       const initializedProviders = initResults
-        .filter((result): result is PromiseFulfilledResult<ICatalogCapability> => 
+        .filter((result): result is PromiseFulfilledResult<ICatalogProvider> => 
           result.status === 'fulfilled'
         )
         .map(result => result.value)
@@ -194,7 +194,7 @@ export class GetAllCatalogsUseCase {
       // Extract successful catalog results
       const successfulResults = catalogResults
         .filter((result): result is PromiseFulfilledResult<{
-          provider: ICatalogCapability
+          provider: ICatalogProvider
           catalogs: Catalog[]
           fetchTime: number
         }> => result.status === 'fulfilled')
