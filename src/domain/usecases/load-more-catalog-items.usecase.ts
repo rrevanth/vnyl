@@ -129,9 +129,11 @@ export class LoadMoreCatalogItemsUseCase {
       // Load more items from the provider
       const catalogFetchStart = performance.now()
       
-      // Pass either the full catalog object or the catalogId
-      const catalogOrId = request.catalog || request.catalogId
-      const items = await provider.loadMoreItems(catalogOrId, request.page, limit)
+      // Use the catalog object for load more operation
+      if (!request.catalog) {
+        throw new Error('Catalog object is required for load more operation')
+      }
+      const items = await provider.loadMoreItems(request.catalog, request.page, limit)
       const catalogFetchTime = performance.now() - catalogFetchStart
 
       this.logger.debug('Successfully loaded catalog items', undefined, {

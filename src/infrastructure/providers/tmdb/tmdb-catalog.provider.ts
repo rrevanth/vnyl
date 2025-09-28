@@ -204,88 +204,67 @@ export class TMDBCatalogProvider implements ICatalogProvider {
     }
   }
 
-  async loadMoreItems(catalogOrId: Catalog | string, page: number, limit: number = 20): Promise<CatalogItem[]> {
+  async loadMoreItems(catalog: Catalog, page: number, limit: number = 20): Promise<CatalogItem[]> {
+    const catalogType = catalog.catalogContext?.catalogType || ''
+
+    this.logger.info('Loading more TMDB catalog items', {
+      context: 'tmdb_catalog_provider',
+      catalogId: catalog.id,
+      catalogType,
+      page,
+      limit
+    })
+
     try {
-      let catalog: Catalog
-      let catalogType: string
-
-      if (typeof catalogOrId === 'string') {
-        // Legacy mode: catalogOrId is a catalogId string
-        this.logger.info('Loading more TMDB catalog items (legacy mode)', {
-          context: 'tmdb_catalog_provider',
-          catalogId: catalogOrId,
-          page,
-          limit
-        })
-
-        // Call getCatalog to get items (this will fail with complex IDs, but maintains backwards compatibility)
-        catalog = await this.getCatalog(catalogOrId, page, limit)
-        return catalog.items
-      } else {
-        // New mode: catalogOrId is a full Catalog object
-        catalog = catalogOrId
-        catalogType = catalog.catalogContext?.catalogType || ''
-
-        this.logger.info('Loading more TMDB catalog items using catalog context', {
-          context: 'tmdb_catalog_provider',
-          catalogId: catalog.id,
-          catalogType,
-          page,
-          limit
-        })
-
-        if (!catalogType) {
-          throw new Error(`No catalog type found in catalog context for ${catalog.id}`)
-        }
-
-        // Fetch data directly using catalog context instead of calling getCatalog
-        const startTime = performance.now()
-        const { response, mediaType } = await this.fetchCatalogData(catalogType, page)
-        const fetchTime = performance.now() - startTime
-
-        // Create updated catalog context for the new items
-        const pageInfo: PageInfo = {
-          currentPage: response.page,
-          totalPages: response.total_pages,
-          totalItems: response.total_results,
-          hasMorePages: response.page < response.total_pages,
-          pageSize: response.results.length
-        }
-
-        const updatedCatalogContext: CatalogContext = {
-          ...catalog.catalogContext,
-          pageInfo,
-          lastFetchAt: new Date(),
-          requestId: `tmdb-catalog-loadmore-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        }
-
-        // Convert TMDB items to catalog items
-        const items = response.results.slice(0, limit).map((item, index) => 
-          this.mapTMDBItemToCatalogItem(item, updatedCatalogContext, index, mediaType)
-        )
-        
-        this.logger.info('Successfully loaded more TMDB catalog items using direct fetch', {
-          context: 'tmdb_catalog_provider',
-          catalogId: catalog.id,
-          catalogType,
-          page,
-          itemCount: items.length,
-          fetchTime: Math.round(fetchTime)
-        })
-
-        return items
+      if (!catalogType) {
+        throw new Error(`No catalog type found in catalog context for ${catalog.id}`)
       }
+
+      // Fetch data directly using catalog context
+      const startTime = performance.now()
+      const { response, mediaType } = await this.fetchCatalogData(catalogType, page)
+      const fetchTime = performance.now() - startTime
+
+      // Create updated catalog context for the new items
+      const pageInfo: PageInfo = {
+        currentPage: response.page,
+        totalPages: response.total_pages,
+        totalItems: response.total_results,
+        hasMorePages: response.page < response.total_pages,
+        pageSize: response.results.length
+      }
+
+      const updatedCatalogContext: CatalogContext = {
+        ...catalog.catalogContext,
+        pageInfo,
+        lastFetchAt: new Date(),
+        requestId: `tmdb-catalog-loadmore-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }
+
+      // Convert TMDB items to catalog items
+      const items = response.results.slice(0, limit).map((item, index) => 
+        this.mapTMDBItemToCatalogItem(item, updatedCatalogContext, index, mediaType)
+      )
+      
+      this.logger.info('Successfully loaded more TMDB catalog items', {
+        context: 'tmdb_catalog_provider',
+        catalogId: catalog.id,
+        catalogType,
+        page,
+        itemCount: items.length,
+        fetchTime: Math.round(fetchTime)
+      })
+
+      return items
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      const catalogId = typeof catalogOrId === 'string' ? catalogOrId : catalogOrId.id
-      
       this.logger.error('Failed to load more TMDB catalog items', errorInstance, {
         context: 'tmdb_catalog_provider',
-        catalogId,
+        catalogId: catalog.id,
         page,
         limit
       })
-      throw new Error(`Failed to load more items for catalog ${catalogId}: ${errorInstance.message}`)
+      throw new Error(`Failed to load more items for catalog ${catalog.id}: ${errorInstance.message}`)
     }
   }
 
