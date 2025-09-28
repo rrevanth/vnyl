@@ -11,6 +11,9 @@ export interface IProvider {
   /** Human-readable provider name */
   readonly name: string
 
+  /** Source identifier that created this provider */
+  readonly sourceId: string
+
   /** Capabilities this provider supports */
   readonly capabilities: ProviderCapability[]
 

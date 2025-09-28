@@ -187,11 +187,12 @@ export class TMDBProviderSource implements IProviderSource {
   private createCatalogProvider(tmdbService: ITMDBService): TMDBCatalogProvider {
     this.logger.debug('TMDBProviderSource: Creating catalog provider')
 
-    const provider = new TMDBCatalogProvider(tmdbService, this.logger)
+    const provider = new TMDBCatalogProvider(tmdbService, this.logger, this.id)
 
     this.logger.info('TMDBProviderSource: Catalog provider created', {
       providerId: provider.id,
       providerName: provider.name,
+      sourceId: provider.sourceId,
       capabilities: provider.capabilities,
       priority: provider.priority
     })
@@ -205,11 +206,12 @@ export class TMDBProviderSource implements IProviderSource {
   private createMetadataProvider(tmdbService: ITMDBService): TMDBMetadataProvider {
     this.logger.debug('TMDBProviderSource: Creating metadata provider')
 
-    const provider = new TMDBMetadataProvider(tmdbService, this.logger)
+    const provider = new TMDBMetadataProvider(tmdbService, this.logger, this.id)
 
     this.logger.info('TMDBProviderSource: Metadata provider created', {
       providerId: provider.id,
       providerName: provider.name,
+      sourceId: provider.sourceId,
       capabilities: provider.capabilities,
       priority: provider.priority
     })
@@ -223,11 +225,12 @@ export class TMDBProviderSource implements IProviderSource {
   private createImagesProvider(tmdbService: ITMDBService): TMDBImagesProvider {
     this.logger.debug('TMDBProviderSource: Creating images provider')
 
-    const provider = new TMDBImagesProvider(tmdbService, this.logger)
+    const provider = new TMDBImagesProvider(tmdbService, this.logger, this.id)
 
     this.logger.info('TMDBProviderSource: Images provider created', {
       providerId: provider.id,
       providerName: provider.name,
+      sourceId: provider.sourceId,
       capabilities: provider.capabilities,
       priority: provider.priority
     })

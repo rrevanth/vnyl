@@ -67,13 +67,17 @@ export const TMDB_IMAGE_SIZES: Record<string, ImageSize[]> = {
 export class TMDBImagesProvider implements IImagesProvider {
   public readonly id = 'tmdb-images'
   public readonly name = 'TMDB Images Provider'
+  public readonly sourceId: string
   public readonly capabilities: ProviderCapability[] = [ProviderCapability.IMAGES]
   public readonly priority = 10
 
   constructor(
     private readonly tmdbService: ITMDBService,
-    private readonly logger: ILoggingService
-  ) {}
+    private readonly logger: ILoggingService,
+    sourceId: string
+  ) {
+    this.sourceId = sourceId
+  }
 
   async initialize(): Promise<void> {
     try {
@@ -376,7 +380,8 @@ export class TMDBImagesProvider implements IImagesProvider {
  */
 export const createTMDBImagesProvider = (
   tmdbService: ITMDBService,
-  logger: ILoggingService
+  logger: ILoggingService,
+  sourceId: string
 ): TMDBImagesProvider => {
-  return new TMDBImagesProvider(tmdbService, logger)
+  return new TMDBImagesProvider(tmdbService, logger, sourceId)
 }

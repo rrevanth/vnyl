@@ -45,13 +45,17 @@ export type TMDBCatalogType = typeof TMDB_CATALOG_TYPES[keyof typeof TMDB_CATALO
 export class TMDBCatalogProvider implements ICatalogProvider {
   public readonly id = 'tmdb-catalog'
   public readonly name = 'TMDB Catalog Provider'
+  public readonly sourceId: string
   public readonly capabilities: ProviderCapability[] = [ProviderCapability.CATALOG]
   public readonly priority = 10
 
   constructor(
     private readonly tmdbService: ITMDBService,
-    private readonly logger: ILoggingService
-  ) {}
+    private readonly logger: ILoggingService,
+    sourceId: string
+  ) {
+    this.sourceId = sourceId
+  }
 
   async initialize(): Promise<void> {
     try {
@@ -491,7 +495,8 @@ export class TMDBCatalogProvider implements ICatalogProvider {
  */
 export const createTMDBCatalogProvider = (
   tmdbService: ITMDBService,
-  logger: ILoggingService
+  logger: ILoggingService,
+  sourceId: string
 ): TMDBCatalogProvider => {
-  return new TMDBCatalogProvider(tmdbService, logger)
+  return new TMDBCatalogProvider(tmdbService, logger, sourceId)
 }

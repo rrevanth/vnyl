@@ -29,11 +29,34 @@ export interface IProviderRegistry {
   getAllProviders(): IProvider[]
 
   /**
+   * Get all providers from a specific source
+   */
+  getProvidersBySource(sourceId: string): IProvider[]
+
+  /**
+   * Get capabilities available from a specific source
+   */
+  getCapabilitiesBySource(sourceId: string): ProviderCapability[]
+
+  /**
+   * Unregister all providers from a specific source
+   */
+  unregisterProvidersBySource(sourceId: string): void
+
+  /**
+   * Get all source IDs that have registered providers
+   */
+  getAllSources(): string[]
+
+  /**
    * Get registry statistics
    */
   getStats(): {
     totalProviders: number
+    totalSources: number
     providersByCapability: Record<string, number>
-    providers: { id: string; name: string; capabilities: ProviderCapability[]; priority: number }[]
+    providersBySource: Record<string, number>
+    capabilitiesBySource: Record<string, ProviderCapability[]>
+    providers: { id: string; name: string; sourceId: string; capabilities: ProviderCapability[]; priority: number }[]
   }
 }

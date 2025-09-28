@@ -41,13 +41,17 @@ export type TMDBMetadataField = typeof TMDB_METADATA_FIELDS[keyof typeof TMDB_ME
 export class TMDBMetadataProvider implements IMetadataProvider {
   public readonly id = 'tmdb-metadata'
   public readonly name = 'TMDB Metadata Provider'
+  public readonly sourceId: string
   public readonly capabilities: ProviderCapability[] = [ProviderCapability.METADATA]
   public readonly priority = 10
 
   constructor(
     private readonly tmdbService: ITMDBService,
-    private readonly logger: ILoggingService
-  ) {}
+    private readonly logger: ILoggingService,
+    sourceId: string
+  ) {
+    this.sourceId = sourceId
+  }
 
   async initialize(): Promise<void> {
     try {
@@ -463,7 +467,8 @@ export class TMDBMetadataProvider implements IMetadataProvider {
  */
 export const createTMDBMetadataProvider = (
   tmdbService: ITMDBService,
-  logger: ILoggingService
+  logger: ILoggingService,
+  sourceId: string
 ): TMDBMetadataProvider => {
-  return new TMDBMetadataProvider(tmdbService, logger)
+  return new TMDBMetadataProvider(tmdbService, logger, sourceId)
 }
