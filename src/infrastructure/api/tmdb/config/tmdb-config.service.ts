@@ -8,7 +8,7 @@
 import type { IEnvironmentService } from '@/src/domain/services/environment.service.interface'
 import type { ILoggingService } from '@/src/domain/services/logging.service.interface'
 import type { IUserPreferenceService } from '@/src/domain/services/user-preference.service.interface'
-import type { HttpClientConfig } from '../base/http.types'
+import type { HttpClientConfig } from '@/src/infrastructure/api/tmdb/base/http.types'
 
 /**
  * TMDB API configuration interface

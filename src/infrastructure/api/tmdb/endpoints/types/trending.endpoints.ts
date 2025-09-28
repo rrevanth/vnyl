@@ -32,12 +32,12 @@ export interface TMDBTrendingEndpoints {
   /**
    * Get the daily or weekly trending movies
    */
-  getTrendingMovies(timeWindow: TimeWindow, params?: { language?: LanguageCode }): Promise<PaginatedResponse<MovieSummary>>
+  getTrendingMovies(timeWindow: TimeWindow, params?: { language?: LanguageCode; page?: number }): Promise<PaginatedResponse<MovieSummary>>
 
   /**
    * Get the daily or weekly trending TV shows
    */
-  getTrendingTV(timeWindow: TimeWindow, params?: { language?: LanguageCode }): Promise<PaginatedResponse<TVShowSummary>>
+  getTrendingTV(timeWindow: TimeWindow, params?: { language?: LanguageCode; page?: number }): Promise<PaginatedResponse<TVShowSummary>>
 
   /**
    * Get the daily or weekly trending people

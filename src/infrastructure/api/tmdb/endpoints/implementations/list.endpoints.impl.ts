@@ -4,12 +4,12 @@
  * Implementation of list endpoints for user list data
  */
 
-import type { LanguageCode } from '../types/base.types'
+import type { LanguageCode } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBListEndpoints,
   ListDetails,
   ListItemStatusResponse
-} from '../types/list.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/list.endpoints'
 
 /**
  * Create list endpoints implementation

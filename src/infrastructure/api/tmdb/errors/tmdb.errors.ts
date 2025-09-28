@@ -4,7 +4,7 @@
  * Comprehensive error types and handlers for TMDB API interactions
  */
 
-import type { HttpError } from '../base/http.types'
+import type { HttpError } from '@/src/infrastructure/api/tmdb/base/http.types'
 
 /**
  * TMDB specific error codes

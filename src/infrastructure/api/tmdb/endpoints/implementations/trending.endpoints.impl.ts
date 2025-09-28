@@ -4,14 +4,14 @@
  * Implementation of trending endpoints
  */
 
-import type { PaginatedResponse, TimeWindow, LanguageCode } from '../types/base.types'
+import type { PaginatedResponse, TimeWindow, LanguageCode } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBTrendingEndpoints,
   TrendingAllResult
-} from '../types/trending.endpoints'
-import type { MovieSummary } from '../types/movie.endpoints'
-import type { TVShowSummary } from '../types/tv.endpoints'
-import type { PersonSummary } from '../types/person.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/trending.endpoints'
+import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
+import type { TVShowSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
+import type { PersonSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/person.endpoints'
 
 /**
  * Create trending endpoints implementation
@@ -35,14 +35,14 @@ export const createTrendingEndpoints = (
   /**
    * Get the daily or weekly trending movies
    */
-  async getTrendingMovies(timeWindow: TimeWindow, params?: { language?: LanguageCode }): Promise<PaginatedResponse<MovieSummary>> {
+  async getTrendingMovies(timeWindow: TimeWindow, params?: { language?: LanguageCode; page?: number }): Promise<PaginatedResponse<MovieSummary>> {
     return request<PaginatedResponse<MovieSummary>>('GET', `/trending/movie/${timeWindow}`, params)
   },
 
   /**
    * Get the daily or weekly trending TV shows
    */
-  async getTrendingTV(timeWindow: TimeWindow, params?: { language?: LanguageCode }): Promise<PaginatedResponse<TVShowSummary>> {
+  async getTrendingTV(timeWindow: TimeWindow, params?: { language?: LanguageCode; page?: number }): Promise<PaginatedResponse<TVShowSummary>> {
     return request<PaginatedResponse<TVShowSummary>>('GET', `/trending/tv/${timeWindow}`, params)
   },
 

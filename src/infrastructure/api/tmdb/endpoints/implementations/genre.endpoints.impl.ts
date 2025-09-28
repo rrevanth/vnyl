@@ -4,11 +4,11 @@
  * Implementation of genre endpoints for movie and TV genre lists
  */
 
-import type { LanguageCode } from '../types/base.types'
+import type { LanguageCode } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBGenreEndpoints,
   GenreListResponse
-} from '../types/genre.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/genre.endpoints'
 
 /**
  * Create genre endpoints implementation

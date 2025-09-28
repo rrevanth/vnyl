@@ -4,7 +4,7 @@
  * Implementation of person endpoints with comprehensive functionality
  */
 
-import type { LanguageCode, PaginatedResponse } from '../types/base.types'
+import type { LanguageCode, PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBPersonEndpoints,
   PersonDetails,
@@ -17,7 +17,7 @@ import type {
   PersonTaggedImagesResponse,
   PersonTranslationsResponse,
   PopularPeopleParams
-} from '../types/person.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/person.endpoints'
 
 /**
  * Create person endpoints implementation

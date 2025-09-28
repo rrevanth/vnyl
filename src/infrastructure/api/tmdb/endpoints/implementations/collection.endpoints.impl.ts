@@ -4,13 +4,13 @@
  * Implementation of collection endpoints for movie collection data
  */
 
-import type { LanguageCode } from '../types/base.types'
+import type { LanguageCode } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBCollectionEndpoints,
   CollectionDetails,
   CollectionImagesResponse,
   CollectionTranslationsResponse
-} from '../types/collection.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/collection.endpoints'
 
 /**
  * Create collection endpoints implementation

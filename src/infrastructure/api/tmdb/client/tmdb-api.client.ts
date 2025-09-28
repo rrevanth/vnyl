@@ -5,10 +5,10 @@
  * Supports all endpoint groups with bearer token authentication
  */
 
-import type { HttpClient } from '../base/http.client'
-import type { ITMDBConfigService } from '../config/tmdb-config.service'
+import type { HttpClient } from '@/src/infrastructure/api/tmdb/base/http.client'
+import type { ITMDBConfigService } from '@/src/infrastructure/api/tmdb/config/tmdb-config.service'
 import type { ILoggingService } from '@/src/domain/services/logging.service.interface'
-import { TMDBError, TMDBErrorHandler } from '../errors/tmdb.errors'
+import { TMDBError, TMDBErrorHandler } from '@/src/infrastructure/api/tmdb/errors/tmdb.errors'
 
 // Import endpoint group types
 import type { 
@@ -31,28 +31,28 @@ import type {
   TMDBReviewEndpoints,
   TMDBTrendingEndpoints,
   TMDBWatchProviderEndpoints
-} from '../endpoints/types'
+} from '@/src/infrastructure/api/tmdb/endpoints/types'
 
 // Import endpoint implementations
-import { createConfigurationEndpoints } from '../endpoints/implementations/configuration.endpoints.impl'
-import { createMovieEndpoints } from '../endpoints/implementations/movie.endpoints.impl'
-import { createTVEndpoints } from '../endpoints/implementations/tv.endpoints.impl'
-import { createPersonEndpoints } from '../endpoints/implementations/person.endpoints.impl'
-import { createSearchEndpoints } from '../endpoints/implementations/search.endpoints.impl'
-import { createDiscoverEndpoints } from '../endpoints/implementations/discover.endpoints.impl'
-import { createTrendingEndpoints } from '../endpoints/implementations/trending.endpoints.impl'
-import { createCollectionEndpoints } from '../endpoints/implementations/collection.endpoints.impl'
-import { createCompanyEndpoints } from '../endpoints/implementations/company.endpoints.impl'
-import { createNetworkEndpoints } from '../endpoints/implementations/network.endpoints.impl'
-import { createGenreEndpoints } from '../endpoints/implementations/genre.endpoints.impl'
-import { createKeywordEndpoints } from '../endpoints/implementations/keyword.endpoints.impl'
-import { createWatchProviderEndpoints } from '../endpoints/implementations/watch-provider.endpoints.impl'
-import { createCertificationEndpoints } from '../endpoints/implementations/certification.endpoints.impl'
-import { createCreditEndpoints } from '../endpoints/implementations/credit.endpoints.impl'
-import { createReviewEndpoints } from '../endpoints/implementations/review.endpoints.impl'
-import { createListEndpoints } from '../endpoints/implementations/list.endpoints.impl'
-import { createAuthenticationEndpoints } from '../endpoints/implementations/authentication.endpoints.impl'
-import { createAccountEndpoints } from '../endpoints/implementations/account.endpoints.impl'
+import { createConfigurationEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/configuration.endpoints.impl'
+import { createMovieEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/movie.endpoints.impl'
+import { createTVEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/tv.endpoints.impl'
+import { createPersonEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/person.endpoints.impl'
+import { createSearchEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/search.endpoints.impl'
+import { createDiscoverEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/discover.endpoints.impl'
+import { createTrendingEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/trending.endpoints.impl'
+import { createCollectionEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/collection.endpoints.impl'
+import { createCompanyEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/company.endpoints.impl'
+import { createNetworkEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/network.endpoints.impl'
+import { createGenreEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/genre.endpoints.impl'
+import { createKeywordEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/keyword.endpoints.impl'
+import { createWatchProviderEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/watch-provider.endpoints.impl'
+import { createCertificationEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/certification.endpoints.impl'
+import { createCreditEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/credit.endpoints.impl'
+import { createReviewEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/review.endpoints.impl'
+import { createListEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/list.endpoints.impl'
+import { createAuthenticationEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/authentication.endpoints.impl'
+import { createAccountEndpoints } from '@/src/infrastructure/api/tmdb/endpoints/implementations/account.endpoints.impl'
 
 /**
  * Comprehensive TMDB API client interface

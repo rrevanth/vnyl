@@ -332,7 +332,7 @@ export class TMDBCatalogProvider implements ICatalogProvider {
         }
       case TMDB_CATALOG_TYPES.TRENDING_MOVIES:
         return {
-          response: await client.trending.getTrendingMovies('week'),
+          response: await client.trending.getTrendingMovies('week', { page }),
           mediaType: MediaType.MOVIE,
           catalogName: 'Trending Movies'
         }
@@ -364,7 +364,7 @@ export class TMDBCatalogProvider implements ICatalogProvider {
         }
       case TMDB_CATALOG_TYPES.TRENDING_TV:
         return {
-          response: await client.trending.getTrendingTV('week'),
+          response: await client.trending.getTrendingTV('week', { page }),
           mediaType: MediaType.TV_SERIES,
           catalogName: 'Trending TV Shows'
         }

@@ -4,7 +4,7 @@
  * Implementation of TV endpoints with comprehensive functionality
  */
 
-import type { LanguageCode, PaginatedResponse } from '../types/base.types'
+import type { LanguageCode, PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBTVEndpoints,
   TVShowDetails,
@@ -40,7 +40,7 @@ import type {
   TopRatedTVParams,
   AiringTodayTVParams,
   OnTheAirTVParams
-} from '../types/tv.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
 
 /**
  * Create TV endpoints implementation

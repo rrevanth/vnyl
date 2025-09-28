@@ -4,7 +4,7 @@
  * Implementation of search endpoints with comprehensive functionality
  */
 
-import type { PaginatedResponse } from '../types/base.types'
+import type { PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBSearchEndpoints,
   MovieSearchParams,
@@ -18,10 +18,10 @@ import type {
   CollectionSearchResult,
   CompanySearchResult,
   KeywordSearchResult
-} from '../types/search.endpoints'
-import type { MovieSummary } from '../types/movie.endpoints'
-import type { TVShowSummary } from '../types/tv.endpoints'
-import type { PersonSummary } from '../types/person.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/search.endpoints'
+import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
+import type { TVShowSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
+import type { PersonSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/person.endpoints'
 
 /**
  * Create search endpoints implementation

@@ -9,7 +9,7 @@ import type {
   NetworkDetails,
   NetworkAlternativeNamesResponse,
   NetworkImagesResponse
-} from '../types/network.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/network.endpoints'
 
 /**
  * Create network endpoints implementation

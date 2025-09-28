@@ -9,7 +9,7 @@ import type {
   CompanyDetails,
   CompanyAlternativeNamesResponse,
   CompanyImagesResponse
-} from '../types/company.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/company.endpoints'
 
 /**
  * Create company endpoints implementation

@@ -10,7 +10,7 @@ import type {
   SessionResponse,
   GuestSessionResponse,
   DeleteSessionResponse
-} from '../types/authentication.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/authentication.endpoints'
 
 /**
  * Create authentication endpoints implementation

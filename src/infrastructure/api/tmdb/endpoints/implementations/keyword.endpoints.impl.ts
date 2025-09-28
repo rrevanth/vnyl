@@ -4,12 +4,12 @@
  * Implementation of keyword endpoints for keyword data
  */
 
-import type { PaginatedResponse } from '../types/base.types'
-import type { MovieSummary } from '../types/movie.endpoints'
+import type { PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
+import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
 import type { 
   TMDBKeywordEndpoints,
   KeywordDetails
-} from '../types/keyword.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/keyword.endpoints'
 
 /**
  * Create keyword endpoints implementation

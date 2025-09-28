@@ -4,7 +4,7 @@
  * Implementation of movie endpoints with comprehensive functionality
  */
 
-import type { LanguageCode, CountryCode, PaginatedResponse } from '../types/base.types'
+import type { LanguageCode, CountryCode, PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBMovieEndpoints,
   MovieDetails,
@@ -27,7 +27,7 @@ import type {
   TopRatedMoviesParams,
   UpcomingMoviesParams,
   NowPlayingMoviesParams
-} from '../types/movie.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
 
 /**
  * Create movie endpoints implementation

@@ -4,14 +4,14 @@
  * Implementation of discover endpoints with advanced filtering and sorting
  */
 
-import type { PaginatedResponse } from '../types/base.types'
+import type { PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBDiscoverEndpoints,
   DiscoverMovieParams,
   DiscoverTVParams
-} from '../types/discover.endpoints'
-import type { MovieSummary } from '../types/movie.endpoints'
-import type { TVShowSummary } from '../types/tv.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/discover.endpoints'
+import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
+import type { TVShowSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
 
 /**
  * Create discover endpoints implementation

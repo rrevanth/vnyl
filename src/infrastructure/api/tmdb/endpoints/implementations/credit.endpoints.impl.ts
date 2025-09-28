@@ -7,7 +7,7 @@
 import type { 
   TMDBCreditEndpoints,
   CreditDetails
-} from '../types/credit.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/credit.endpoints'
 
 /**
  * Create credit endpoints implementation

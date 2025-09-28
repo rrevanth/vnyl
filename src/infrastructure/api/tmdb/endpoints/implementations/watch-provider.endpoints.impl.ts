@@ -4,13 +4,13 @@
  * Implementation of watch provider endpoints for streaming service data
  */
 
-import type { LanguageCode } from '../types/base.types'
+import type { LanguageCode } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBWatchProviderEndpoints,
   WatchProviderRegionsResponse,
   GlobalMovieWatchProvidersResponse,
   GlobalTVWatchProvidersResponse
-} from '../types/watch-provider.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/watch-provider.endpoints'
 
 /**
  * Create watch provider endpoints implementation

@@ -7,7 +7,7 @@
 import type { 
   TMDBReviewEndpoints,
   ReviewDetails
-} from '../types/review.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/review.endpoints'
 
 /**
  * Create review endpoints implementation

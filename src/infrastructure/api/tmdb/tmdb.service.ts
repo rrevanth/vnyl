@@ -105,16 +105,14 @@ export class TMDBService implements ITMDBService {
    * Get trending movies
    */
   async getTrendingMovies(params?: { page?: number }): Promise<any> {
-    // Note: trending endpoints only accept language, not page
-    return this.client.trending.getTrendingMovies('week')
+    return this.client.trending.getTrendingMovies('week', { page: params?.page })
   }
 
   /**
    * Get trending TV shows
    */
   async getTrendingTV(params?: { page?: number }): Promise<any> {
-    // Note: trending endpoints only accept language, not page
-    return this.client.trending.getTrendingTV('week')
+    return this.client.trending.getTrendingTV('week', { page: params?.page })
   }
 
   /**

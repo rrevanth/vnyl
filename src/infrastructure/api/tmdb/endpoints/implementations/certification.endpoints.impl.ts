@@ -8,7 +8,7 @@ import type {
   TMDBCertificationEndpoints,
   MovieCertificationsResponse,
   TVCertificationsResponse
-} from '../types/certification.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/certification.endpoints'
 
 /**
  * Create certification endpoints implementation

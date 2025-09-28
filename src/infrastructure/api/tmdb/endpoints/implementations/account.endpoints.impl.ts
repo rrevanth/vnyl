@@ -4,15 +4,15 @@
  * Implementation of account endpoints for user account management
  */
 
-import type { PaginatedResponse, LanguageCode } from '../types/base.types'
-import type { MovieSummary } from '../types/movie.endpoints'
-import type { TVShowSummary } from '../types/tv.endpoints'
+import type { PaginatedResponse, LanguageCode } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
+import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
+import type { TVShowSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
 import type { 
   TMDBAccountEndpoints,
   AccountDetails,
   CreatedList,
   ModifyResponse
-} from '../types/account.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/account.endpoints'
 
 /**
  * Create account endpoints implementation

@@ -12,7 +12,7 @@ import type {
   LanguagesConfigurationResponse,
   PrimaryTranslationsResponse,
   TimezonesConfigurationResponse
-} from '../types/configuration.endpoints'
+} from '@/src/infrastructure/api/tmdb/endpoints/types/configuration.endpoints'
 
 /**
  * Create configuration endpoints implementation
