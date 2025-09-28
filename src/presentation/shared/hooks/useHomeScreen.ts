@@ -168,25 +168,29 @@ export const useHomeScreen = (): UseHomeScreenResult => {
       throw new Error(errorMessage)
     }
 
+    const nextPage = catalog.pagination.page + 1
+
     logger?.info('HomeScreen: Loading more items', { 
       catalogId: catalog.id,
       catalogType: catalog.catalogContext?.catalogType,
-      currentItems: catalog.items.length
+      currentItems: catalog.items.length,
+      currentPage: catalog.pagination.page,
+      requestingPage: nextPage,
+      hasMore: catalog.pagination.hasMore
     })
 
     try {
       catalogActions.setLoadingMore(true)
       catalogActions.clearError()
 
-      // Calculate next page
+      // Get provider and prepare request
       const providerId = catalog.catalogContext?.providerId || 'tmdb-catalog'
-      const currentPage = Math.floor(catalog.items.length / 20) + 1
 
       const request: LoadMoreCatalogItemsRequest = {
         providerId,
         catalogId: catalog.catalogContext?.catalogId || catalog.catalogContext?.catalogType || catalog.id,
         catalog,
-        page: currentPage,
+        page: nextPage,
         limit: 20,
         originalCatalogContext: catalog.catalogContext,
         originalPagination: catalog.pagination
