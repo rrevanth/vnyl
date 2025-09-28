@@ -75,12 +75,11 @@ export const CatalogRow: React.FC<CatalogRowProps> = observer(({
     onSeeAllPress?.(catalog)
   }, [onSeeAllPress, catalog])
 
-  // commented out due to Legend List compatibility  
-  // const handleLoadMore = useCallback(async () => {
-  //   if (hasMore && !isLoading && onLoadMore) {
-  //     await onLoadMore(catalog)
-  //   }
-  // }, [hasMore, isLoading, onLoadMore, catalog])
+  const handleLoadMore = useCallback(async () => {
+    if (hasMore && !isLoading && onLoadMore) {
+      await onLoadMore(catalog)
+    }
+  }, [hasMore, isLoading, onLoadMore, catalog])
 
   const renderItem = useCallback(({ item: listItem }: { item: any }) => {
     // Handle loading indicator
@@ -172,12 +171,8 @@ export const CatalogRow: React.FC<CatalogRowProps> = observer(({
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={getItemId}
-          // maintainVisibleContentPosition={{
-          //   minIndexForVisible: 0,
-          //   autoscrollToTopThreshold: 100
-          // }}
-          // onEndReached={handleLoadMore}
-          // onEndReachedThreshold={0.5}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
           style={styles.list}
           contentContainerStyle={styles.listContent}
         />

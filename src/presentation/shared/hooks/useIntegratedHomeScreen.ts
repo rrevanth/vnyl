@@ -68,6 +68,7 @@ interface IntegratedHomeScreenActions {
   // Data management
   refresh: () => Promise<void>
   loadMoreItems: (catalogId: string, providerId: string, page: number) => Promise<void>
+  loadMoreItemsWithCatalog: (catalog: Catalog, providerId: string, page: number) => Promise<void>
   refetch: () => Promise<any>
   invalidateCache: () => Promise<void>
   clearError: () => void
@@ -218,6 +219,55 @@ export const useIntegratedHomeScreen = (
   }, [logger, controllerActions, queryClient])
 
   /**
+   * Load more items using catalog object directly (avoids catalog lookup issues)
+   */
+  const loadMoreItemsWithCatalog = useCallback(async (
+    catalog: Catalog,
+    providerId: string, 
+    page: number
+  ): Promise<void> => {
+    logger?.info('IntegratedHomeScreen: Loading more items with catalog object', { 
+      catalogId: catalog.id, 
+      catalogType: catalog.catalogContext?.catalogType,
+      providerId, 
+      page 
+    })
+    
+    try {
+      // Use the catalogContext.catalogId (original ID) instead of the modified unique catalog.id
+      const originalCatalogId = catalog.catalogContext?.catalogId || catalog.catalogContext?.catalogType || 'unknown'
+      
+      logger?.debug('IntegratedHomeScreen: Using original catalog ID from context', undefined, {
+        uniqueCatalogId: catalog.id,
+        originalCatalogId,
+        catalogType: catalog.catalogContext?.catalogType
+      })
+      
+      // Use controller's load more functionality with original catalog ID
+      await controllerActions.loadMoreItems(originalCatalogId, providerId, page)
+      
+      // Invalidate relevant queries to sync with new data
+      await queryClient.invalidateQueries({ 
+        queryKey: vnylQueryKeys.catalogs.pagination(catalog.id, providerId)
+      })
+      
+      // Also invalidate main catalog query to update hasMore states
+      await queryClient.invalidateQueries({ 
+        queryKey: vnylQueryKeys.catalogs.all 
+      })
+      
+      logger?.info('IntegratedHomeScreen: Load more with catalog completed successfully')
+    } catch (error) {
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      logger?.error('IntegratedHomeScreen: Load more with catalog failed', errorInstance, {
+        catalogId: catalog.id,
+        catalogType: catalog.catalogContext?.catalogType
+      })
+      throw errorInstance
+    }
+  }, [logger, controllerActions, queryClient])
+
+  /**
    * Comprehensive cache invalidation
    */
   const invalidateCache = useCallback(async (): Promise<void> => {
@@ -352,6 +402,7 @@ export const useIntegratedHomeScreen = (
     // Data management
     refresh,
     loadMoreItems,
+    loadMoreItemsWithCatalog,
     refetch: queryRefetch,
     invalidateCache,
     clearError,

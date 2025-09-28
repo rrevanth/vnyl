@@ -6,7 +6,7 @@
  */
 
 import { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
-import { PaginationInfo } from '@/src/domain/entities/media/catalog.entity'
+import { Catalog, PaginationInfo } from '@/src/domain/entities/media/catalog.entity'
 import { CatalogContext } from '@/src/domain/entities/context/catalog-context.entity'
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { ILoggingService } from '@/src/domain/services'
@@ -20,6 +20,9 @@ export interface LoadMoreCatalogItemsRequest {
   
   /** The catalog ID to load more items for */
   readonly catalogId: string
+  
+  /** The full catalog object with context (optional - if not provided, will be looked up) */
+  readonly catalog?: Catalog
   
   /** The page number to load (1-based) */
   readonly page: number
@@ -125,7 +128,10 @@ export class LoadMoreCatalogItemsUseCase {
 
       // Load more items from the provider
       const catalogFetchStart = performance.now()
-      const items = await provider.loadMoreItems(request.catalogId, request.page, limit)
+      
+      // Pass either the full catalog object or the catalogId
+      const catalogOrId = request.catalog || request.catalogId
+      const items = await provider.loadMoreItems(catalogOrId, request.page, limit)
       const catalogFetchTime = performance.now() - catalogFetchStart
 
       this.logger.debug('Successfully loaded catalog items', undefined, {

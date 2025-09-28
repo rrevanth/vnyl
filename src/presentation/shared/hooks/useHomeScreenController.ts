@@ -145,11 +145,20 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
 
       updateState({ isLoadingMore: true, error: null })
 
+      // Find the catalog to get its context
+      const catalog = state.catalogs.find(c => c.id === catalogId)
+      if (!catalog) {
+        throw new Error(`Catalog ${catalogId} not found`)
+      }
+
       const request: LoadMoreCatalogItemsRequest = {
         providerId,
         catalogId,
+        catalog,
         page,
-        limit: 20
+        limit: 20,
+        originalCatalogContext: catalog.catalogContext,
+        originalPagination: catalog.pagination
       }
 
       const result: LoadMoreCatalogItemsResult = await loadMoreCatalogItemsUseCase.execute(request)
@@ -195,7 +204,8 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
     loadMoreCatalogItemsUseCase,
     logger,
     updateState,
-    handleError
+    handleError,
+    state.catalogs
   ])
 
   // Refresh all catalogs

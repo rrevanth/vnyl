@@ -117,7 +117,8 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
     const providerId = catalog.catalogContext?.providerId || 'unknown'
     const currentPage = Math.floor(catalog.items.length / 20) + 1
     
-    await actions.loadMoreItems(catalog.id, providerId, currentPage)
+    // Pass the catalog object directly instead of just the ID
+    await actions.loadMoreItemsWithCatalog(catalog, providerId, currentPage)
   }, [actions])
 
   const handleRefresh = useCallback(async () => {
@@ -222,7 +223,7 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
             onSeeAllPress={handleSeeAllPress}
             onLoadMore={handleCatalogLoadMore}
             isLoading={state.isLoadingMore}
-            hasMore={state.hasMore}
+            hasMore={listItem.catalog.pagination.hasMore}
             index={listItem.index}
           />
         )

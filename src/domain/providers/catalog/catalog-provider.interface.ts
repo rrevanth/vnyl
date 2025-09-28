@@ -21,7 +21,7 @@ export interface ICatalogProvider extends IProvider {
   /**
    * Load more items for a specific catalog (pagination)
    */
-  loadMoreItems(catalogId: string, page: number, limit?: number): Promise<CatalogItem[]>
+  loadMoreItems(catalogOrId: Catalog | string, page: number, limit?: number): Promise<CatalogItem[]>
 
   /**
    * Get supported media types for this provider

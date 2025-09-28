@@ -140,7 +140,7 @@ export class TMDBCatalogProvider implements ICatalogProvider {
       }
 
       const catalogContext: CatalogContext = {
-        providerId: 'tmdb',
+        providerId: this.id,
         providerName: 'The Movie Database (TMDB)',
         catalogId,
         catalogName,
@@ -204,27 +204,56 @@ export class TMDBCatalogProvider implements ICatalogProvider {
     }
   }
 
-  async loadMoreItems(catalogId: string, page: number, limit: number = 20): Promise<CatalogItem[]> {
+  async loadMoreItems(catalogOrId: Catalog | string, page: number, limit: number = 20): Promise<CatalogItem[]> {
     try {
-      this.logger.info('Loading more TMDB catalog items', {
-        context: 'tmdb_catalog_provider',
-        catalogId,
-        page,
-        limit
-      })
+      let catalog: Catalog
+      let catalogType: string
 
-      const catalog = await this.getCatalog(catalogId, page, limit)
-      
-      this.logger.info('Successfully loaded more TMDB catalog items', {
-        context: 'tmdb_catalog_provider',
-        catalogId,
-        page,
-        itemCount: catalog.items.length
-      })
+      if (typeof catalogOrId === 'string') {
+        // Legacy mode: catalogOrId is a catalogId string
+        this.logger.info('Loading more TMDB catalog items (legacy mode)', {
+          context: 'tmdb_catalog_provider',
+          catalogId: catalogOrId,
+          page,
+          limit
+        })
 
-      return catalog.items
+        // Call getCatalog to get items (this will fail with complex IDs, but maintains backwards compatibility)
+        catalog = await this.getCatalog(catalogOrId, page, limit)
+        return catalog.items
+      } else {
+        // New mode: catalogOrId is a full Catalog object
+        catalog = catalogOrId
+        catalogType = catalog.catalogContext?.catalogType || ''
+
+        this.logger.info('Loading more TMDB catalog items', {
+          context: 'tmdb_catalog_provider',
+          catalogId: catalog.id,
+          catalogType,
+          page,
+          limit
+        })
+
+        if (!catalogType) {
+          throw new Error(`No catalog type found in catalog context for ${catalog.id}`)
+        }
+
+        const newCatalog = await this.getCatalog(catalogType, page, limit)
+        
+        this.logger.info('Successfully loaded more TMDB catalog items', {
+          context: 'tmdb_catalog_provider',
+          catalogId: catalog.id,
+          catalogType,
+          page,
+          itemCount: newCatalog.items.length
+        })
+
+        return newCatalog.items
+      }
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
+      const catalogId = typeof catalogOrId === 'string' ? catalogOrId : catalogOrId.id
+      
       this.logger.error('Failed to load more TMDB catalog items', errorInstance, {
         context: 'tmdb_catalog_provider',
         catalogId,
