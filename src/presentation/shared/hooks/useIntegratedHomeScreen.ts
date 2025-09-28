@@ -237,14 +237,14 @@ export const useIntegratedHomeScreen = (
       // Use the catalogContext.catalogId (original ID) instead of the modified unique catalog.id
       const originalCatalogId = catalog.catalogContext?.catalogId || catalog.catalogContext?.catalogType || 'unknown'
       
-      logger?.debug('IntegratedHomeScreen: Using original catalog ID from context', undefined, {
+      logger?.debug('IntegratedHomeScreen: Using catalog object directly for load more', undefined, {
         uniqueCatalogId: catalog.id,
         originalCatalogId,
         catalogType: catalog.catalogContext?.catalogType
       })
       
-      // Use controller's load more functionality with original catalog ID
-      await controllerActions.loadMoreItems(originalCatalogId, providerId, page)
+      // Use controller's new loadMoreItemsWithCatalog method to avoid catalog lookup
+      await controllerActions.loadMoreItemsWithCatalog(catalog, providerId, page)
       
       // Invalidate relevant queries to sync with new data
       await queryClient.invalidateQueries({ 

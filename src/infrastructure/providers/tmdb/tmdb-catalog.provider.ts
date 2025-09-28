@@ -226,7 +226,7 @@ export class TMDBCatalogProvider implements ICatalogProvider {
         catalog = catalogOrId
         catalogType = catalog.catalogContext?.catalogType || ''
 
-        this.logger.info('Loading more TMDB catalog items', {
+        this.logger.info('Loading more TMDB catalog items using catalog context', {
           context: 'tmdb_catalog_provider',
           catalogId: catalog.id,
           catalogType,
@@ -238,17 +238,42 @@ export class TMDBCatalogProvider implements ICatalogProvider {
           throw new Error(`No catalog type found in catalog context for ${catalog.id}`)
         }
 
-        const newCatalog = await this.getCatalog(catalogType, page, limit)
+        // Fetch data directly using catalog context instead of calling getCatalog
+        const startTime = performance.now()
+        const { response, mediaType } = await this.fetchCatalogData(catalogType, page)
+        const fetchTime = performance.now() - startTime
+
+        // Create updated catalog context for the new items
+        const pageInfo: PageInfo = {
+          currentPage: response.page,
+          totalPages: response.total_pages,
+          totalItems: response.total_results,
+          hasMorePages: response.page < response.total_pages,
+          pageSize: response.results.length
+        }
+
+        const updatedCatalogContext: CatalogContext = {
+          ...catalog.catalogContext,
+          pageInfo,
+          lastFetchAt: new Date(),
+          requestId: `tmdb-catalog-loadmore-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        }
+
+        // Convert TMDB items to catalog items
+        const items = response.results.slice(0, limit).map((item, index) => 
+          this.mapTMDBItemToCatalogItem(item, updatedCatalogContext, index, mediaType)
+        )
         
-        this.logger.info('Successfully loaded more TMDB catalog items', {
+        this.logger.info('Successfully loaded more TMDB catalog items using direct fetch', {
           context: 'tmdb_catalog_provider',
           catalogId: catalog.id,
           catalogType,
           page,
-          itemCount: newCatalog.items.length
+          itemCount: items.length,
+          fetchTime: Math.round(fetchTime)
         })
 
-        return newCatalog.items
+        return items
       }
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))

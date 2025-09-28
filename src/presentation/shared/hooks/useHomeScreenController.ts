@@ -28,6 +28,7 @@ export interface HomeScreenState {
 export interface HomeScreenActions {
   loadCatalogs: () => Promise<void>
   loadMoreItems: (catalogId: string, providerId: string, page: number) => Promise<void>
+  loadMoreItemsWithCatalog: (catalog: Catalog, providerId: string, page: number) => Promise<void>
   refresh: () => Promise<void>
   clearError: () => void
 }
@@ -208,6 +209,82 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
     state.catalogs
   ])
 
+  // Load more items for a specific catalog using catalog object directly (avoids catalog lookup)
+  const loadMoreItemsWithCatalog = useCallback(async (catalog: Catalog, providerId: string, page: number) => {
+    if (!loadMoreCatalogItemsUseCase) {
+      updateState({ error: 'Load more service not available', isLoadingMore: false })
+      return
+    }
+
+    try {
+      logger?.info('HomeScreen: Loading more items with catalog object', { 
+        catalogId: catalog.id,
+        catalogType: catalog.catalogContext?.catalogType,
+        providerId, 
+        page 
+      })
+
+      updateState({ isLoadingMore: true, error: null })
+
+      // Use catalog object directly, no lookup needed
+      const request: LoadMoreCatalogItemsRequest = {
+        providerId,
+        catalogId: catalog.catalogContext?.catalogId || catalog.catalogContext?.catalogType || catalog.id,
+        catalog,
+        page,
+        limit: 20,
+        originalCatalogContext: catalog.catalogContext,
+        originalPagination: catalog.pagination
+      }
+
+      const result: LoadMoreCatalogItemsResult = await loadMoreCatalogItemsUseCase.execute(request)
+
+      if (result.items) {
+        setState(prev => {
+          const updatedCatalogs = prev.catalogs.map(existingCatalog => {
+            if (existingCatalog.id === catalog.id) {
+              return {
+                ...existingCatalog,
+                items: [...existingCatalog.items, ...result.items],
+                pagination: result.pagination,
+                updatedAt: new Date()
+              }
+            }
+            return existingCatalog
+          })
+
+          const hasMoreItems = updatedCatalogs.some(catalog => catalog.pagination.hasMore)
+
+          return {
+            ...prev,
+            catalogs: updatedCatalogs,
+            hasMore: hasMoreItems,
+            isLoadingMore: false
+          }
+        })
+
+        logger?.info('HomeScreen: More items loaded successfully with catalog object', {
+          catalogId: catalog.id,
+          catalogType: catalog.catalogContext?.catalogType,
+          providerId,
+          newItemsCount: result.items.length,
+          hasMore: result.pagination.hasMore,
+          isLastPage: result.isLastPage
+        })
+      } else {
+        throw new Error('No items received from provider')
+      }
+    } catch (error) {
+      handleError(error, 'failed to load more items with catalog')
+    }
+  }, [
+    loadMoreCatalogItemsUseCase,
+    logger,
+    updateState,
+    handleError,
+    setState
+  ])
+
   // Refresh all catalogs
   const refresh = useCallback(async () => {
     try {
@@ -257,6 +334,7 @@ export const useHomeScreenController = (): UseHomeScreenControllerReturn => {
   const actions: HomeScreenActions = {
     loadCatalogs,
     loadMoreItems,
+    loadMoreItemsWithCatalog,
     refresh,
     clearError
   }
