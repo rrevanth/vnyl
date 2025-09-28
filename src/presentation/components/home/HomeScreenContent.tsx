@@ -2,8 +2,9 @@
  * HomeScreenContent Component
  * 
  * Main content component for the home screen that displays multiple catalog rows
- * Uses useIntegratedHomeScreen hook for unified state management
+ * Uses useHomeScreen hook with deterministic catalog ordering
  * Implements Legend List for virtualized scrolling and Legend Motion for animations
+ * No random special catalog insertions - stable, predictable ordering
  */
 
 /* @jsxImportSource react */
@@ -17,7 +18,7 @@ import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
-import { useIntegratedHomeScreen } from '@/src/presentation/shared/hooks/useIntegratedHomeScreen'
+import { useHomeScreen } from '@/src/presentation/shared/hooks/useHomeScreen'
 import { CatalogRow } from './CatalogRow'
 import { MotionWrapper } from './MotionWrapper'
 import { moderateScale } from 'react-native-size-matters'
@@ -33,14 +34,10 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
   const theme = useTheme()
   const styles = createStyles(theme)
 
-  // Integrated home screen state management
-  const { state, actions } = useIntegratedHomeScreen({
-    enableBackgroundRefetch: true,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refreshOnMount: true
-  })
+  // Home screen state management using Legend State + TanStack Query
+  const { state, actions } = useHomeScreen()
 
-  // Prepare data for Legend List with special catalog handling
+  // Prepare data for Legend List with deterministic ordering
   const listData = useMemo(() => {
     if (state.isEmpty) {
       return [{ type: 'empty', id: 'empty' }]
@@ -55,35 +52,8 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
     // Add welcome header
     items.push({ type: 'header', id: 'header' })
 
-    // Get special catalogs positioning
-    const { top10Index, awardsIndex } = actions.getSpecialCatalogs(state.catalogs)
-
-    // Add catalog rows with special insertions
+    // Add catalog rows in deterministic order (no special insertions)
     state.catalogs.forEach((catalog, index) => {
-      // Add top 10 special catalog
-      if (index === top10Index) {
-        items.push({
-          type: 'special',
-          id: 'top10',
-          specialType: 'top10',
-          catalogs: state.catalogs.slice(0, 10)
-        })
-      }
-
-      // Add awards special catalog
-      if (index === awardsIndex) {
-        items.push({
-          type: 'special',
-          id: 'awards',
-          specialType: 'awards',
-          catalogs: state.catalogs.filter(c => 
-            c.name.toLowerCase().includes('award') || 
-            c.name.toLowerCase().includes('winner')
-          )
-        })
-      }
-
-      // Add regular catalog
       items.push({
         type: 'catalog',
         id: catalog.id,
@@ -98,7 +68,7 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
     }
 
     return items
-  }, [state.catalogs, state.isEmpty, state.isError, state.error, state.isLoadingMore, actions])
+  }, [state.catalogs, state.isEmpty, state.isError, state.error, state.isLoadingMore])
 
   const handleItemPress = useCallback((item: CatalogItemEntity) => {
     actions.handleItemPress(item)
@@ -113,12 +83,8 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
   }, [actions])
 
   const handleCatalogLoadMore = useCallback(async (catalog: Catalog) => {
-    // Find the first provider ID from the catalog context
-    const providerId = catalog.catalogContext?.providerId || 'unknown'
-    const currentPage = Math.floor(catalog.items.length / 20) + 1
-    
-    // Pass the catalog object directly instead of just the ID
-    await actions.loadMoreItemsWithCatalog(catalog, providerId, currentPage)
+    // Use simplified load more approach
+    await actions.loadMoreItems(catalog)
   }, [actions])
 
   const handleRefresh = useCallback(async () => {

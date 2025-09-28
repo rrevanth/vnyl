@@ -2,13 +2,15 @@
  * GetAllCatalogsUseCase
  * 
  * Returns all supported catalogs from all registered catalog providers with first page loaded.
- * Implements parallel loading for optimal performance and complete context traceability.
+ * Implements deterministic sequential loading for stable catalog ordering.
+ * Integrates directly with Legend State for immediate UI updates.
  */
 
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { ILoggingService } from '@/src/domain/services'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
+import type { ICatalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
 
 /**
  * Result type for GetAllCatalogsUseCase
@@ -46,22 +48,29 @@ export interface ProviderError {
 export class GetAllCatalogsUseCase {
   constructor(
     private readonly catalogProviders: ICatalogProvider[],
-    private readonly logger: ILoggingService
+    private readonly logger: ILoggingService,
+    private readonly catalogStateService: ICatalogStateService
   ) {}
 
   /**
    * Execute the use case to get all catalogs from all providers
+   * Implements deterministic sequential loading with immediate Legend State updates
    */
   async execute(): Promise<GetAllCatalogsResult> {
     const requestId = `get-all-catalogs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const startTime = performance.now()
 
     try {
-      this.logger.info('Starting GetAllCatalogsUseCase execution', {
+      this.logger.info('Starting GetAllCatalogsUseCase execution with deterministic ordering', {
         context: 'get_all_catalogs_usecase',
         requestId,
         providerCount: this.catalogProviders.length
       })
+
+      // Clear existing catalogs at start
+      this.catalogStateService.reset()
+      this.catalogStateService.setLoading(true)
+      this.catalogStateService.clearError()
 
       if (this.catalogProviders.length === 0) {
         this.logger.warn('No catalog providers registered', undefined, {
@@ -69,6 +78,7 @@ export class GetAllCatalogsUseCase {
           requestId
         })
 
+        this.catalogStateService.setLoading(false)
         return {
           catalogs: [],
           totalProviders: 0,
@@ -79,53 +89,53 @@ export class GetAllCatalogsUseCase {
         }
       }
 
-      // Initialize all providers in parallel
-      this.logger.debug('Initializing catalog providers', undefined, {
-        context: 'get_all_catalogs_usecase',
-        requestId,
-        providerIds: this.catalogProviders.map(p => p.id)
+      // Sort providers by priority for deterministic ordering
+      const sortedProviders = [...this.catalogProviders].sort((a, b) => {
+        // Primary sort by provider type (TMDB first)
+        const aPriority = a.id.includes('tmdb') ? 0 : 1
+        const bPriority = b.id.includes('tmdb') ? 0 : 1
+        if (aPriority !== bPriority) return aPriority - bPriority
+        
+        // Secondary sort by provider ID for consistency
+        return a.id.localeCompare(b.id)
       })
 
-      const initResults = await Promise.allSettled(
-        this.catalogProviders.map(async (provider) => {
-          try {
-            await provider.initialize()
-            return provider
-          } catch (error) {
-            const errorInstance = error instanceof Error ? error : new Error(String(error))
-            this.logger.warn('Failed to initialize catalog provider', errorInstance, {
-              context: 'get_all_catalogs_usecase',
-              requestId,
-              providerId: provider.id,
-              providerName: provider.name
-            })
-            throw errorInstance
-          }
-        })
-      )
+      // Initialize providers sequentially to maintain order
+      this.logger.debug('Initializing catalog providers in deterministic order', undefined, {
+        context: 'get_all_catalogs_usecase',
+        requestId,
+        providerIds: sortedProviders.map(p => p.id)
+      })
 
-      // Extract successfully initialized providers
-      const initializedProviders = initResults
-        .filter((result): result is PromiseFulfilledResult<ICatalogProvider> => 
-          result.status === 'fulfilled'
-        )
-        .map(result => result.value)
+      const initializedProviders: ICatalogProvider[] = []
+      const initErrors: ProviderError[] = []
 
-      // Collect initialization errors
-      const initErrors: ProviderError[] = initResults
-        .map((result, index) => {
-          if (result.status === 'rejected') {
-            const provider = this.catalogProviders[index]
-            return {
-              providerId: provider.id,
-              providerName: provider.name,
-              error: result.reason instanceof Error ? result.reason.message : String(result.reason),
-              capability: ProviderCapability.CATALOG
-            }
-          }
-          return null
-        })
-        .filter((error): error is ProviderError => error !== null)
+      for (const provider of sortedProviders) {
+        try {
+          await provider.initialize()
+          initializedProviders.push(provider)
+          this.logger.debug('Provider initialized successfully', undefined, {
+            context: 'get_all_catalogs_usecase',
+            requestId,
+            providerId: provider.id,
+            providerName: provider.name
+          })
+        } catch (error) {
+          const errorInstance = error instanceof Error ? error : new Error(String(error))
+          initErrors.push({
+            providerId: provider.id,
+            providerName: provider.name,
+            error: errorInstance.message,
+            capability: ProviderCapability.CATALOG
+          })
+          this.logger.warn('Failed to initialize catalog provider', errorInstance, {
+            context: 'get_all_catalogs_usecase',
+            requestId,
+            providerId: provider.id,
+            providerName: provider.name
+          })
+        }
+      }
 
       this.logger.info('Provider initialization completed', {
         context: 'get_all_catalogs_usecase',
@@ -141,6 +151,8 @@ export class GetAllCatalogsUseCase {
           requestId
         })
 
+        this.catalogStateService.setError('All catalog providers failed to initialize')
+        this.catalogStateService.setLoading(false)
         return {
           catalogs: [],
           totalProviders: this.catalogProviders.length,
@@ -151,85 +163,91 @@ export class GetAllCatalogsUseCase {
         }
       }
 
-      // Fetch catalogs from all initialized providers in parallel
-      this.logger.debug('Fetching catalogs from initialized providers', undefined, {
+      // Fetch catalogs sequentially to maintain deterministic order
+      this.logger.debug('Fetching catalogs from initialized providers in order', undefined, {
         context: 'get_all_catalogs_usecase',
         requestId,
         providerCount: initializedProviders.length
       })
 
-      const catalogResults = await Promise.allSettled(
-        initializedProviders.map(async (provider) => {
-          try {
-            const providerStartTime = performance.now()
-            const catalogs = await provider.getAllCatalogs()
-            const providerTime = performance.now() - providerStartTime
+      const allCatalogs: Catalog[] = []
+      const fetchErrors: ProviderError[] = []
+      let successfulProviders = 0
 
-            this.logger.debug('Successfully fetched catalogs from provider', undefined, {
-              context: 'get_all_catalogs_usecase',
-              requestId,
-              providerId: provider.id,
-              catalogCount: catalogs.length,
-              fetchTime: Math.round(providerTime)
-            })
+      for (const provider of initializedProviders) {
+        try {
+          const providerStartTime = performance.now()
+          const catalogs = await provider.getAllCatalogs()
+          const providerTime = performance.now() - providerStartTime
 
-            return {
-              provider,
-              catalogs,
-              fetchTime: providerTime
-            }
-          } catch (error) {
-            const errorInstance = error instanceof Error ? error : new Error(String(error))
-            this.logger.error('Failed to fetch catalogs from provider', errorInstance, {
-              context: 'get_all_catalogs_usecase',
-              requestId,
-              providerId: provider.id,
-              providerName: provider.name
-            })
-            throw errorInstance
-          }
-        })
-      )
+          // Sort catalogs within provider for consistency
+          const sortedCatalogs = catalogs.sort((a, b) => {
+            // Primary sort by catalog type priority
+            const typeOrder = ['popular', 'trending', 'top_rated', 'upcoming', 'now_playing']
+            const aTypeIndex = typeOrder.indexOf(a.catalogContext?.catalogType || '')
+            const bTypeIndex = typeOrder.indexOf(b.catalogContext?.catalogType || '')
+            
+            const aPriority = aTypeIndex >= 0 ? aTypeIndex : 999
+            const bPriority = bTypeIndex >= 0 ? bTypeIndex : 999
+            
+            if (aPriority !== bPriority) return aPriority - bPriority
+            
+            // Secondary sort by catalog name for consistency
+            return a.name.localeCompare(b.name)
+          })
 
-      // Extract successful catalog results
-      const successfulResults = catalogResults
-        .filter((result): result is PromiseFulfilledResult<{
-          provider: ICatalogProvider
-          catalogs: Catalog[]
-          fetchTime: number
-        }> => result.status === 'fulfilled')
-        .map(result => result.value)
+          // Add catalogs to collection in order
+          allCatalogs.push(...sortedCatalogs)
+          successfulProviders++
 
-      // Collect catalog fetch errors
-      const fetchErrors: ProviderError[] = catalogResults
-        .map((result, index) => {
-          if (result.status === 'rejected') {
-            const provider = initializedProviders[index]
-            return {
-              providerId: provider.id,
-              providerName: provider.name,
-              error: result.reason instanceof Error ? result.reason.message : String(result.reason),
-              capability: ProviderCapability.CATALOG
-            }
-          }
-          return null
-        })
-        .filter((error): error is ProviderError => error !== null)
+          // Update Legend State immediately with current catalogs
+          this.catalogStateService.updateCatalogs(allCatalogs, {
+            successfulProviders,
+            totalProviders: this.catalogProviders.length
+          })
 
-      // Flatten all catalogs from successful providers
-      const allCatalogs = successfulResults.flatMap(result => result.catalogs)
+          this.logger.debug('Successfully fetched and added catalogs from provider', undefined, {
+            context: 'get_all_catalogs_usecase',
+            requestId,
+            providerId: provider.id,
+            catalogCount: sortedCatalogs.length,
+            totalCatalogs: allCatalogs.length,
+            fetchTime: Math.round(providerTime)
+          })
+
+        } catch (error) {
+          const errorInstance = error instanceof Error ? error : new Error(String(error))
+          fetchErrors.push({
+            providerId: provider.id,
+            providerName: provider.name,
+            error: errorInstance.message,
+            capability: ProviderCapability.CATALOG
+          })
+          this.logger.error('Failed to fetch catalogs from provider', errorInstance, {
+            context: 'get_all_catalogs_usecase',
+            requestId,
+            providerId: provider.id,
+            providerName: provider.name
+          })
+        }
+      }
 
       // Combine all errors
       const allErrors = [...initErrors, ...fetchErrors]
-
       const executionTime = performance.now() - startTime
 
-      this.logger.info('GetAllCatalogsUseCase execution completed', {
+      // Final Legend State update
+      this.catalogStateService.setLoading(false)
+      if (allErrors.length > 0 && allCatalogs.length === 0) {
+        this.catalogStateService.setError('Failed to load any catalogs')
+      }
+
+      this.logger.info('GetAllCatalogsUseCase execution completed with deterministic ordering', {
         context: 'get_all_catalogs_usecase',
         requestId,
         totalCatalogs: allCatalogs.length,
         totalProviders: this.catalogProviders.length,
-        successfulProviders: successfulResults.length,
+        successfulProviders,
         errorCount: allErrors.length,
         executionTime: Math.round(executionTime)
       })
@@ -237,7 +255,7 @@ export class GetAllCatalogsUseCase {
       return {
         catalogs: allCatalogs,
         totalProviders: this.catalogProviders.length,
-        successfulProviders: successfulResults.length,
+        successfulProviders,
         providerErrors: allErrors,
         executionTime,
         requestId

@@ -306,24 +306,39 @@ export class LoadMoreCatalogItemsUseCase {
 
     // If we have original pagination, validate consistency
     if (originalPagination) {
-      // Total items and pages should not decrease (but may increase with new data)
-      if (originalPagination.totalItems && currentPagination.totalItems && 
-          currentPagination.totalItems < originalPagination.totalItems) {
-        this.logger.warn('Total items decreased unexpectedly', undefined, {
+      // Total items and pages can fluctuate in live APIs, only warn for significant decreases
+      const itemsDiff = originalPagination.totalItems && currentPagination.totalItems ? 
+        originalPagination.totalItems - currentPagination.totalItems : 0
+      const pagesDiff = originalPagination.totalPages && currentPagination.totalPages ? 
+        originalPagination.totalPages - currentPagination.totalPages : 0
+
+      // Only warn if decrease is significant (>5% or >50 items)
+      if (itemsDiff > 50 || (originalPagination.totalItems && itemsDiff > originalPagination.totalItems * 0.05)) {
+        this.logger.warn('Significant total items decrease detected', undefined, {
           context: 'load_more_catalog_items_usecase',
           requestId,
           original: originalPagination.totalItems,
-          current: currentPagination.totalItems
+          current: currentPagination.totalItems,
+          difference: itemsDiff
+        })
+      } else if (itemsDiff > 0) {
+        this.logger.debug('Minor total items fluctuation (normal for live APIs)', undefined, {
+          context: 'load_more_catalog_items_usecase',
+          requestId,
+          original: originalPagination.totalItems,
+          current: currentPagination.totalItems,
+          difference: itemsDiff
         })
       }
 
-      if (originalPagination.totalPages && currentPagination.totalPages && 
-          currentPagination.totalPages < originalPagination.totalPages) {
-        this.logger.warn('Total pages decreased unexpectedly', undefined, {
+      // Only warn for significant page decreases
+      if (pagesDiff > 2 || (originalPagination.totalPages && pagesDiff > originalPagination.totalPages * 0.1)) {
+        this.logger.warn('Significant total pages decrease detected', undefined, {
           context: 'load_more_catalog_items_usecase',
           requestId,
           original: originalPagination.totalPages,
-          current: currentPagination.totalPages
+          current: currentPagination.totalPages,
+          difference: pagesDiff
         })
       }
     }

@@ -1,7 +1,7 @@
 import { container } from './setup'
 import { TOKENS, ServiceToken } from './tokens'
 import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService } from '@/src/domain/services'
-import type { ITMDBService } from '../api/tmdb/tmdb.service'
+import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { IUserRepository } from '@/src/domain/repositories'
 import {
   GetOrCreateUserUseCase,

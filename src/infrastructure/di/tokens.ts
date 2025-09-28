@@ -31,6 +31,9 @@ export const TOKENS = {
   GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),
   LOAD_MORE_CATALOG_ITEMS_USE_CASE: Symbol('LoadMoreCatalogItemsUseCase'),
 
+  // State Services
+  CATALOG_STATE_SERVICE: Symbol('ICatalogStateService'),
+
 } as const
 
 export type ServiceToken = typeof TOKENS[keyof typeof TOKENS]

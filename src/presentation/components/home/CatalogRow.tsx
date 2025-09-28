@@ -8,7 +8,7 @@
 
 /* @jsxImportSource react */
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, useRef, useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { observer } from '@legendapp/state/react'
 import { LegendList } from '@legendapp/list'
@@ -32,7 +32,7 @@ interface CatalogRowProps {
   index: number
 }
 
-export const CatalogRow: React.FC<CatalogRowProps> = observer(({
+const CatalogRowImpl: React.FC<CatalogRowProps> = ({
   catalog,
   onItemPress,
   onItemLongPress,
@@ -46,20 +46,53 @@ export const CatalogRow: React.FC<CatalogRowProps> = observer(({
   const theme = useTheme()
   const styles = createStyles(theme)
 
-  // Prepare data for Legend List
+  // Track previous item count for animation detection
+  const previousItemCount = useRef(catalog.items.length)
+  const lastNewItemsCount = useRef(0)
+
+  useEffect(() => {
+    const currentCount = catalog.items.length
+    if (currentCount > previousItemCount.current) {
+      // New items were added
+      lastNewItemsCount.current = currentCount - previousItemCount.current
+      previousItemCount.current = currentCount
+      
+      // Clear the new items flag after animation
+      setTimeout(() => {
+        lastNewItemsCount.current = 0
+      }, 1000) // Clear after 1 second
+    } else {
+      previousItemCount.current = currentCount
+    }
+  }, [catalog.items.length])
+
+  // Prepare data for Legend List with stable keys and animation flags
   const listData = useMemo(() => {
-    const items = catalog.items.map((item, itemIndex) => ({
-      id: `${catalog.id}-${item.id}-${itemIndex}`, // Make unique by combining catalog ID, item ID, and index
-      item,
-      index: itemIndex,
-      isFirstItem: itemIndex === 0,
-      isLastItem: itemIndex === catalog.items.length - 1
-    }))
+    const totalItems = catalog.items.length
+    const newItemsCount = lastNewItemsCount.current
+    
+    const items = catalog.items.map((item, itemIndex) => {
+      // Check if this item is one of the newly added items
+      const isNewItem = newItemsCount > 0 && itemIndex >= (totalItems - newItemsCount)
+      // Stagger animation delay for new items
+      const animationDelay = isNewItem ? (itemIndex - (totalItems - newItemsCount)) * 100 : 0
+      
+      return {
+        // UNIQUE + STABLE key: catalog.id + item.id + index for absolute uniqueness without timestamps
+        id: `${catalog.id}-item-${item.id}-pos-${itemIndex}`,
+        item,
+        index: itemIndex,
+        isFirstItem: itemIndex === 0,
+        isLastItem: itemIndex === catalog.items.length - 1,
+        isNewItem,
+        animationDelay
+      }
+    })
 
     // Add loading indicator if loading more
     if (isLoading && hasMore) {
       items.push({
-        id: `${catalog.id}-loading`,
+        id: `${catalog.id}-loading-indicator`,
         item: null as any,
         index: items.length,
         isFirstItem: false,
@@ -110,6 +143,8 @@ export const CatalogRow: React.FC<CatalogRowProps> = observer(({
           index={listItem.index}
           isFirstItem={listItem.isFirstItem}
           isLastItem={listItem.isLastItem}
+          isNewItem={listItem.isNewItem}
+          animationDelay={listItem.animationDelay}
         />
       )
     }
@@ -179,7 +214,9 @@ export const CatalogRow: React.FC<CatalogRowProps> = observer(({
       </View>
     </MotionWrapper>
   )
-})
+}
+
+export const CatalogRow = React.memo(observer(CatalogRowImpl))
 
 const createStyles = (theme: Theme) => StyleSheet.create({
   container: {

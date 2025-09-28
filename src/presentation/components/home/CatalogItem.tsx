@@ -7,7 +7,7 @@
 
 /* @jsxImportSource react */
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native'
 import { observer } from '@legendapp/state/react'
 import { Image } from 'expo-image'
@@ -24,6 +24,8 @@ interface CatalogItemProps {
   index: number
   isFirstItem?: boolean
   isLastItem?: boolean
+  isNewItem?: boolean
+  animationDelay?: number
 }
 
 export const CatalogItem: React.FC<CatalogItemProps> = observer(({
@@ -32,11 +34,47 @@ export const CatalogItem: React.FC<CatalogItemProps> = observer(({
   onLongPress,
   index,
   isFirstItem = false,
-  isLastItem = false
+  isLastItem = false,
+  isNewItem = false,
+  animationDelay = 0
 }) => {
   const { t } = useTranslation()
   const theme = useTheme()
   const styles = createStyles(theme, isFirstItem, isLastItem)
+
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(isNewItem ? 0 : 1)).current
+  const scaleAnim = useRef(new Animated.Value(isNewItem ? 0.8 : 1)).current
+  const translateYAnim = useRef(new Animated.Value(isNewItem ? 20 : 0)).current
+
+  // Animate in new items
+  useEffect(() => {
+    if (isNewItem) {
+      const delay = animationDelay
+      
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          delay,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          delay,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateYAnim, {
+          toValue: 0,
+          duration: 400,
+          delay,
+          useNativeDriver: true,
+        }),
+      ]).start()
+    }
+  }, [isNewItem, animationDelay, fadeAnim, scaleAnim, translateYAnim])
 
   const handlePress = () => {
     onPress(item)
@@ -46,8 +84,16 @@ export const CatalogItem: React.FC<CatalogItemProps> = observer(({
     onLongPress?.(item)
   }
 
+  const animatedStyle = {
+    opacity: fadeAnim,
+    transform: [
+      { scale: scaleAnim },
+      { translateY: translateYAnim }
+    ]
+  }
+
   return (
-    <Animated.View style={styles.container}>
+    <Animated.View style={[styles.container, animatedStyle]}>
       <Pressable
         onPress={handlePress}
         onLongPress={handleLongPress}

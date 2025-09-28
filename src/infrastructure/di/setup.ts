@@ -23,6 +23,7 @@ import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ProviderRegistry } from '@/src/infrastructure/providers/provider-registry.impl'
 import { TMDBProviderSource } from '@/src/infrastructure/providers/tmdb-provider-source'
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
+import { catalogStateService, type ICatalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
 
 const container = new DIContainer()
 
@@ -196,19 +197,26 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     throw new Error(`Provider source initialization failed: ${errorMessage}`)
   }
 
-  // Register Catalog Use Cases (depend on provider registry and logging)
+  // Register Catalog State Service (no dependencies - singleton presentation service)
+  container.registerSingleton<ICatalogStateService>(
+    TOKENS.CATALOG_STATE_SERVICE,
+    () => catalogStateService
+  )
+
+  // Register Catalog Use Cases (depend on provider registry, logging, and state service)
   container.registerSingleton<GetAllCatalogsUseCase>(
     TOKENS.GET_ALL_CATALOGS_USE_CASE,
     () => {
       const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      const stateService = container.resolve<ICatalogStateService>(TOKENS.CATALOG_STATE_SERVICE)
       
       // Get all catalog providers from registry
       const catalogProviders = registry.getAllProviders().filter(
         provider => provider.capabilities.includes(ProviderCapability.CATALOG)
       ) as ICatalogProvider[]
       
-      return new GetAllCatalogsUseCase(catalogProviders, logger)
+      return new GetAllCatalogsUseCase(catalogProviders, logger, stateService)
     }
   )
 

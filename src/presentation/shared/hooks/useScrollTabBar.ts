@@ -18,7 +18,7 @@ interface UseScrollTabBarReturn {
 export const useScrollTabBar = (): UseScrollTabBarReturn => {
   const handleScroll = useCallback((event: any) => {
     // Mock implementation - replace with actual tab bar scroll logic
-    console.log('Scroll event received:', event?.nativeEvent?.contentOffset?.y || 0)
+    // TODO: Implement actual tab bar scroll logic
   }, [])
 
   return {
