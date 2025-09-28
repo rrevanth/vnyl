@@ -8,7 +8,9 @@ import {
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase
+  UpdateUserLocaleUseCase,
+  GetAllCatalogsUseCase,
+  LoadMoreCatalogItemsUseCase
 } from '@/src/domain/usecases'
 
 export const useDI = <T>(token: ServiceToken): T => {
@@ -104,5 +106,14 @@ export const useUserPreferences = () => {
     refreshCache: () => userPreferenceService.refreshCache(),
     isReady: () => userPreferenceService.isReady()
   }
+}
+
+// Catalog Use Case Hooks
+export const useGetAllCatalogsUseCase = (): GetAllCatalogsUseCase => {
+  return useDI<GetAllCatalogsUseCase>(TOKENS.GET_ALL_CATALOGS_USE_CASE)
+}
+
+export const useLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase => {
+  return useDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
 }
 

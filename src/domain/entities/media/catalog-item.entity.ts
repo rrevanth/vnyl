@@ -5,6 +5,7 @@
 
 import { MediaType, Genre, LanguageCode, CountryCode, ContentRating, MediaStatus } from '@/src/domain/entities/media/content-types'
 import { ExternalIds } from '@/src/domain/entities/media/external-ids.entity'
+import { ContentContext, EnrichedData } from '@/src/domain/entities/context/content-context.entity'
 import { ProductionCompany } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 
 /**
@@ -61,9 +62,17 @@ export interface CatalogItem {
   /** Primary genres */
   readonly genres?: Genre[]
 
-  /** External service identifiers */
-  readonly externalIds: ExternalIds
+  /** Original media type from provider (preserve original provider type) */
+  readonly originalMediaType: string
 
+  /** Complete traceability context */
+  readonly contentContext: ContentContext
+
+  /** External service identifiers (dynamic with provider support) */
+  readonly externalIds: ExternalIds & { readonly [providerId: string]: string | number }
+
+  /** Enriched data from multiple providers (only on items, not catalog) */
+  readonly enrichedData?: EnrichedData<CatalogItem>
 
   /** Whether detailed information has been loaded */
   readonly hasDetailedInfo: boolean
@@ -352,6 +361,17 @@ export class CatalogItemUtils {
   }
 
   /**
+   * Creates a catalog item ID from content context
+   * @param contentContext - Content context
+   * @returns Unique catalog item ID
+   */
+  static createCatalogItemIdFromContext(
+    contentContext: ContentContext
+  ): string {
+    return `${contentContext.originalMediaType}_${contentContext.providerId}_${contentContext.originalMediaId}`
+  }
+
+  /**
    * Extracts the display title for a catalog item
    * @param item - Catalog item
    * @returns Display title
@@ -476,5 +496,32 @@ export class CatalogItemUtils {
    */
   static isCollectionItem(item: CatalogItem): item is CollectionCatalogItem {
     return item.mediaType === MediaType.COLLECTION
+  }
+
+  /**
+   * Checks if item has enriched data
+   * @param item - Catalog item
+   * @returns Whether item has enriched data
+   */
+  static hasEnrichedData(item: CatalogItem): boolean {
+    return !!item.enrichedData
+  }
+
+  /**
+   * Gets the original provider ID from content context
+   * @param item - Catalog item
+   * @returns Provider ID
+   */
+  static getProviderId(item: CatalogItem): string {
+    return item.contentContext.providerId
+  }
+
+  /**
+   * Gets the original media ID from content context
+   * @param item - Catalog item
+   * @returns Original media ID
+   */
+  static getOriginalMediaId(item: CatalogItem): string | number {
+    return item.contentContext.originalMediaId
   }
 }

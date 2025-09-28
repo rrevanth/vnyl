@@ -1,12 +1,11 @@
 /**
  * Domain Use Cases Index
  * 
- * Simplified export point for user management use cases only.
- * Provider functionality is handled directly through provider registry.
+ * Export point for all use cases including user management and catalog operations.
  */
 
 // =============================================================================
-// User Management Use Cases (Existing)
+// User Management Use Cases
 // =============================================================================
 
 export { GetOrCreateUserUseCase } from '@/src/domain/usecases/get-or-create-user.usecase'
@@ -15,5 +14,16 @@ export { UpdateUserLocaleUseCase } from '@/src/domain/usecases/update-user-local
 export { UpdateUserPreferencesUseCase } from '@/src/domain/usecases/update-user-preferences.usecase'
 export { UpdateUserThemeUseCase } from '@/src/domain/usecases/update-user-theme.usecase'
 
-// Re-export types for existing user use cases
-// Note: These types are defined elsewhere in the entities
+// =============================================================================
+// Catalog Management Use Cases
+// =============================================================================
+
+export { GetAllCatalogsUseCase } from '@/src/domain/usecases/get-all-catalogs.usecase'
+export type { GetAllCatalogsResult, ProviderError } from '@/src/domain/usecases/get-all-catalogs.usecase'
+
+export { LoadMoreCatalogItemsUseCase } from '@/src/domain/usecases/load-more-catalog-items.usecase'
+export type { 
+  LoadMoreCatalogItemsRequest, 
+  LoadMoreCatalogItemsResult, 
+  LoadMetrics 
+} from '@/src/domain/usecases/load-more-catalog-items.usecase'

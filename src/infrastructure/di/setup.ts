@@ -7,7 +7,9 @@ import {
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase
+  UpdateUserLocaleUseCase,
+  GetAllCatalogsUseCase,
+  LoadMoreCatalogItemsUseCase
 } from '@/src/domain/usecases'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
@@ -16,6 +18,9 @@ import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
 import { createTMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
+import { createTMDBCatalogProvider } from '@/src/infrastructure/providers/tmdb-catalog.provider'
+import type { ITMDBCatalogProvider } from '@/src/infrastructure/providers/tmdb-catalog.provider'
+import { ICatalogCapability } from '@/src/domain/providers/catalog/catalog-capability.interface'
 
 const container = new DIContainer()
 
@@ -146,6 +151,43 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
     }
   )
 
+  // Register TMDB Catalog Provider (depends on TMDB service and logging)
+  container.registerSingleton<ITMDBCatalogProvider>(
+    TOKENS.TMDB_CATALOG_PROVIDER,
+    () => {
+      const tmdbService = container.resolve<ITMDBService>(TOKENS.TMDB_SERVICE)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return createTMDBCatalogProvider(tmdbService, logger)
+    }
+  )
+
+  // Register Catalog Use Cases (depend on catalog providers and logging)
+  container.registerSingleton<GetAllCatalogsUseCase>(
+    TOKENS.GET_ALL_CATALOGS_USE_CASE,
+    () => {
+      const tmdbCatalogProvider = container.resolve<ITMDBCatalogProvider>(TOKENS.TMDB_CATALOG_PROVIDER)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      // Create array of all catalog providers
+      const catalogProviders: ICatalogCapability[] = [tmdbCatalogProvider]
+      
+      return new GetAllCatalogsUseCase(catalogProviders, logger)
+    }
+  )
+
+  container.registerSingleton<LoadMoreCatalogItemsUseCase>(
+    TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE,
+    () => {
+      const tmdbCatalogProvider = container.resolve<ITMDBCatalogProvider>(TOKENS.TMDB_CATALOG_PROVIDER)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      // Create array of all catalog providers
+      const catalogProviders: ICatalogCapability[] = [tmdbCatalogProvider]
+      
+      return new LoadMoreCatalogItemsUseCase(catalogProviders, logger)
+    }
+  )
+
 
 
   // Log successful initialization
@@ -160,11 +202,14 @@ export const initializeDI = (apiConfig: ApiConfig): void => {
       'ConfigClient',
       'ApiClient',
       'TMDBService',
+      'TMDBCatalogProvider',
       'GetOrCreateUserUseCase',
       'UpdateUserPreferencesUseCase',
       'ResetUserPreferencesUseCase',
       'UpdateUserThemeUseCase',
-      'UpdateUserLocaleUseCase'
+      'UpdateUserLocaleUseCase',
+      'GetAllCatalogsUseCase',
+      'LoadMoreCatalogItemsUseCase'
     ]
   })
 }

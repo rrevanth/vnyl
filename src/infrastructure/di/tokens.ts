@@ -23,6 +23,13 @@ export const TOKENS = {
   UPDATE_USER_THEME_USE_CASE: Symbol('UpdateUserThemeUseCase'),
   UPDATE_USER_LOCALE_USE_CASE: Symbol('UpdateUserLocaleUseCase'),
 
+  // Provider Services
+  TMDB_CATALOG_PROVIDER: Symbol('ITMDBCatalogProvider'),
+  
+  // Catalog Use Cases
+  GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),
+  LOAD_MORE_CATALOG_ITEMS_USE_CASE: Symbol('LoadMoreCatalogItemsUseCase'),
+
 } as const
 
 export type ServiceToken = typeof TOKENS[keyof typeof TOKENS]
