@@ -200,15 +200,8 @@ export const useIntegratedHomeScreen = (
       // Use controller's load more functionality
       await controllerActions.loadMoreItems(catalogId, providerId, page)
       
-      // Invalidate relevant queries to sync with new data
-      await queryClient.invalidateQueries({ 
-        queryKey: vnylQueryKeys.catalogs.pagination(catalogId, providerId)
-      })
-      
-      // Also invalidate main catalog query to update hasMore states
-      await queryClient.invalidateQueries({ 
-        queryKey: vnylQueryKeys.catalogs.all 
-      })
+      // No need to invalidate queries - the controller already updates local state with new items
+      // Invalidating would cause a full page refresh instead of just appending items
       
       logger?.info('IntegratedHomeScreen: Load more completed successfully')
     } catch (error) {
@@ -216,7 +209,7 @@ export const useIntegratedHomeScreen = (
       logger?.error('IntegratedHomeScreen: Load more failed', errorInstance)
       throw errorInstance
     }
-  }, [logger, controllerActions, queryClient])
+  }, [logger, controllerActions])
 
   /**
    * Load more items using catalog object directly (avoids catalog lookup issues)
@@ -246,15 +239,8 @@ export const useIntegratedHomeScreen = (
       // Use controller's new loadMoreItemsWithCatalog method to avoid catalog lookup
       await controllerActions.loadMoreItemsWithCatalog(catalog, providerId, page)
       
-      // Invalidate relevant queries to sync with new data
-      await queryClient.invalidateQueries({ 
-        queryKey: vnylQueryKeys.catalogs.pagination(catalog.id, providerId)
-      })
-      
-      // Also invalidate main catalog query to update hasMore states
-      await queryClient.invalidateQueries({ 
-        queryKey: vnylQueryKeys.catalogs.all 
-      })
+      // No need to invalidate queries - the controller already updates local state with new items
+      // Invalidating would cause a full page refresh instead of just appending items
       
       logger?.info('IntegratedHomeScreen: Load more with catalog completed successfully')
     } catch (error) {
@@ -265,7 +251,7 @@ export const useIntegratedHomeScreen = (
       })
       throw errorInstance
     }
-  }, [logger, controllerActions, queryClient])
+  }, [logger, controllerActions])
 
   /**
    * Comprehensive cache invalidation
