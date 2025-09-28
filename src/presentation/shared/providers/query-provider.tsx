@@ -42,9 +42,17 @@ export const QueryProvider: React.FC<QueryProviderProps> = ({ children }) => {
   
   // Create query client (memoized to prevent recreation)
   const queryClient = useMemo(() => {
-    const client = createQueryClient()
+    // Provide fallback logger when DI container isn't ready
+    const effectiveLogger = logger || {
+      error: () => {},
+      info: () => {},
+      debug: () => {},
+      warn: () => {}
+    }
     
-    // Log initialization if logger is available
+    const client = createQueryClient(effectiveLogger)
+    
+    // Log initialization if real logger is available
     if (logger) {
       logger.debug('QueryClient initialized', undefined, {
         context: 'QueryProvider',

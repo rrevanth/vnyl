@@ -8,6 +8,7 @@
  */
 
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
+import type { ILoggingService } from '@/src/domain/services'
 
 /**
  * Query configuration constants
@@ -78,15 +79,14 @@ export const queryKeys = {
 /**
  * Creates a configured QueryClient with error handling and logging
  */
-export const createQueryClient = (): QueryClient => {
-  // Use console for logging since we can't use hooks in this factory function
+export const createQueryClient = (logger: ILoggingService): QueryClient => {
   const logError = (context: string, error: unknown, meta?: any) => {
     const errorInstance = error instanceof Error ? error : new Error(String(error))
-    console.error(`QueryClient: ${context}`, errorInstance, meta)
+    logger.error(`QueryClient: ${context}`, errorInstance, meta)
   }
 
   const logInfo = (context: string, meta?: any) => {
-    console.log(`QueryClient: ${context}`, meta)
+    logger.info(`QueryClient: ${context}`, meta)
   }
 
   // Query cache with error handling
@@ -220,7 +220,7 @@ export const cacheUtils = {
     providerId: string
   ): Promise<void> => {
     // This would be implemented with actual use case when component uses it
-    console.log('Prefetching catalog:', catalogId, providerId)
+    // Note: This function needs a logger parameter to be properly implemented
   },
 
   /**
@@ -265,8 +265,10 @@ export const queryStatusUtils = {
   /**
    * Log cache statistics
    */
-  logCacheStats: (queryClient: QueryClient): void => {
+  logCacheStats: (queryClient: QueryClient, logger?: ILoggingService): void => {
     const stats = queryStatusUtils.getCacheStats(queryClient)
-    console.log('Query Cache Statistics:', stats)
+    if (logger) {
+      logger.info('Query Cache Statistics:', stats)
+    }
   }
 }

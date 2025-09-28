@@ -1,4 +1,4 @@
-import type { TranslationKey } from '../types'
+import type { TranslationKey } from '@/src/presentation/shared/i18n/types'
 
 export const en: TranslationKey = {
   common: {
