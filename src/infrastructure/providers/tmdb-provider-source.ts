@@ -10,6 +10,9 @@ import { TMDBCatalogProvider } from './tmdb/tmdb-catalog.provider'
 import { TMDBMetadataProvider } from './tmdb/tmdb-metadata.provider'
 import { TMDBImagesProvider } from './tmdb/tmdb-images.provider'
 import { TMDBExternalIdsProvider } from './tmdb/tmdb-external-ids.provider'
+import { TMDBPeopleProvider } from './tmdb/tmdb-people.provider'
+import { TMDBRecommendationsProvider } from './tmdb/tmdb-recommendations.provider'
+import { TMDBSeasonsProvider } from './tmdb/tmdb-seasons.provider'
 
 /**
  * TMDB Provider Source
@@ -22,7 +25,11 @@ export class TMDBProviderSource implements IProviderSource {
   public readonly availableCapabilities: ProviderCapability[] = [
     ProviderCapability.CATALOG,
     ProviderCapability.METADATA,
-    ProviderCapability.EXTERNAL_IDS
+    ProviderCapability.EXTERNAL_IDS,
+    ProviderCapability.IMAGES,
+    ProviderCapability.PEOPLE,
+    ProviderCapability.RECOMMENDATIONS,
+    ProviderCapability.SEASONS_EPISODES
   ]
 
   public readonly config: ProviderSourceConfig
@@ -121,12 +128,22 @@ export class TMDBProviderSource implements IProviderSource {
       const metadataProvider = new TMDBMetadataProvider(tmdbService, this.logger, this.id)
       const imagesProvider = new TMDBImagesProvider(tmdbService, this.logger, this.id)
       const externalIdsProvider = new TMDBExternalIdsProvider(tmdbService, this.logger, this.id)
+      
+      // Create new enrichment providers
+      const peopleProvider = new TMDBPeopleProvider(tmdbService, this.logger, this.id)
+      const recommendationsProvider = new TMDBRecommendationsProvider(tmdbService, this.logger, this.id)
+      const seasonsProvider = new TMDBSeasonsProvider(tmdbService, this.logger, this.id)
 
       // Register each provider
       await this.registerSingleProvider(registry, catalogProvider, 'catalog')
       await this.registerSingleProvider(registry, metadataProvider, 'metadata')
       await this.registerSingleProvider(registry, imagesProvider, 'images')
       await this.registerSingleProvider(registry, externalIdsProvider, 'external-ids')
+      
+      // Register new enrichment providers
+      await this.registerSingleProvider(registry, peopleProvider, 'people')
+      await this.registerSingleProvider(registry, recommendationsProvider, 'recommendations')
+      await this.registerSingleProvider(registry, seasonsProvider, 'seasons-episodes')
 
       const registrationTime = Date.now() - startTime
 

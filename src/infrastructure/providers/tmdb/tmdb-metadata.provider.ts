@@ -12,8 +12,8 @@ import { ExternalIds } from '@/src/domain/entities/media/external-ids.entity'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
 import { ITMDBService, TMDBOptimizer, TMDBUtils } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
-import type { MovieDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
-import type { TVShowDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
+import type { TMDBMovieDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
+import type { TMDBTVShowDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
 
 /**
  * TMDB metadata fields that can be included via append_to_response
@@ -233,14 +233,14 @@ export class TMDBMetadataProvider implements IMetadataProvider {
     return [MediaType.MOVIE, MediaType.TV_SERIES]
   }
 
-  private async fetchMovieDetails(movieId: number): Promise<MovieDetails> {
+  private async fetchMovieDetails(movieId: number): Promise<TMDBMovieDetails> {
     const appendToResponse = TMDBOptimizer.getOptimizedAppend('movie', 'essential')
     return this.tmdbService.client.movies.getDetails(movieId, {
       append_to_response: appendToResponse
     })
   }
 
-  private async fetchTVDetails(tvId: number): Promise<TVShowDetails> {
+  private async fetchTVDetails(tvId: number): Promise<TMDBTVShowDetails> {
     const appendToResponse = TMDBOptimizer.getOptimizedAppend('tv', 'essential')
     return this.tmdbService.client.tv.getDetails(tvId, {
       append_to_response: appendToResponse
@@ -271,7 +271,7 @@ export class TMDBMetadataProvider implements IMetadataProvider {
     return baseAppend
   }
 
-  private mapMovieDetailsToCatalogItem(movieDetails: MovieDetails, enhanced: boolean = false): MovieCatalogItem {
+  private mapMovieDetailsToCatalogItem(movieDetails: TMDBMovieDetails, enhanced: boolean = false): MovieCatalogItem {
     const baseItem = {
       id: CatalogItemUtils.createCatalogItemId(MediaType.MOVIE, movieDetails.id, 'tmdb'),
       mediaType: MediaType.MOVIE,
@@ -316,7 +316,7 @@ export class TMDBMetadataProvider implements IMetadataProvider {
     return baseItem
   }
 
-  private mapTVDetailsToCatalogItem(tvDetails: TVShowDetails, enhanced: boolean = false): TVCatalogItem {
+  private mapTVDetailsToCatalogItem(tvDetails: TMDBTVShowDetails, enhanced: boolean = false): TVCatalogItem {
     const baseItem = {
       id: CatalogItemUtils.createCatalogItemId(MediaType.TV_SERIES, tvDetails.id, 'tmdb'),
       mediaType: MediaType.TV_SERIES,
@@ -345,7 +345,7 @@ export class TMDBMetadataProvider implements IMetadataProvider {
       status: tvDetails.status as any,
       type: tvDetails.type || undefined,
       originCountries: tvDetails.origin_country as any[],
-      networks: tvDetails.networks?.map(network => ({
+      networks: tvDetails.networks?.map((network: any) => ({
         id: network.id,
         name: network.name,
         logoPath: network.logo_path,

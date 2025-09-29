@@ -7,7 +7,7 @@
 import type { LanguageCode, CountryCode, PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBMovieEndpoints,
-  MovieDetails,
+  TMDBMovieDetails,
   MovieSummary,
   MovieCreditsResponse,
   MovieImagesResponse,
@@ -44,9 +44,9 @@ export const createMovieEndpoints = (
   /**
    * Get the primary information about a movie
    */
-  async getDetails(movieId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<MovieDetails> {
+  async getDetails(movieId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TMDBMovieDetails> {
     const appendToResponse = params?.append_to_response ? [params.append_to_response] : undefined
-    return request<MovieDetails>('GET', `/movie/${movieId}`, params, undefined, { appendToResponse })
+    return request<TMDBMovieDetails>('GET', `/movie/${movieId}`, params, undefined, { appendToResponse })
   },
 
   /**
@@ -193,7 +193,7 @@ export const createMovieEndpoints = (
   /**
    * Get the latest movie id
    */
-  async getLatest(params?: { language?: LanguageCode }): Promise<MovieDetails> {
-    return request<MovieDetails>('GET', '/movie/latest', params)
+  async getLatest(params?: { language?: LanguageCode }): Promise<TMDBMovieDetails> {
+    return request<TMDBMovieDetails>('GET', '/movie/latest', params)
   }
 })

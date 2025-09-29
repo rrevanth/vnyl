@@ -7,9 +7,9 @@
 import type { LanguageCode, PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 import type { 
   TMDBTVEndpoints,
-  TVShowDetails,
+  TMDBTVShowDetails,
   TVShowSummary,
-  TVSeasonDetails,
+  TMDBTVSeasonDetails,
   TVEpisodeDetails,
   TVCreditsResponse,
   TVImagesResponse,
@@ -57,9 +57,9 @@ export const createTVEndpoints = (
   /**
    * Get the primary TV show details by id
    */
-  async getDetails(tvId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TVShowDetails> {
+  async getDetails(tvId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TMDBTVShowDetails> {
     const appendToResponse = params?.append_to_response ? [params.append_to_response] : undefined
-    return request<TVShowDetails>('GET', `/tv/${tvId}`, params, undefined, { appendToResponse })
+    return request<TMDBTVShowDetails>('GET', `/tv/${tvId}`, params, undefined, { appendToResponse })
   },
 
   /**
@@ -177,9 +177,9 @@ export const createTVEndpoints = (
   /**
    * Get the details of a TV season
    */
-  async getSeasonDetails(tvId: number, seasonNumber: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TVSeasonDetails> {
+  async getSeasonDetails(tvId: number, seasonNumber: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TMDBTVSeasonDetails> {
     const appendToResponse = params?.append_to_response ? [params.append_to_response] : undefined
-    return request<TVSeasonDetails>('GET', `/tv/${tvId}/season/${seasonNumber}`, params, undefined, { appendToResponse })
+    return request<TMDBTVSeasonDetails>('GET', `/tv/${tvId}/season/${seasonNumber}`, params, undefined, { appendToResponse })
   },
 
   /**
@@ -314,7 +314,7 @@ export const createTVEndpoints = (
   /**
    * Get the most newly created TV show
    */
-  async getLatest(params?: { language?: LanguageCode }): Promise<TVShowDetails> {
-    return request<TVShowDetails>('GET', '/tv/latest', params)
+  async getLatest(params?: { language?: LanguageCode }): Promise<TMDBTVShowDetails> {
+    return request<TMDBTVShowDetails>('GET', '/tv/latest', params)
   }
 })

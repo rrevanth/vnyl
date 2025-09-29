@@ -26,9 +26,9 @@ import type {
 } from './base.types'
 
 /**
- * Movie object (detailed)
+ * TMDB Movie object (detailed) - Provider-specific type with optional appended data
  */
-export interface MovieDetails {
+export interface TMDBMovieDetails {
   /** Is adult content */
   adult: boolean
   /** Backdrop image path */
@@ -84,6 +84,39 @@ export interface MovieDetails {
   vote_average: number
   /** Vote count */
   vote_count: number
+  
+  // Optional appended data (previously in MovieDetailsWithAppends)
+  /** Credits data when append_to_response includes 'credits' */
+  credits?: {
+    cast: CastMember[]
+    crew: CrewMember[]
+  }
+  /** Recommendations when append_to_response includes 'recommendations' */
+  recommendations?: {
+    page: number
+    results: MovieSummary[]
+    total_pages: number
+    total_results: number
+  }
+  /** Similar movies when append_to_response includes 'similar' */
+  similar?: {
+    page: number
+    results: MovieSummary[]
+    total_pages: number
+    total_results: number
+  }
+  /** Videos when append_to_response includes 'videos' */
+  videos?: {
+    results: Video[]
+  }
+  /** Images when append_to_response includes 'images' */
+  images?: {
+    backdrops: Image[]
+    logos: Image[]
+    posters: Image[]
+  }
+  /** External IDs when append_to_response includes 'external_ids' */
+  external_ids?: ExternalIds
 }
 
 /**
@@ -339,7 +372,7 @@ export interface TMDBMovieEndpoints {
   /**
    * Get the primary information about a movie
    */
-  getDetails(movieId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<MovieDetails>
+  getDetails(movieId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TMDBMovieDetails>
 
   /**
    * Get the alternative titles for a movie
@@ -444,5 +477,5 @@ export interface TMDBMovieEndpoints {
   /**
    * Get the latest movie id
    */
-  getLatest(params?: { language?: LanguageCode }): Promise<MovieDetails>
+  getLatest(params?: { language?: LanguageCode }): Promise<TMDBMovieDetails>
 }

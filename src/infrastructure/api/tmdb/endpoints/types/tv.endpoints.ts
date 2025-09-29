@@ -24,9 +24,9 @@ import type {
 } from './base.types'
 
 /**
- * TV show object (detailed)
+ * TMDB TV show object (detailed) - Provider-specific type with optional appended data
  */
-export interface TVShowDetails {
+export interface TMDBTVShowDetails {
   /** Is adult content */
   adult: boolean
   /** Backdrop image path */
@@ -136,6 +136,39 @@ export interface TVShowDetails {
   vote_average: number
   /** Vote count */
   vote_count: number
+
+  // Optional appended data (previously in TVShowDetailsWithAppends)
+  /** Credits data when append_to_response includes 'credits' */
+  credits?: {
+    cast: CastMember[]
+    crew: CrewMember[]
+  }
+  /** Recommendations when append_to_response includes 'recommendations' */
+  recommendations?: {
+    page: number
+    results: TVShowSummary[]
+    total_pages: number
+    total_results: number
+  }
+  /** Similar shows when append_to_response includes 'similar' */
+  similar?: {
+    page: number
+    results: TVShowSummary[]
+    total_pages: number
+    total_results: number
+  }
+  /** Videos when append_to_response includes 'videos' */
+  videos?: {
+    results: Video[]
+  }
+  /** Images when append_to_response includes 'images' */
+  images?: {
+    backdrops: Image[]
+    logos: Image[]
+    posters: Image[]
+  }
+  /** External IDs when append_to_response includes 'external_ids' */
+  external_ids?: TVExternalIdsResponse
 }
 
 /**
@@ -173,9 +206,9 @@ export interface TVShowSummary {
 }
 
 /**
- * TV season details
+ * TMDB TV season details with optional appended data
  */
-export interface TVSeasonDetails {
+export interface TMDBTVSeasonDetails {
   /** Season air date */
   air_date: string | null
   /** Episodes */
@@ -205,6 +238,25 @@ export interface TVSeasonDetails {
   poster_path: string | null
   /** Season number */
   season_number: number
+
+  // Optional appended data (previously in TVSeasonDetailsWithAppends)
+  /** Vote average for the season */
+  vote_average?: number
+  /** Credits data when append_to_response includes 'credits' */
+  credits?: {
+    cast: CastMember[]
+    crew: CrewMember[]
+  }
+  /** Videos when append_to_response includes 'videos' */
+  videos?: {
+    results: Video[]
+  }
+  /** Images when append_to_response includes 'images' */
+  images?: {
+    posters: Image[]
+  }
+  /** External IDs when append_to_response includes 'external_ids' */
+  external_ids?: TVSeasonExternalIdsResponse
 }
 
 /**
@@ -620,7 +672,7 @@ export interface TMDBTVEndpoints {
   /**
    * Get the primary TV show details by id
    */
-  getDetails(tvId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TVShowDetails>
+  getDetails(tvId: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TMDBTVShowDetails>
 
   /**
    * Get the alternative titles for a TV show
@@ -705,7 +757,7 @@ export interface TMDBTVEndpoints {
   /**
    * Get the details of a TV season
    */
-  getSeasonDetails(tvId: number, seasonNumber: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TVSeasonDetails>
+  getSeasonDetails(tvId: number, seasonNumber: number, params?: { language?: LanguageCode; append_to_response?: string }): Promise<TMDBTVSeasonDetails>
 
   /**
    * Get the credits for TV season
@@ -800,5 +852,5 @@ export interface TMDBTVEndpoints {
   /**
    * Get the most newly created TV show
    */
-  getLatest(params?: { language?: LanguageCode }): Promise<TVShowDetails>
+  getLatest(params?: { language?: LanguageCode }): Promise<TMDBTVShowDetails>
 }
