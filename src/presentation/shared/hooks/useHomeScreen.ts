@@ -9,13 +9,13 @@
  * - Dependency injection for all services and use cases
  */
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useSafeGetAllCatalogsUseCase, useSafeLoadMoreCatalogItemsUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
 import { useScrollTabBar } from '@/src/presentation/shared/hooks/useScrollTabBar'
-import { catalogStore$, catalogActions, catalogComputed } from '@/src/presentation/shared/stores/catalog-store'
+import { catalogActions, catalogSelectors } from '@/src/presentation/shared/stores/catalog-store'
 import { vnylQueryKeys } from '@/src/presentation/shared/queries/vnyl-query-client'
 import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
@@ -76,12 +76,13 @@ interface UseHomeScreenResult {
 }
 
 /**
- * Home Screen Hook
+ * Home Screen Hook (Performance Optimized)
  * 
  * Provides clean interface for home screen state management following CLEAN architecture.
  * All business logic delegated to use cases with proper dependency injection.
+ * Optimized with selective subscriptions and computed values for better performance.
  */
-export const useHomeScreen = (): UseHomeScreenResult => {
+const useHomeScreenImpl = (): UseHomeScreenResult => {
   const logger = useSafeLogging()
   
   // Get user preferences following app pattern
@@ -91,14 +92,19 @@ export const useHomeScreen = (): UseHomeScreenResult => {
   const getAllCatalogsUseCase = useSafeGetAllCatalogsUseCase()
   const loadMoreCatalogItemsUseCase = useSafeLoadMoreCatalogItemsUseCase()
 
-  // Extract user preferences following app pattern
-  const preferences = {
+  // Extract user preferences following app pattern - memoized for performance
+  const preferences = useMemo(() => ({
     layout: userPreferencesContext.preferences.homeScreenLayout,
     compactMode: userPreferencesContext.preferences.displaySettings.compactMode,
     fontSize: userPreferencesContext.preferences.displaySettings.fontSize,
     enabledProviders: userPreferencesContext.preferences.providerPreferences.enabledProviders,
     regionSettings: 'US' // Default region settings
-  }
+  }), [
+    userPreferencesContext.preferences.homeScreenLayout,
+    userPreferencesContext.preferences.displaySettings.compactMode,
+    userPreferencesContext.preferences.displaySettings.fontSize,
+    userPreferencesContext.preferences.providerPreferences.enabledProviders
+  ])
 
   // TanStack Query for API caching only - Legend State managed by use case
   const { refetch } = useQuery({
@@ -266,26 +272,22 @@ export const useHomeScreen = (): UseHomeScreenResult => {
     catalogActions.clearError()
   }, [])
 
-  // Build state from Legend State store
-  const state: HomeScreenState = {
-    // Data from Legend State store
-    catalogs: catalogStore$.catalogs.get(),
-    isLoading: catalogStore$.isLoading.get(),
-    isLoadingMore: catalogStore$.isLoadingMore.get(),
-    error: catalogStore$.error.get(),
-    isError: catalogComputed.isError,
-    refreshing: catalogStore$.refreshing.get(),
-    hasMore: catalogStore$.hasMore.get(),
-    isEmpty: catalogComputed.isEmpty,
-    hasData: catalogComputed.hasData,
-    totalCatalogs: catalogStore$.totalCatalogs.get(),
-    totalItems: catalogStore$.totalItems.get(),
-    successfulProviders: catalogStore$.successfulProviders.get(),
-    totalProviders: catalogStore$.totalProviders.get(),
+  // Build state from Legend State store using optimized selectors
+  const dataState = catalogSelectors.dataState.get()
+  const loadingState = catalogSelectors.loadingState.get()
+  const errorState = catalogSelectors.errorState.get()
+  const statsState = catalogSelectors.statsState.get()
+
+  const state: HomeScreenState = useMemo(() => ({
+    // Data from optimized selectors
+    ...dataState,
+    ...loadingState,
+    ...errorState,
+    ...statsState,
     
-    // User preferences
+    // User preferences (stable)
     ...preferences
-  }
+  }), [dataState, loadingState, errorState, statsState, preferences])
 
   const actions: HomeScreenActions = {
     handleScroll,
@@ -307,5 +309,7 @@ export const useHomeScreen = (): UseHomeScreenResult => {
 }
 
 /**
- * Export the hook - components should use observer() wrapper
+ * Export the hook - observer should be applied at component level
  */
+export const useHomeScreen = useHomeScreenImpl
+

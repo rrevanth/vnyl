@@ -16,10 +16,8 @@ import type { HttpClientConfig } from '@/src/infrastructure/api/tmdb/base/http.t
 export interface TMDBConfig {
   /** Base URL for TMDB API */
   baseURL: string
-  /** API key for authentication */
+  /** API key for authentication (TMDB v3 uses query parameter only) */
   apiKey: string
-  /** Bearer token for authentication (preferred) */
-  bearerToken?: string
   /** Default language for requests */
   language: string
   /** Default region for requests */
@@ -114,6 +112,7 @@ export interface ITMDBConfigService {
 
   /**
    * Get Bearer token for header authentication
+   * @deprecated TMDB v3 API only supports API key authentication via query parameters
    */
   getBearerToken(): string | undefined
 }
@@ -155,7 +154,6 @@ export class TMDBConfigService implements ITMDBConfigService {
     return {
       baseURL,
       apiKey,
-      bearerToken: apiKey, // Use API key as Bearer token
       language: 'en-US',
       region: 'US',
       includeAdult: false,
@@ -185,21 +183,18 @@ export class TMDBConfigService implements ITMDBConfigService {
           imageQuality: tmdbSettings.imageQuality
         }
         
-        // Override config with user's API credentials if provided
+        // Override config with user's API key if provided
         if (tmdbSettings.apiKey) {
           this.config.apiKey = tmdbSettings.apiKey
         }
-        if (tmdbSettings.bearerToken) {
-          this.config.bearerToken = tmdbSettings.bearerToken
-        }
+        // Note: TMDB v3 API does not support Bearer token authentication
         
         this.logger.debug('TMDB user preferences loaded successfully', undefined, {
           tmdbLanguage: this.userPreferences.language,
           tmdbRegion: this.userPreferences.region,
           includeAdult: this.userPreferences.includeAdult,
           imageQuality: this.userPreferences.imageQuality,
-          hasApiKey: !!tmdbSettings.apiKey,
-          hasBearerToken: !!tmdbSettings.bearerToken
+          hasApiKey: !!tmdbSettings.apiKey
         })
       } else {
         this.logger.debug('User preference service not ready, using default TMDB preferences')
@@ -244,10 +239,8 @@ export class TMDBConfigService implements ITMDBConfigService {
       logger: this.logger,
       defaultHeaders: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...(config.bearerToken && {
-          'Authorization': `Bearer ${config.bearerToken}`
-        })
+        'Accept': 'application/json'
+        // Note: TMDB v3 API uses api_key query parameter, not Authorization header
       }
     }
   }
@@ -362,7 +355,9 @@ export class TMDBConfigService implements ITMDBConfigService {
   }
 
   getBearerToken(): string | undefined {
-    return this.config.bearerToken
+    // TMDB v3 API does not support Bearer token authentication
+    // This method is deprecated and returns undefined
+    return undefined
   }
 }
 

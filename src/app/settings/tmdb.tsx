@@ -65,13 +65,7 @@ export default observer(function TMDBSettingsScreen() {
 
   // Determine connection status and API key hierarchy
   const getConnectionStatus = () => {
-    if (localSettings.bearerToken) {
-      return {
-        status: 'connected',
-        keyType: 'custom_bearer_token',
-        message: t('settings.providers.tmdb.status.connected_bearer_token')
-      }
-    } else if (localSettings.apiKey) {
+    if (localSettings.apiKey) {
       return {
         status: 'connected',
         keyType: 'custom_api_key',
@@ -132,14 +126,11 @@ export default observer(function TMDBSettingsScreen() {
           </Text>
           
           <View style={styles.hierarchyList}>
-            <Text style={[styles.hierarchyItem, localSettings.bearerToken && styles.activeHierarchy]}>
-              1. {t('settings.providers.tmdb.status.custom_bearer_token')}
+            <Text style={[styles.hierarchyItem, localSettings.apiKey && styles.activeHierarchy]}>
+              1. {t('settings.providers.tmdb.status.custom_api_key')}
             </Text>
-            <Text style={[styles.hierarchyItem, !localSettings.bearerToken && localSettings.apiKey && styles.activeHierarchy]}>
-              2. {t('settings.providers.tmdb.status.custom_api_key')}
-            </Text>
-            <Text style={[styles.hierarchyItem, !localSettings.bearerToken && !localSettings.apiKey && styles.activeHierarchy]}>
-              3. {t('settings.providers.tmdb.status.default_api_key')}
+            <Text style={[styles.hierarchyItem, !localSettings.apiKey && styles.activeHierarchy]}>
+              2. {t('settings.providers.tmdb.status.default_api_key')}
             </Text>
           </View>
         </View>
@@ -153,16 +144,20 @@ export default observer(function TMDBSettingsScreen() {
             {t('settings.providers.tmdb.authentication_description')}
           </Text>
 
-          <TextInput
-            label={t('settings.providers.tmdb.bearer_token')}
-            description={t('settings.providers.tmdb.bearer_token_description')}
-            value={localSettings.bearerToken || ''}
-            onChangeText={(value) => handleLocalChange({ bearerToken: value.trim() || undefined })}
-            placeholder={t('settings.providers.tmdb.bearer_token_placeholder')}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          {/* Bearer Token Field - Deprecated */}
+          <View style={[styles.inputContainer, styles.deprecatedContainer]}>
+            <TextInput
+              label={`${t('settings.providers.tmdb.bearer_token')} (${t('common.deprecated')})`}
+              description={t('settings.providers.tmdb.bearer_token_deprecated_description')}
+              value={localSettings.bearerToken || ''}
+              onChangeText={(value) => handleLocalChange({ bearerToken: value.trim() || undefined })}
+              placeholder={t('settings.providers.tmdb.bearer_token_placeholder')}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={false}
+            />
+          </View>
 
           <TextInput
             label={t('settings.providers.tmdb.api_key')}
@@ -270,6 +265,8 @@ interface TMDBSettingsStyles {
   sectionTitle: TextStyle
   sectionDescription: TextStyle
   actionsSection: ViewStyle
+  inputContainer: ViewStyle
+  deprecatedContainer: ViewStyle
 }
 
 const createStyles = (theme: Theme): TMDBSettingsStyles => StyleSheet.create({
@@ -351,5 +348,14 @@ const createStyles = (theme: Theme): TMDBSettingsStyles => StyleSheet.create({
   actionsSection: {
     gap: theme.spacing.sm,
     marginTop: theme.spacing.md
+  },
+  inputContainer: {
+    marginBottom: theme.spacing.md
+  },
+  deprecatedContainer: {
+    opacity: 0.6,
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: theme.radius.sm,
+    padding: theme.spacing.sm
   }
 })

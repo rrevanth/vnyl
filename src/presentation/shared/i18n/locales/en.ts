@@ -13,7 +13,8 @@ export const en: TranslationKey = {
     delete: 'Delete',
     edit: 'Edit',
     done: 'Done',
-    close: 'Close'
+    close: 'Close',
+    deprecated: 'Deprecated'
   },
 
   navigation: {
@@ -41,7 +42,10 @@ export const en: TranslationKey = {
   catalog: {
     item_count: '{{count}} items',
     last_updated: 'Updated {{date}}',
-    see_all: 'See All'
+    see_all: 'See All',
+    load_more_items: 'Load more items',
+    show_more: 'Show {{count}} more',
+    loading_more: 'Loading more items...'
   },
 
   settings: {
@@ -136,6 +140,7 @@ export const en: TranslationKey = {
         api_key_placeholder: 'Enter your TMDB API key',
         bearer_token: 'Bearer Token',
         bearer_token_description: 'Bearer token for enhanced authentication (recommended)',
+        bearer_token_deprecated_description: 'Bearer tokens are not supported by TMDB v3 API. Please use API key authentication instead.',
         bearer_token_placeholder: 'Enter your TMDB bearer token',
         regional_settings: 'Regional Settings',
         regional_description: 'Language and location preferences',

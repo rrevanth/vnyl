@@ -3,6 +3,7 @@ import { TOKENS, ServiceToken } from './tokens'
 import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService } from '@/src/domain/services'
 import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { IUserRepository } from '@/src/domain/repositories'
+import { ImageCacheService } from '@/src/infrastructure/services/image-cache.service'
 import {
   GetOrCreateUserUseCase,
   UpdateUserPreferencesUseCase,
@@ -141,5 +142,14 @@ export const useLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase =>
 
 export const useSafeLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase | null => {
   return useSafeDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
+}
+
+// Image Cache Service Hooks
+export const useImageCacheService = (): ImageCacheService => {
+  return useDI<ImageCacheService>(TOKENS.IMAGE_CACHE_SERVICE)
+}
+
+export const useSafeImageCacheService = (): ImageCacheService | null => {
+  return useSafeDI<ImageCacheService>(TOKENS.IMAGE_CACHE_SERVICE)
 }
 

@@ -15,6 +15,7 @@ export interface TranslationKey {
     edit: string
     done: string
     close: string
+    deprecated: string
   }
 
   // Navigation
@@ -46,6 +47,9 @@ export interface TranslationKey {
     item_count: string
     last_updated: string
     see_all: string
+    load_more_items: string
+    show_more: string
+    loading_more: string
   }
 
   // Settings
@@ -141,6 +145,7 @@ export interface TranslationKey {
         api_key_placeholder: string
         bearer_token: string
         bearer_token_description: string
+        bearer_token_deprecated_description: string
         bearer_token_placeholder: string
         regional_settings: string
         regional_description: string

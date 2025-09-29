@@ -6,6 +6,7 @@ export const TOKENS = {
   CONFIG_CLIENT: Symbol('IConfigClient'),
   USER_PREFERENCE_SERVICE: Symbol('IUserPreferenceService'),
   ENVIRONMENT_SERVICE: Symbol('IEnvironmentService'),
+  IMAGE_CACHE_SERVICE: Symbol('ImageCacheService'),
 
   // API Configuration
   API_CONFIG: Symbol('ApiConfig'),

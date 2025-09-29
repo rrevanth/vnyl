@@ -7,14 +7,14 @@
 
 /* @jsxImportSource react */
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native'
 import { observer } from '@legendapp/state/react'
-import { Image } from 'expo-image'
-// import { useTranslation } from '@/src/presentation/shared/i18n' // Removed since no translations needed
+import { PosterImage } from '@/src/presentation/components/atoms/CachedImage'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
+import { useLazyLoadingPerformance, useProgressiveImageLoading } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { scale, moderateScale } from 'react-native-size-matters'
 
 interface CatalogItemProps {
@@ -26,9 +26,13 @@ interface CatalogItemProps {
   isLastItem?: boolean
   isNewItem?: boolean
   animationDelay?: number
+  /** Whether this item was lazy loaded */
+  isLazyLoaded?: boolean
+  /** Whether item is currently visible in viewport */
+  isVisible?: boolean
 }
 
-export const CatalogItem: React.FC<CatalogItemProps> = observer(({
+const CatalogItemImpl: React.FC<CatalogItemProps> = ({
   item,
   onPress,
   onLongPress,
@@ -36,11 +40,23 @@ export const CatalogItem: React.FC<CatalogItemProps> = observer(({
   isFirstItem = false,
   isLastItem = false,
   isNewItem = false,
-  animationDelay = 0
+  animationDelay = 0,
+  isLazyLoaded = false,
+  isVisible = true
 }) => {
-  // const { t } = useTranslation() // Removed since no translations needed
   const theme = useTheme()
-  const styles = createStyles(theme, isFirstItem, isLastItem)
+  const styles = useMemo(() => createStyles(theme, isFirstItem, isLastItem), [theme, isFirstItem, isLastItem])
+
+  // Performance monitoring
+  useLazyLoadingPerformance(`CatalogItem-${item.id}`)
+
+  // Progressive image loading
+  const { shouldLoadImage, setPriority } = useProgressiveImageLoading()
+
+  // Set priority for first few items
+  useEffect(() => {
+    setPriority(item.id, index < 5)
+  }, [setPriority, item.id, index])
 
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(isNewItem ? 0 : 1)).current
@@ -76,21 +92,37 @@ export const CatalogItem: React.FC<CatalogItemProps> = observer(({
     }
   }, [isNewItem, animationDelay, fadeAnim, scaleAnim, translateYAnim])
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     onPress(item)
-  }
+  }, [onPress, item])
 
-  const handleLongPress = () => {
+  const handleLongPress = useCallback(() => {
     onLongPress?.(item)
-  }
+  }, [onLongPress, item])
 
-  const animatedStyle = {
+  const animatedStyle = useMemo(() => ({
     opacity: fadeAnim,
     transform: [
       { scale: scaleAnim },
       { translateY: translateYAnim }
     ]
-  }
+  }), [fadeAnim, scaleAnim, translateYAnim])
+
+  // Memoize release year calculation
+  const releaseYear = useMemo(() => {
+    return item.releaseDate ? new Date(item.releaseDate).getFullYear() : null
+  }, [item.releaseDate])
+
+  // Determine image loading priority
+  const imagePriority = useMemo(() => {
+    if (index < 3) return 10 // High priority for first 3
+    if (index < 5) return 8  // Medium-high for next 2
+    if (isVisible) return 6  // Medium for visible items
+    return 3 // Low for non-visible
+  }, [index, isVisible])
+
+  // Only load image if conditions are met
+  const shouldRenderImage = shouldLoadImage(item.id, index) || isVisible
 
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
@@ -105,14 +137,22 @@ export const CatalogItem: React.FC<CatalogItemProps> = observer(({
         <View>
           {/* Poster Image */}
           <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: item.posterUrl || undefined }}
-              style={styles.posterImage}
-              contentFit="cover"
-              transition={200}
-              placeholder={{ blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.' }}
-            />
-            
+            {shouldRenderImage ? (
+              <PosterImage
+                source={item.posterUrl}
+                width={scale(140)}
+                height={scale(200)}
+                cachePolicy={index < 5 ? "memory-disk" : "disk"}
+                quality={index < 3 ? "high" : "medium"}
+                showLoadingIndicator={!isLazyLoaded}
+                transitionDuration={isLazyLoaded ? 300 : 200}
+                priority={imagePriority}
+                style={styles.posterImage}
+                accessibilityLabel={`${item.title} poster`}
+              />
+            ) : (
+              <View style={styles.imagePlaceholder} />
+            )}
           </View>
           
           {/* Content Info */}
@@ -121,15 +161,32 @@ export const CatalogItem: React.FC<CatalogItemProps> = observer(({
               {item.title}
             </Text>
             
-            {item.releaseDate && (
+            {releaseYear && (
               <Text style={styles.releaseDate}>
-                {new Date(item.releaseDate).getFullYear()}
+                {releaseYear}
               </Text>
             )}
           </View>
         </View>
       </Pressable>
     </Animated.View>
+  )
+}
+
+// Memoize the component to prevent unnecessary re-renders
+export const CatalogItem = React.memo(observer(CatalogItemImpl), (prevProps, nextProps) => {
+  // Custom comparison function for optimal performance
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.index === nextProps.index &&
+    prevProps.isFirstItem === nextProps.isFirstItem &&
+    prevProps.isLastItem === nextProps.isLastItem &&
+    prevProps.isNewItem === nextProps.isNewItem &&
+    prevProps.animationDelay === nextProps.animationDelay &&
+    prevProps.isLazyLoaded === nextProps.isLazyLoaded &&
+    prevProps.isVisible === nextProps.isVisible &&
+    prevProps.onPress === nextProps.onPress &&
+    prevProps.onLongPress === nextProps.onLongPress
   )
 })
 
@@ -152,9 +209,7 @@ const createStyles = (theme: Theme, isFirstItem: boolean, isLastItem: boolean) =
     ...theme.shadows.md,
   },
   posterImage: {
-    width: '100%',
-    height: scale(200),
-    backgroundColor: theme.colors.background.tertiary,
+    // Removed styles since they're handled by CachedImage component
   },
   contentInfo: {
     paddingTop: theme.spacing.sm,
@@ -171,5 +226,12 @@ const createStyles = (theme: Theme, isFirstItem: boolean, isLastItem: boolean) =
     fontSize: moderateScale(12),
     fontWeight: '400',
     marginBottom: theme.spacing.xs,
+  },
+  imagePlaceholder: {
+    width: scale(140),
+    height: scale(200),
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: theme.radius.md,
+    opacity: 0.3,
   },
 })

@@ -71,8 +71,8 @@ export const useTMDBSettings = () => {
   const testConnection = useCallback(async (testSettings?: Partial<TMDBSettings>): Promise<boolean> => {
     const credentialsToTest = testSettings || settings
     
-    // Only test if user has provided custom credentials
-    if (!credentialsToTest.apiKey && !credentialsToTest.bearerToken) {
+    // Only test if user has provided API key (TMDB v3 only supports API key authentication)
+    if (!credentialsToTest.apiKey) {
       throw new Error(t('settings.providers.tmdb.validation.no_custom_credentials'))
     }
 
@@ -91,10 +91,8 @@ export const useTMDBSettings = () => {
         testConfig.logger = logger
       }
       
-      if (credentialsToTest.bearerToken) {
-        // Bearer token goes in Authorization header
-        testConfig.defaultHeaders['Authorization'] = `Bearer ${credentialsToTest.bearerToken}`
-      }
+      // TMDB v3 API does not support Bearer token authentication
+      // All authentication is done via api_key query parameter
       
       const testClient = createHttpClient(testConfig)
       
@@ -102,10 +100,8 @@ export const useTMDBSettings = () => {
       const endpoint = '/configuration'
       const params: Record<string, any> = {}
       
-      if (credentialsToTest.apiKey && !credentialsToTest.bearerToken) {
-        // API key goes as query parameter when no bearer token
-        params.api_key = credentialsToTest.apiKey
-      }
+      // TMDB v3 API always uses api_key query parameter for authentication
+      params.api_key = credentialsToTest.apiKey
       
       // Test the connection by calling the configuration endpoint
       await testClient.get(endpoint, { params })
@@ -135,7 +131,7 @@ export const useTMDBSettings = () => {
     
     try {
       // First test the connection with the provided settings (if custom credentials exist)
-      if (targetSettings.apiKey || targetSettings.bearerToken) {
+      if (targetSettings.apiKey) {
         await testConnection(targetSettings)
       }
       
@@ -225,7 +221,7 @@ export const useTMDBSettings = () => {
     validateBearerToken,
     
     // Computed
-    isConfigured: !!(settings.apiKey || settings.bearerToken),
-    canTest: !!(settings.apiKey || settings.bearerToken) && !isTesting
+    isConfigured: !!settings.apiKey,
+    canTest: !!settings.apiKey && !isTesting
   }
 }

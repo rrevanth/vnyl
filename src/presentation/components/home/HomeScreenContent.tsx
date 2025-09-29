@@ -9,7 +9,7 @@
 
 /* @jsxImportSource react */
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, memo, useState, useRef } from 'react'
 import { View, Text, StyleSheet, RefreshControl } from 'react-native'
 import { observer } from '@legendapp/state/react'
 import { LegendList } from '@legendapp/list'
@@ -19,6 +19,8 @@ import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
 import { useHomeScreen } from '@/src/presentation/shared/hooks/useHomeScreen'
+import { usePerformanceMonitor } from '@/src/presentation/shared/utils/performance-monitor'
+import { useViewportDetection } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { CatalogRow } from './CatalogRow'
 import { MotionWrapper } from './MotionWrapper'
 import { moderateScale } from 'react-native-size-matters'
@@ -27,7 +29,12 @@ interface HomeScreenContentProps {
   onScroll?: (event: any) => void
 }
 
-export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
+// Estimated heights for viewport calculations
+const CATALOG_ROW_HEIGHT = 340 // Header + content + spacing
+const HEADER_HEIGHT = 120
+const BUFFER_ZONE = 2 // Number of rows to render outside viewport
+
+const HomeScreenContentImpl: React.FC<HomeScreenContentProps> = ({
   onScroll
 }) => {
   const { t, formatMessage } = useTranslation()
@@ -36,8 +43,59 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
 
   // Home screen state management using Legend State + TanStack Query
   const { state, actions } = useHomeScreen()
+  
+  // Viewport detection for lazy loading
+  const { dimensions, scrollPosition, handleScroll: handleViewportScroll } = useViewportDetection()
+  
+  // Track visible catalog rows
+  const [visibleRows, setVisibleRows] = useState<Set<string>>(new Set())
+  const lastUpdateRef = useRef<number>(0)
+  
+  // Performance monitoring (dev only)
+  const { renderCount } = usePerformanceMonitor('HomeScreenContent', [
+    'state.catalogs',
+    'state.isLoading',
+    'state.isEmpty', 
+    'state.isError'
+  ])
+  
+  if (__DEV__ && renderCount > 0) {
+    console.log(`🔄 HomeScreenContent render #${renderCount}, visible rows: ${visibleRows.size}`)
+  }
 
-  // Prepare data for Legend List with deterministic ordering
+  // Calculate visible rows based on scroll position
+  const updateVisibleRows = useCallback(() => {
+    const now = performance.now()
+    if (now - lastUpdateRef.current < 100) return // Throttle updates
+    
+    const newVisibleRows = new Set<string>()
+    const viewportTop = scrollPosition
+    const viewportBottom = scrollPosition + dimensions.height
+    
+    // Calculate which catalog rows are visible
+    state.catalogs.forEach((catalog, index) => {
+      const rowTop = HEADER_HEIGHT + (index * CATALOG_ROW_HEIGHT)
+      const rowBottom = rowTop + CATALOG_ROW_HEIGHT
+      
+      // Add buffer zone for smooth loading
+      const bufferTop = viewportTop - (BUFFER_ZONE * CATALOG_ROW_HEIGHT)
+      const bufferBottom = viewportBottom + (BUFFER_ZONE * CATALOG_ROW_HEIGHT)
+      
+      if (rowBottom >= bufferTop && rowTop <= bufferBottom) {
+        newVisibleRows.add(catalog.id)
+      }
+    })
+    
+    setVisibleRows(newVisibleRows)
+    lastUpdateRef.current = now
+  }, [scrollPosition, dimensions.height, state.catalogs])
+
+  // Update visible rows when scroll position or catalogs change
+  React.useEffect(() => {
+    updateVisibleRows()
+  }, [updateVisibleRows])
+
+  // Prepare data for Legend List with lazy loading support
   const listData = useMemo(() => {
     if (state.isEmpty) {
       return [{ type: 'empty', id: 'empty' }]
@@ -52,13 +110,17 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
     // Add welcome header
     items.push({ type: 'header', id: 'header' })
 
-    // Add catalog rows in deterministic order (no special insertions)
+    // Add catalog rows with visibility tracking
     state.catalogs.forEach((catalog, index) => {
+      const isVisible = visibleRows.has(catalog.id)
+      
       items.push({
         type: 'catalog',
         id: catalog.id,
         catalog,
-        index
+        index,
+        isVisible,
+        estimatedHeight: CATALOG_ROW_HEIGHT
       })
     })
 
@@ -68,7 +130,7 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
     }
 
     return items
-  }, [state.catalogs, state.isEmpty, state.isError, state.error, state.isLoadingMore])
+  }, [state.catalogs, state.isEmpty, state.isError, state.error, state.isLoadingMore, visibleRows])
 
   const handleItemPress = useCallback((item: CatalogItemEntity) => {
     actions.handleItemPress(item)
@@ -191,6 +253,12 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
             isLoading={state.isLoadingMore}
             hasMore={listItem.catalog.pagination.hasMore}
             index={listItem.index}
+            isVisible={listItem.isVisible}
+            onVisible={() => {
+              if (!visibleRows.has(listItem.catalog.id)) {
+                setVisibleRows(prev => new Set([...prev, listItem.catalog.id]))
+              }
+            }}
           />
         )
 
@@ -255,15 +323,21 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
     state,
     t,
     formatMessage,
-    styles
+    styles,
+    visibleRows,
+    setVisibleRows
   ])
 
   const getItemId = useCallback((item: typeof listData[0]) => item.id, [])
 
   const handleScroll = useCallback((event: any) => {
+    // Update viewport tracking
+    handleViewportScroll(event)
+    
+    // Handle other scroll logic
     actions.handleScroll(event)
     onScroll?.(event)
-  }, [actions, onScroll])
+  }, [actions, onScroll, handleViewportScroll])
 
   return (
     <View style={styles.container}>
@@ -281,16 +355,16 @@ export const HomeScreenContent: React.FC<HomeScreenContentProps> = observer(({
           />
         }
         onScroll={handleScroll}
-        // maintainVisibleContentPosition={{
-        //   minIndexForVisible: 1,
-        //   autoscrollToTopThreshold: 100
-        // }}
+        scrollEventThrottle={16}
         style={styles.list}
         contentContainerStyle={styles.listContent}
       />
     </View>
   )
-})
+}
+
+// Export with observer wrapper and memo for optimal performance
+export const HomeScreenContent = memo(observer(HomeScreenContentImpl))
 
 const createStyles = (theme: Theme) => StyleSheet.create({
   container: {

@@ -17,6 +17,7 @@ import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
 import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/services'
+import { createImageCacheService, ImageCacheService } from '@/src/infrastructure/services/image-cache.service'
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
 import { createTMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
@@ -94,6 +95,15 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
       const config = container.resolve<ApiConfig>(TOKENS.API_CONFIG)
       return new AxiosApiClient(config, logger)
+    }
+  )
+
+  // Register Image Cache Service (depends on logging)
+  container.registerSingleton<ImageCacheService>(
+    TOKENS.IMAGE_CACHE_SERVICE,
+    () => {
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return createImageCacheService(logger)
     }
   )
 
@@ -254,7 +264,8 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       'UpdateUserThemeUseCase',
       'UpdateUserLocaleUseCase',
       'GetAllCatalogsUseCase',
-      'LoadMoreCatalogItemsUseCase'
+      'LoadMoreCatalogItemsUseCase',
+      'ImageCacheService'
     ]
   })
 }
