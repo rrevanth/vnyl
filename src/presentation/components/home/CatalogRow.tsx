@@ -19,7 +19,7 @@ import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
 import { CatalogItem } from './CatalogItem'
 import { MotionWrapper } from './MotionWrapper'
-import { LazyContainer } from '@/src/presentation/shared/components/LazyContainer'
+// import { LazyContainer } from '@/src/presentation/shared/components/LazyContainer'
 import { useLazyLoading, useLazyLoadingPerformance } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { scale, moderateScale } from 'react-native-size-matters'
 
@@ -204,34 +204,25 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
       )
     }
 
-    // Handle catalog item with lazy container
+    // Handle catalog item - render directly without lazy container for now
     if (listItem.item) {
-      const isLazyItem = listItem.isLazyLoaded
-      
       return (
-        <LazyContainer
-          isVisible={isVisible}
-          renderPlaceholder={isLazyItem}
-          height={scale(260)}
-          unloadDelay={2000}
-        >
-          <CatalogItem
-            item={listItem.item}
-            onPress={onItemPress}
-            onLongPress={onItemLongPress}
-            index={listItem.index}
-            isFirstItem={listItem.isFirstItem}
-            isLastItem={listItem.isLastItem}
-            isNewItem={listItem.isNewItem}
-            animationDelay={listItem.animationDelay}
-            isLazyLoaded={isLazyItem}
-          />
-        </LazyContainer>
+        <CatalogItem
+          item={listItem.item}
+          onPress={onItemPress}
+          onLongPress={onItemLongPress}
+          index={listItem.index}
+          isFirstItem={listItem.isFirstItem}
+          isLastItem={listItem.isLastItem}
+          isNewItem={listItem.isNewItem}
+          animationDelay={listItem.animationDelay}
+          isLazyLoaded={listItem.isLazyLoaded}
+        />
       )
     }
 
     return null
-  }, [onItemPress, onItemLongPress, t, formatMessage, styles, loadMoreLazy, itemsToRender, catalog.items.length, isVisible, isLazyLoading])
+  }, [onItemPress, onItemLongPress, t, formatMessage, styles, loadMoreLazy, itemsToRender, catalog.items.length, isLazyLoading])
 
   const getItemId = useCallback((item: typeof listData[0]) => item.id, [])
 
