@@ -1,13 +1,13 @@
 import { useCallback } from 'react'
 import { useUserPreferences } from '@/src/presentation/shared/providers/user-preferences-provider'
-import { useUpdateUserPreferencesUseCase } from '@/src/infrastructure/di'
-import { SettingsLogger } from '@/src/presentation/shared/utils/settings-logger'
+import { useUpdateUserPreferencesUseCase, useLogging } from '@/src/infrastructure/di'
 import type { ThemePreference, DisplaySettings, FontSize, UserPreferences } from '@/src/domain/entities'
 import { DEFAULT_USER_PREFERENCES } from '@/src/domain/entities'
 
 export const useSettingsActions = () => {
   const userPreferencesContext = useUserPreferences()
   const updateUserPreferencesUseCase = useUpdateUserPreferencesUseCase()
+  const logger = useLogging()
 
   // Generic update function to reduce repetition
   const updatePreferences = useCallback(async (
@@ -16,20 +16,21 @@ export const useSettingsActions = () => {
     logData?: Record<string, any>
   ) => {
     try {
-      SettingsLogger.start(actionName, logData)
-      SettingsLogger.saving(preferences)
+      logger.info(`Settings: Starting ${actionName}`, logData)
+      logger.info('Settings: Saving preferences through domain layer', { preferences })
 
       await updateUserPreferencesUseCase.execute(preferences)
-      SettingsLogger.success(actionName)
+      logger.info(`Settings: ${actionName} successful`)
 
       // Refresh the provider to get updated state
       await userPreferencesContext.refresh()
-      SettingsLogger.refresh(actionName)
+      logger.info(`Settings: Provider state refreshed after ${actionName.toLowerCase()}`)
     } catch (error) {
-      SettingsLogger.error(actionName, error)
-      throw error
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      logger.error(`Settings: Failed ${actionName.toLowerCase()}`, errorInstance)
+      throw errorInstance
     }
-  }, [updateUserPreferencesUseCase, userPreferencesContext])
+  }, [updateUserPreferencesUseCase, userPreferencesContext, logger])
 
   // Theme actions using typed logging
   const updateThemeMode = useCallback(async (mode: ThemePreference['mode']) => {
@@ -119,16 +120,6 @@ export const useSettingsActions = () => {
     )
   }, [userPreferencesContext.preferences.providerSettings, updatePreferences])
 
-  const updateTMDBSettings = useCallback(async (tmdbUpdate: Partial<UserPreferences['providerSettings']['tmdbSettings']>) => {
-    const currentTMDBSettings = userPreferencesContext.preferences.providerSettings?.tmdbSettings || DEFAULT_USER_PREFERENCES.providerSettings.tmdbSettings
-    const updatedTMDBSettings = {
-      ...currentTMDBSettings,
-      ...tmdbUpdate
-    }
-    await updateProviderSettings({
-      tmdbSettings: updatedTMDBSettings
-    })
-  }, [userPreferencesContext.preferences.providerSettings?.tmdbSettings, updateProviderSettings])
 
   // Generic update functions for reusability
   const updateThemePreference = useCallback(async (themeUpdate: Partial<ThemePreference>) => {
@@ -166,7 +157,6 @@ export const useSettingsActions = () => {
 
     // Provider settings actions
     updateProviderSettings,
-    updateTMDBSettings,
 
     // Generic update functions for advanced usage
     updateThemePreference,

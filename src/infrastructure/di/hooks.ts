@@ -1,98 +1,108 @@
-import { useCallback } from 'react'
 import { container } from './setup'
 import { TOKENS, ServiceToken } from './tokens'
-import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService, ITMDBConfigService } from '@/src/domain/services'
+import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService } from '@/src/domain/services'
+import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { IUserRepository } from '@/src/domain/repositories'
+import { ImageCacheService } from '@/src/infrastructure/services/image-cache.service'
 import {
   GetOrCreateUserUseCase,
   UpdateUserPreferencesUseCase,
   ResetUserPreferencesUseCase,
   UpdateUserThemeUseCase,
-  UpdateUserLocaleUseCase
+  UpdateUserLocaleUseCase,
+  GetAllCatalogsUseCase,
+  LoadMoreCatalogItemsUseCase
 } from '@/src/domain/usecases'
-import { TMDBApiClient } from '@/src/infrastructure/api/implementations/tmdb-api-client.service'
 
-export const useDI = () => {
-  const resolve = useCallback(<T>(token: ServiceToken): T => {
-    if (!container.isRegistered(token)) {
-      throw new Error(`Service not available: ${token.toString()}. DI container may not be initialized yet.`)
-    }
-    return container.resolve<T>(token)
-  }, [])
-
-  const isServiceAvailable = useCallback((token: ServiceToken): boolean => {
-    return container.isRegistered(token)
-  }, [])
-
-  return { resolve, isServiceAvailable }
+export const useDI = <T>(token: ServiceToken): T => {
+  if (!container.isRegistered(token)) {
+    throw new Error(`Service not available: ${token.toString()}. DI container may not be initialized yet.`)
+  }
+  return container.resolve<T>(token)
 }
 
-// Infrastructure Service Hooks
+export const useServiceAvailable = (token: ServiceToken): boolean => {
+  return container.isRegistered(token)
+}
+
+/**
+ * Safe DI hook that returns service only when available
+ */
+export const useSafeDI = <T>(token: ServiceToken): T | null => {
+  if (!container.isRegistered(token)) {
+    return null
+  }
+  try {
+    return container.resolve<T>(token)
+  } catch {
+    return null
+  }
+}
+
+// Infrastructure Service Hooks - Safe versions
 export const useLogging = (): ILoggingService => {
-  const { resolve } = useDI()
-  return resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+  return useDI<ILoggingService>(TOKENS.LOGGING_SERVICE)
+}
+
+export const useSafeLogging = (): ILoggingService | null => {
+  return useSafeDI<ILoggingService>(TOKENS.LOGGING_SERVICE)
 }
 
 export const useStorage = (): IStorageService => {
-  const { resolve } = useDI()
-  return resolve<IStorageService>(TOKENS.STORAGE_SERVICE)
+  return useDI<IStorageService>(TOKENS.STORAGE_SERVICE)
 }
 
 export const useApiClient = (): IApiClient => {
-  const { resolve } = useDI()
-  return resolve<IApiClient>(TOKENS.API_CLIENT)
+  return useDI<IApiClient>(TOKENS.API_CLIENT)
 }
 
 export const useConfigClient = (): IConfigClient => {
-  const { resolve } = useDI()
-  return resolve<IConfigClient>(TOKENS.CONFIG_CLIENT)
+  return useDI<IConfigClient>(TOKENS.CONFIG_CLIENT)
 }
 
 export const useUserPreferenceService = (): IUserPreferenceService => {
-  const { resolve } = useDI()
-  return resolve<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
+  return useDI<IUserPreferenceService>(TOKENS.USER_PREFERENCE_SERVICE)
 }
 
-// TMDB Service Hooks
-export const useTMDBConfigService = (): ITMDBConfigService => {
-  const { resolve } = useDI()
-  return resolve<ITMDBConfigService>(TOKENS.TMDB_CONFIG_SERVICE)
-}
-
-export const useTMDBApiClient = (): TMDBApiClient => {
-  const { resolve } = useDI()
-  return resolve<TMDBApiClient>(TOKENS.TMDB_API_CLIENT)
-}
 
 // User Service Hooks
 export const useUserRepository = (): IUserRepository => {
-  const { resolve } = useDI()
-  return resolve<IUserRepository>(TOKENS.USER_REPOSITORY)
+  return useDI<IUserRepository>(TOKENS.USER_REPOSITORY)
 }
 
 export const useGetOrCreateUserUseCase = (): GetOrCreateUserUseCase => {
-  const { resolve } = useDI()
-  return resolve<GetOrCreateUserUseCase>(TOKENS.GET_OR_CREATE_USER_USE_CASE)
+  return useDI<GetOrCreateUserUseCase>(TOKENS.GET_OR_CREATE_USER_USE_CASE)
 }
 
 export const useUpdateUserPreferencesUseCase = (): UpdateUserPreferencesUseCase => {
-  const { resolve } = useDI()
-  return resolve<UpdateUserPreferencesUseCase>(TOKENS.UPDATE_USER_PREFERENCES_USE_CASE)
+  return useDI<UpdateUserPreferencesUseCase>(TOKENS.UPDATE_USER_PREFERENCES_USE_CASE)
 }
 
 export const useResetUserPreferencesUseCase = (): ResetUserPreferencesUseCase => {
-  const { resolve } = useDI()
-  return resolve<ResetUserPreferencesUseCase>(TOKENS.RESET_USER_PREFERENCES_USE_CASE)
+  return useDI<ResetUserPreferencesUseCase>(TOKENS.RESET_USER_PREFERENCES_USE_CASE)
 }
 
 export const useUpdateUserThemeUseCase = (): UpdateUserThemeUseCase => {
-  const { resolve } = useDI()
-  return resolve<UpdateUserThemeUseCase>(TOKENS.UPDATE_USER_THEME_USE_CASE)
+  return useDI<UpdateUserThemeUseCase>(TOKENS.UPDATE_USER_THEME_USE_CASE)
 }
 
 export const useUpdateUserLocaleUseCase = (): UpdateUserLocaleUseCase => {
-  const { resolve } = useDI()
-  return resolve<UpdateUserLocaleUseCase>(TOKENS.UPDATE_USER_LOCALE_USE_CASE)
+  return useDI<UpdateUserLocaleUseCase>(TOKENS.UPDATE_USER_LOCALE_USE_CASE)
+}
+
+// TMDB Service Hooks
+export const useTMDBService = (): ITMDBService => {
+  return useDI<ITMDBService>(TOKENS.TMDB_SERVICE)
+}
+
+export const useTMDBClient = () => {
+  const tmdbService = useTMDBService()
+  return tmdbService.client
+}
+
+export const useTMDBConfig = () => {
+  const tmdbService = useTMDBService()
+  return tmdbService.config
 }
 
 // Convenience Preference Hooks
@@ -117,32 +127,29 @@ export const useUserPreferences = () => {
   }
 }
 
-// TMDB Convenience Hooks
-export const useTMDBServices = () => {
-  const configService = useTMDBConfigService()
-  const apiClient = useTMDBApiClient()
-
-  return {
-    // Configuration methods
-    hasValidCredentials: () => configService.hasValidCredentials(),
-    getAuthenticationMethod: () => configService.getAuthenticationMethod(),
-    getEffectiveLanguage: () => configService.getEffectiveLanguage(),
-    shouldIncludeAdult: () => configService.shouldIncludeAdult(),
-    refreshConfiguration: () => {
-      configService.refreshConfiguration()
-      apiClient.refreshConfiguration()
-    },
-
-    // API client methods
-    apiClient,
-    get: <T = unknown>(url: string, config?: any) => apiClient.get<T>(url, config),
-    post: <T = unknown>(url: string, data?: unknown, config?: any) => apiClient.post<T>(url, data, config),
-    put: <T = unknown>(url: string, data?: unknown, config?: any) => apiClient.put<T>(url, data, config),
-    patch: <T = unknown>(url: string, data?: unknown, config?: any) => apiClient.patch<T>(url, data, config),
-    delete: <T = unknown>(url: string, config?: any) => apiClient.delete<T>(url, config),
-
-    // Helper methods
-    isConfigured: () => configService.hasValidCredentials(),
-    getConfig: () => configService.getEffectiveTMDBConfig()
-  }
+// Catalog Use Case Hooks - Safe versions
+export const useGetAllCatalogsUseCase = (): GetAllCatalogsUseCase => {
+  return useDI<GetAllCatalogsUseCase>(TOKENS.GET_ALL_CATALOGS_USE_CASE)
 }
+
+export const useSafeGetAllCatalogsUseCase = (): GetAllCatalogsUseCase | null => {
+  return useSafeDI<GetAllCatalogsUseCase>(TOKENS.GET_ALL_CATALOGS_USE_CASE)
+}
+
+export const useLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase => {
+  return useDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
+}
+
+export const useSafeLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCase | null => {
+  return useSafeDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
+}
+
+// Image Cache Service Hooks
+export const useImageCacheService = (): ImageCacheService => {
+  return useDI<ImageCacheService>(TOKENS.IMAGE_CACHE_SERVICE)
+}
+
+export const useSafeImageCacheService = (): ImageCacheService | null => {
+  return useSafeDI<ImageCacheService>(TOKENS.IMAGE_CACHE_SERVICE)
+}
+

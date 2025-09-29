@@ -5,7 +5,7 @@ import { observer } from '@legendapp/state/react'
 import { useRouter } from 'expo-router'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
-import { NavigationHeader, SettingsCard } from '@/src/presentation/components'
+import { NavigationHeader, SettingsCard } from '@/src/presentation/components/atoms'
 import type { Theme } from '@/src/presentation/shared/theme'
 
 export default observer(function ProvidersSettingsScreen() {
@@ -28,8 +28,8 @@ export default observer(function ProvidersSettingsScreen() {
         <SettingsCard
           title={t('settings.providers.tmdb.title')}
           description={t('settings.providers.tmdb.description')}
-          icon="server-outline"
-          onPress={() => router.push('/settings/providers/tmdb')}
+          icon="film-outline"
+          onPress={() => router.push('/settings/tmdb')}
         />
       </ScrollView>
     </SafeAreaView>

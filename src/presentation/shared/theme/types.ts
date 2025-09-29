@@ -14,6 +14,7 @@ export interface ThemeColors {
     tertiary: string
     inverse: string
     disabled: string
+    onColor: string // Always white text for colored backgrounds
   }
   border: {
     primary: string

@@ -6,7 +6,9 @@ import type {
   ThemePreference,
   LocalePreferences,
   DisplaySettings,
-  HomeScreenLayoutPreference
+  HomeScreenLayoutPreference,
+  ProviderSettings,
+  TMDBSettings
 } from '@/src/domain/entities'
 
 /**
@@ -29,6 +31,7 @@ export interface IUserPreferenceService {
    */
   getStreamPreferences(): StreamPreferences
   getProviderPreferences(): ProviderPreferences
+  getProviderSettings(): ProviderSettings
   getNotificationPreferences(): NotificationPreferences
   getThemePreferences(): ThemePreference
   getLocalePreferences(): LocalePreferences
@@ -41,6 +44,11 @@ export interface IUserPreferenceService {
   getLocale(): LocalePreferences
   getRegionSettings(): string
   getHomeScreenLayout(): HomeScreenLayoutPreference
+
+  /**
+   * Get provider-specific settings
+   */
+  getTMDBSettings(): TMDBSettings
 
   /**
    * Refresh preferences cache from storage

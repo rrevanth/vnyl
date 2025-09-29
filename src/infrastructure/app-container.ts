@@ -37,11 +37,7 @@ export const initializeApp = async (): Promise<void> => {
     const getOrCreateUserUseCase = container.resolve<GetOrCreateUserUseCase>(TOKENS.GET_OR_CREATE_USER_USE_CASE)
     await getOrCreateUserUseCase.execute()
 
-    logger.info('App initialization completed successfully', {
-      userInitialized: true,
-      preferencesInitialized: true,
-      diContainerReady: true
-    })
+    logger.debug('User initialization completed successfully')
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     logger.error('Failed to initialize default user during app startup', error instanceof Error ? error : new Error(errorMessage), {
@@ -49,4 +45,11 @@ export const initializeApp = async (): Promise<void> => {
     })
     // Don't throw - allow app to continue even if user creation fails
   }
+
+
+  logger.info('App initialization completed successfully', {
+    userInitialized: true,
+    preferencesInitialized: true,
+    diContainerReady: true
+  })
 }

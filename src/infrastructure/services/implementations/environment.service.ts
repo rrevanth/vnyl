@@ -1,4 +1,5 @@
 import type { IEnvironmentService, ILoggingService } from '@/src/domain/services'
+import { EnvironmentError } from '@/src/domain/errors'
 
 /**
  * Environment configuration service implementation
@@ -11,20 +12,23 @@ export class EnvironmentService implements IEnvironmentService {
     })
   }
 
-  getTMDBApiKey(): string | undefined {
-    return this.get('EXPO_PUBLIC_TMDB_API_KEY')
-  }
-
-  getTMDBBearerToken(): string | undefined {
-    return this.get('EXPO_PUBLIC_TMDB_BEARER_TOKEN')
-  }
-
-  getTMDBBaseUrl(): string {
-    return this.get('EXPO_PUBLIC_TMDB_BASE_URL', 'https://api.themoviedb.org/3')!
-  }
 
   getApiBaseUrl(): string | undefined {
     return this.get('EXPO_PUBLIC_API_BASE_URL')
+  }
+
+  getTmdbApiKey(): string | undefined {
+    const apiKey = this.get('EXPO_PUBLIC_TMDB_API_KEY')
+    this.logger.debug('Environment service: TMDB API key lookup', undefined, {
+      hasApiKey: !!apiKey,
+      keyLength: apiKey ? apiKey.length : 0,
+      keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none'
+    })
+    return apiKey
+  }
+
+  getTmdbBaseUrl(): string {
+    return this.get('EXPO_PUBLIC_TMDB_BASE_URL', 'https://api.themoviedb.org/3')!
   }
 
   getEnvironment(): string {
@@ -39,36 +43,26 @@ export class EnvironmentService implements IEnvironmentService {
     return this.getEnvironment() === 'production'
   }
 
+  private readonly environmentVariables: Record<string, string | undefined> = {
+    EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+    EXPO_PUBLIC_TMDB_API_KEY: process.env.EXPO_PUBLIC_TMDB_API_KEY,
+    EXPO_PUBLIC_TMDB_BASE_URL: process.env.EXPO_PUBLIC_TMDB_BASE_URL,
+    NODE_ENV: process.env.NODE_ENV
+  }
+
   get(key: string, fallback?: string): string | undefined {
     try {
-      // Use specific environment variable getters to avoid dynamic access
-      let value: string | undefined
-
-      switch (key) {
-        case 'EXPO_PUBLIC_API_BASE_URL':
-          value = process.env.EXPO_PUBLIC_API_BASE_URL
-          break
-        case 'EXPO_PUBLIC_TMDB_API_KEY':
-          value = process.env.EXPO_PUBLIC_TMDB_API_KEY
-          break
-        case 'EXPO_PUBLIC_TMDB_BEARER_TOKEN':
-          value = process.env.EXPO_PUBLIC_TMDB_BEARER_TOKEN
-          break
-        case 'EXPO_PUBLIC_TMDB_BASE_URL':
-          value = process.env.EXPO_PUBLIC_TMDB_BASE_URL
-          break
-        case 'NODE_ENV':
-          value = process.env.NODE_ENV
-          break
-        default:
-          // For any other keys, we'll need to add them explicitly here
-          this.logger.warn(`Unknown environment variable key: ${key}`)
-          value = undefined
-          break
-      }
+      const value = this.environmentVariables[key]
 
       if (value !== undefined) {
         return value
+      }
+
+      if (!(key in this.environmentVariables)) {
+        this.logger.warn(`Unknown environment variable key: ${key}`, undefined, {
+          key,
+          knownKeys: Object.keys(this.environmentVariables)
+        })
       }
 
       if (fallback !== undefined) {
@@ -79,12 +73,19 @@ export class EnvironmentService implements IEnvironmentService {
         return fallback
       }
 
-      this.logger.warn(`Environment variable ${key} not found and no fallback provided`)
+      this.logger.warn(`Environment variable ${key} not found and no fallback provided`, undefined, {
+        key
+      })
       return undefined
     } catch (error) {
-      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      const errorInstance = error instanceof Error ? error : new EnvironmentError(
+        `Failed to read environment variable: ${key}`,
+        { key },
+        error instanceof Error ? error : undefined
+      )
       this.logger.error(`Failed to read environment variable: ${key}`, errorInstance)
       return fallback
     }
   }
 }
+

@@ -1,7 +1,9 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import type { ViewStyle, TextStyle } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useTheme } from '@/src/presentation/shared/theme'
+import type { Theme } from '@/src/presentation/shared/theme/types'
 import { NavigationHeader } from './NavigationHeader'
 
 interface ScreenProps {
@@ -35,19 +37,19 @@ export const Screen: React.FC<ScreenProps> = ({
   )
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background.primary,
-  },
+  } as ViewStyle,
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  } as ViewStyle,
   text: {
     color: theme.colors.text.primary,
     fontSize: theme.typography.heading1.fontSize,
     fontWeight: theme.typography.heading1.fontWeight,
-  },
+  } as TextStyle,
 })

@@ -1,6 +1,6 @@
-import type { Locale } from '@/src/presentation/shared/i18n'
-
-export type { Locale } from '@/src/presentation/shared/i18n'
+import type { Locale } from '@/src/domain/entities/locale.entity'
+import type { TMDBSettings } from './tmdb-settings.entity'
+import { DEFAULT_TMDB_SETTINGS } from './tmdb-settings.entity'
 
 export interface User {
   userId: string
@@ -62,15 +62,10 @@ export interface ProviderPreferences {
   enabledProviders: Record<string, boolean>
 }
 
+ 
 export interface ProviderSettings {
-  tmdbSettings: TMDBSettings
-}
-
-export interface TMDBSettings {
-  bearerToken?: string
-  apiKey?: string
-  language: string
-  includeAdult: boolean
+  /** TMDB (The Movie Database) provider settings */
+  tmdb?: TMDBSettings
 }
 
 export type HomeScreenLayoutPreference = 'grid' | 'list' | 'carousel'
@@ -108,10 +103,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
     enabledProviders: {}
   },
   providerSettings: {
-    tmdbSettings: {
-      language: 'en-US',
-      includeAdult: false
-    }
+    tmdb: DEFAULT_TMDB_SETTINGS
   },
   homeScreenLayout: 'grid',
   notificationSettings: {

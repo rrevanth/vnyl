@@ -1,9 +1,11 @@
-import type { TranslationKey } from '../types'
+import type { TranslationKey } from '@/src/presentation/shared/i18n/types'
 
 export const es: TranslationKey = {
   common: {
     loading: 'Cargando...',
+    loading_more: 'Cargando más...',
     error: 'Error',
+    success: 'Éxito',
     retry: 'Reintentar',
     cancel: 'Cancelar',
     confirm: 'Confirmar',
@@ -11,7 +13,7 @@ export const es: TranslationKey = {
     delete: 'Eliminar',
     edit: 'Editar',
     done: 'Listo',
-    close: 'Cerrar'
+    close: 'Cerrar',
   },
 
   navigation: {
@@ -19,6 +21,30 @@ export const es: TranslationKey = {
     search: 'Buscar',
     library: 'Biblioteca',
     settings: 'Configuración'
+  },
+
+  home: {
+    welcome: 'Bienvenido a VNYL',
+    discover_content: 'Descubre películas y series increíbles',
+    providers_active: '{{count}} de {{total}} proveedores activos',
+    total_items: '{{count}} elementos disponibles',
+    top_ten: 'Top 10',
+    top_ten_description: 'Contenido más popular de todos los proveedores',
+    award_winners: 'Ganadores de Premios',
+    award_winners_description: 'Películas y series aclamadas por la crítica',
+    no_catalogs: 'No Hay Contenido Disponible',
+    no_catalogs_description: 'Configura tus proveedores en ajustes para descubrir contenido',
+    error: 'No se Pudo Cargar el Contenido',
+    generic_error: 'Algo salió mal al cargar el contenido'
+  },
+
+  catalog: {
+    item_count: '{{count}} elementos',
+    last_updated: 'Actualizado {{date}}',
+    see_all: 'Ver Todo',
+    load_more_items: 'Cargar más elementos',
+    show_more: 'Mostrar {{count}} más',
+    loading_more: 'Cargando más elementos...'
   },
 
   settings: {
@@ -95,31 +121,70 @@ export const es: TranslationKey = {
         description: 'Información y documentación de proveedores'
       },
       tmdb: {
-        title: 'TMDB (The Movie Database)',
-        description: 'Metadatos de películas y series',
-        using_defaults: 'Usando Configuración Predeterminada',
-        using_custom_config: 'Usando Configuración Personalizada',
-        defaults_description: 'Usando claves API integradas y configuración predeterminada. Configura ajustes personalizados a continuación para usar tus propias claves API.',
-        custom_config_description: 'Usando tu configuración API personalizada. Todas las solicitudes usarán tus claves API proporcionadas.',
+        title: 'The Movie Database (TMDB)',
+        description: 'Configurar ajustes de la API de TMDB',
+        status: {
+          connected_bearer_token: 'Conectado con Token Bearer Personalizado',
+          connected_api_key: 'Conectado con Clave API Personalizada', 
+          connected_default: 'Conectado con Clave API Predeterminada',
+          hierarchy_description: 'Orden de prioridad de claves API (mayor prioridad se usa):',
+          custom_bearer_token: 'Token Bearer Personalizado (mayor prioridad)',
+          custom_api_key: 'Clave API Personalizada (prioridad media)',
+          default_api_key: 'Clave API Predeterminada (menor prioridad)'
+        },
         authentication: 'Autenticación',
-        authentication_description: 'Configura tus credenciales API de TMDB. Necesitas un Token Bearer o una Clave API.',
-        bearer_token: 'Token Bearer',
-        bearer_token_placeholder: 'Ingresa tu Token Bearer de TMDB',
-        bearer_token_description: 'Método preferido. Obtener desde configuración API de TMDB.',
+        authentication_description: 'Credenciales de API para acceso a TMDB',
         api_key: 'Clave API',
-        api_key_placeholder: 'Ingresa tu Clave API de TMDB',
-        api_key_description: 'Alternativa al Token Bearer. Obtener desde configuración API de TMDB.',
-        configuration: 'Configuración',
-        configuration_description: 'Personalizar comportamiento de API de TMDB y preferencias de contenido.',
+        api_key_description: 'Tu clave API de TMDB para autenticación',
+        api_key_placeholder: 'Ingresa tu clave API de TMDB',
+        bearer_token: 'Token Bearer',
+        bearer_token_description: 'Token Bearer para autenticación mejorada (recomendado)',
+        bearer_token_placeholder: 'Ingresa tu token Bearer de TMDB',
+        regional_settings: 'Configuración Regional',
+        regional_description: 'Preferencias de idioma y ubicación',
+        preferences: 'Preferencias',
+        preferences_description: 'Preferencias de contenido y regionales',
+        content_settings: 'Contenido y Medios',
+        content_description: 'Calidad de imagen y filtrado de contenido',
         language: 'Idioma',
-        language_description: 'Idioma para metadatos de películas y series',
+        language_description: 'Idioma preferido para datos de películas y series de TV',
+        language_placeholder: 'Seleccionar idioma',
+        country: 'País',
+        country_description: 'Tu país para filtrado de contenido regional',
+        country_placeholder: 'Seleccionar país',
+        region: 'Región',
+        region_description: 'Configuración regional para disponibilidad de contenido',
         include_adult: 'Incluir Contenido Adulto',
-        include_adult_description: 'Mostrar contenido adulto/maduro en resultados de búsqueda',
-        validation_error_title: 'Error de Validación',
-        validation_error_message: 'Por favor proporciona un Token Bearer o una Clave API.',
-        save_success_title: 'Configuración Guardada',
-        save_success_message: 'Tu configuración de TMDB se ha guardado exitosamente.',
-        save_error_message: 'Error al guardar configuración de TMDB. Por favor intenta de nuevo.'
+        include_adult_description: 'Incluir contenido adulto en resultados de búsqueda y recomendaciones',
+        image_quality: 'Calidad de Imagen',
+        image_quality_description: 'Calidad de imágenes (pósters, fondos, etc.)',
+        image_quality_placeholder: 'Seleccionar calidad de imagen',
+        save_settings: 'Guardar Configuración',
+        reset_settings: 'Restablecer a Predeterminados',
+        test_connection: 'Probar Conexión',
+        validate_connection: 'Validar Conexión',
+        validate_and_save: 'Validar y Guardar',
+        setup_guide: 'Guía de Configuración',
+        setup_guide_description: 'Cómo obtener tus credenciales de API de TMDB',
+        setup_steps: {
+          title: 'Cómo obtener credenciales de API de TMDB:',
+          step_1: '1. Visita themoviedb.org y crea una cuenta gratuita',
+          step_2: '2. Ve a Configuración → API en tu cuenta',
+          step_3: '3. Solicita una clave API para uso personal',
+          step_4: '4. Copia tu clave API o token Bearer',
+          step_5: '5. Pégala en el formulario de arriba'
+        },
+        validation: {
+          api_key_required: 'Se requiere Clave API o Token Bearer',
+          api_key_invalid: 'Formato de clave API inválido',
+          bearer_token_invalid: 'Formato de token Bearer inválido',
+          connection_failed: 'Error al conectar con la API de TMDB',
+          connection_success: 'Conectado exitosamente a la API de TMDB',
+          settings_saved: 'Configuración de TMDB guardada exitosamente',
+          settings_reset: 'Configuración de TMDB restablecida a predeterminados',
+          no_custom_credentials: 'Por favor ingresa tu clave API o token Bearer para validar',
+          invalid_credentials: 'Credenciales de API inválidas. Por favor verifica tu clave API o token Bearer'
+        }
       }
     },
     about: {
@@ -149,6 +214,8 @@ export const es: TranslationKey = {
   },
 
   media: {
+    movie: 'Película',
+    tv: 'Serie de TV',
     title: 'Título',
     description: 'Descripción',
     cast: 'Reparto',

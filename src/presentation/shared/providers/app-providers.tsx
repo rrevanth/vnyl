@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { ThemeProvider } from '@/src/presentation/shared/theme'
@@ -6,6 +6,9 @@ import { I18nProvider } from '@/src/presentation/shared/i18n'
 import { AppErrorBoundary } from '@/src/presentation/shared/error-boundary'
 import { UserPreferencesProvider } from './user-preferences-provider'
 import { FontProvider } from './font-provider'
+import { QueryProvider } from './query-provider'
+import { AppLoadingScreen } from '@/src/presentation/components/loading/AppLoadingScreen'
+import { MinimalLoadingScreen } from '@/src/presentation/components/loading/MinimalLoadingScreen'
 import { initializeApp } from '@/src/infrastructure/app-container'
 
 interface AppProvidersProps {
@@ -22,6 +25,7 @@ const appState = observable<{
 })
 
 export const AppProviders: React.FC<AppProvidersProps> = observer(({ children }) => {
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true)
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -40,9 +44,28 @@ export const AppProviders: React.FC<AppProvidersProps> = observer(({ children })
     initialize()
   }, [])
 
-  // Don't render providers until DI container is fully initialized
+  const handleLoadingComplete = () => {
+    setShowLoadingScreen(false)
+  }
+
+  // Show minimal loading screen until DI container is initialized
   if (!appState.isInitialized.get()) {
-    return null // Show loading screen or spinner here
+    return <MinimalLoadingScreen progress={50} />
+  }
+
+  // Show full loading screen with DI services until fully ready
+  if (showLoadingScreen) {
+    return (
+      <AppErrorBoundary>
+        <FontProvider>
+          <ThemeProvider initialMode="light">
+            <I18nProvider fallbackLocale="en">
+              <AppLoadingScreen onLoadingComplete={handleLoadingComplete} />
+            </I18nProvider>
+          </ThemeProvider>
+        </FontProvider>
+      </AppErrorBoundary>
+    )
   }
 
   return (
@@ -51,7 +74,9 @@ export const AppProviders: React.FC<AppProvidersProps> = observer(({ children })
         <UserPreferencesProvider>
           <ThemeProvider initialMode="light">
             <I18nProvider fallbackLocale="en">
-              {children}
+              <QueryProvider>
+                {children}
+              </QueryProvider>
             </I18nProvider>
           </ThemeProvider>
         </UserPreferencesProvider>

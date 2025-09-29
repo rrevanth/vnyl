@@ -1,10 +1,14 @@
-export type Locale = 'en' | 'es'
+import type { Locale } from '@/src/domain/entities/locale.entity'
+
+export type { Locale } from '@/src/domain/entities/locale.entity'
 
 export interface TranslationKey {
   // Common
   common: {
     loading: string
+    loading_more: string
     error: string
+    success: string
     retry: string
     cancel: string
     confirm: string
@@ -21,6 +25,32 @@ export interface TranslationKey {
     search: string
     library: string
     settings: string
+  }
+
+  // Home
+  home: {
+    welcome: string
+    discover_content: string
+    providers_active: string
+    total_items: string
+    top_ten: string
+    top_ten_description: string
+    award_winners: string
+    award_winners_description: string
+    no_catalogs: string
+    no_catalogs_description: string
+    error: string
+    generic_error: string
+  }
+
+  // Catalog
+  catalog: {
+    item_count: string
+    last_updated: string
+    see_all: string
+    load_more_items: string
+    show_more: string
+    loading_more: string
   }
 
   // Settings
@@ -100,29 +130,68 @@ export interface TranslationKey {
       tmdb: {
         title: string
         description: string
-        using_defaults: string
-        using_custom_config: string
-        defaults_description: string
-        custom_config_description: string
+        status: {
+          connected_bearer_token: string
+          connected_api_key: string
+          connected_default: string
+          hierarchy_description: string
+          custom_bearer_token: string
+          custom_api_key: string
+          default_api_key: string
+        }
         authentication: string
         authentication_description: string
-        bearer_token: string
-        bearer_token_placeholder: string
-        bearer_token_description: string
         api_key: string
-        api_key_placeholder: string
         api_key_description: string
-        configuration: string
-        configuration_description: string
+        api_key_placeholder: string
+        bearer_token: string
+        bearer_token_description: string
+        bearer_token_placeholder: string
+        regional_settings: string
+        regional_description: string
+        preferences: string
+        preferences_description: string
+        content_settings: string
+        content_description: string
         language: string
         language_description: string
+        language_placeholder: string
+        country: string
+        country_description: string
+        country_placeholder: string
+        region: string
+        region_description: string
         include_adult: string
         include_adult_description: string
-        validation_error_title: string
-        validation_error_message: string
-        save_success_title: string
-        save_success_message: string
-        save_error_message: string
+        image_quality: string
+        image_quality_description: string
+        image_quality_placeholder: string
+        save_settings: string
+        reset_settings: string
+        test_connection: string
+        validate_connection: string
+        validate_and_save: string
+        setup_guide: string
+        setup_guide_description: string
+        setup_steps: {
+          title: string
+          step_1: string
+          step_2: string
+          step_3: string
+          step_4: string
+          step_5: string
+        }
+        validation: {
+          api_key_required: string
+          api_key_invalid: string
+          bearer_token_invalid: string
+          connection_failed: string
+          connection_success: string
+          settings_saved: string
+          settings_reset: string
+          no_custom_credentials: string
+          invalid_credentials: string
+        }
       }
     }
     about: {
@@ -155,6 +224,8 @@ export interface TranslationKey {
 
   // Media
   media: {
+    movie: string
+    tv: string
     title: string
     description: string
     cast: string

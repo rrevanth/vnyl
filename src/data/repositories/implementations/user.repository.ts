@@ -2,7 +2,6 @@ import { User, UserPreferences, DEFAULT_USER_PREFERENCES } from '@/src/domain/en
 import { IUserRepository } from '@/src/domain/repositories'
 import { IStorageService, ILoggingService } from '@/src/domain/services'
 import { generateUUID } from '@/src/infrastructure/utils'
-import { SettingsLogger } from '@/src/presentation/shared/utils/settings-logger'
 
 const STORAGE_KEY = 'vnyl_user_data'
 const SCHEMA_VERSION = 1
@@ -27,23 +26,23 @@ export class UserRepository implements IUserRepository {
 
   async getUser(): Promise<User | null> {
     try {
-      SettingsLogger.repositoryStart('getUser')
+      this.logger.info('UserRepository: Starting getUser')
       this.logger.debug('Getting user from storage')
 
       const rawData = await this.storageService.getItem(STORAGE_KEY)
       if (!rawData) {
-        SettingsLogger.repositoryNotFound('getUser')
+        this.logger.info('UserRepository: No user data found in storage')
         this.logger.debug('No user data found in storage')
         return null
       }
 
-      SettingsLogger.repositoryFound('getUser')
+      this.logger.info('UserRepository: Found raw data in storage, parsing...')
 
       const userData: StoredUserData = JSON.parse(rawData)
       const userIds = Object.keys(userData)
 
       if (userIds.length === 0) {
-        SettingsLogger.repositoryNotFound('getUser')
+        this.logger.info('UserRepository: No user data found in storage')
         this.logger.debug('User data exists but no users found')
         return null
       }
@@ -52,7 +51,7 @@ export class UserRepository implements IUserRepository {
       const userId = userIds[0]
       const storedUser = userData[userId]
 
-      SettingsLogger.repositoryRetrieved({
+      this.logger.info('UserRepository: Retrieved user data from storage', {
         userId: storedUser.metadata.userId,
         themeMode: storedUser.preferences.theme?.mode,
         accentColor: storedUser.preferences.theme?.accentColor,
@@ -80,7 +79,7 @@ export class UserRepository implements IUserRepository {
 
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      SettingsLogger.repositoryError('get user from storage', errorInstance)
+      this.logger.error('UserRepository: Failed to get user from storage', errorInstance)
       this.logger.error('Failed to get user from storage', errorInstance)
       throw new Error(`Failed to get user: ${errorInstance.message}`)
     }
@@ -117,7 +116,7 @@ export class UserRepository implements IUserRepository {
 
   async updatePreferences(preferences: Partial<UserPreferences>): Promise<User> {
     try {
-      SettingsLogger.repositoryStart('updatePreferences', {
+      this.logger.info('UserRepository: Starting updatePreferences', {
         preferenceKeys: Object.keys(preferences),
         themeMode: preferences.theme?.mode,
         accentColor: preferences.theme?.accentColor,
@@ -135,7 +134,7 @@ export class UserRepository implements IUserRepository {
         throw new Error('No user found to update preferences')
       }
 
-      SettingsLogger.repositoryCurrentState('update', {
+      this.logger.info('UserRepository: Current user preferences before update', {
         userId: existingUser.userId,
         currentThemeMode: existingUser.preferences.theme?.mode,
         currentAccentColor: existingUser.preferences.theme?.accentColor,
@@ -153,7 +152,7 @@ export class UserRepository implements IUserRepository {
         }
       }
 
-      SettingsLogger.repositoryMerged('update', {
+      this.logger.info('UserRepository: Merged user preferences after update', {
         userId: updatedUser.userId,
         newThemeMode: updatedUser.preferences.theme?.mode,
         newAccentColor: updatedUser.preferences.theme?.accentColor,
@@ -164,7 +163,7 @@ export class UserRepository implements IUserRepository {
 
       await this.saveUser(updatedUser)
 
-      SettingsLogger.repositorySuccess('User preferences')
+      this.logger.info('UserRepository: User preferences saved to storage successfully')
       this.logger.info('User preferences updated successfully', {
         userId: updatedUser.userId,
         updatedKeys: Object.keys(preferences)
@@ -174,7 +173,7 @@ export class UserRepository implements IUserRepository {
 
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
-      SettingsLogger.repositoryError('update user preferences', errorInstance)
+      this.logger.error('UserRepository: Failed to update user preferences', errorInstance)
       this.logger.error('Failed to update user preferences', errorInstance)
       throw new Error(`Failed to update preferences: ${errorInstance.message}`)
     }
