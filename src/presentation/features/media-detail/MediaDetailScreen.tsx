@@ -13,7 +13,7 @@
 
 /* @jsxImportSource react */
 
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import {
   View,
   Text,
@@ -47,7 +47,7 @@ import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entit
 import { MediaType } from '@/src/domain/entities/media/content-types'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
 import { CatalogItemUtils } from '@/src/domain/entities/media/catalog-item.entity'
-import { parseCatalogItemFromParams } from '@/src/presentation/shared/utils/catalog-item-serialization'
+import { catalogSelectors, catalogActions } from '@/src/presentation/shared/stores/catalog-store'
 import type { 
   ResolveExternalIdsResult 
 } from '@/src/domain/usecases/media/resolve-external-ids.use-case'
@@ -78,7 +78,7 @@ interface MediaDetailScreenProps {
 }
 
 const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
-  const { id, itemData } = useLocalSearchParams<{ id: string; itemData?: string }>()
+  const { id } = useLocalSearchParams<{ id: string }>()
   const { t, formatMessage } = useTranslation()
   const theme = useTheme()
   const styles = createStyles(theme)
@@ -89,20 +89,18 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
   const resolveExternalIdsUseCase = useResolveExternalIdsUseCase()
   const enrichCatalogItemUseCase = useEnrichCatalogItemUseCase()
 
-  // Parse initial catalog item from route parameters with proper deserialization
-  const initialItem = useMemo<CatalogItem | null>(() => {
-    if (itemData) {
-      const parsedItem = parseCatalogItemFromParams(itemData)
-      if (!parsedItem) {
-        logger.warn('Failed to parse item data from route parameters', new Error('Invalid item data'), {
-          context: 'media_detail_screen',
-          itemData: itemData?.slice(0, 100) // Log first 100 chars for debugging
-        })
-      }
-      return parsedItem
-    }
-    return null
-  }, [itemData, logger])
+  // Get the selected catalog item directly from the store (no serialization needed)
+  const selectedItem = catalogSelectors.selectedItem.get()
+
+  // Use the selected item as initial item - this is the complete CatalogItem object
+  const initialItem = selectedItem
+
+  if (!initialItem) {
+    logger?.warn('No selected catalog item found in store', new Error('Missing catalog item'), {
+      context: 'media_detail_screen',
+      routeId: id
+    })
+  }
 
   // Step 1: Resolve external IDs query
   const {
@@ -297,14 +295,10 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
       title: item.title
     })
     
+    // Store the selected item in the catalog store for direct access
+    catalogActions.setSelectedItem(item)
     // Navigate to the new media detail screen
-    router.push({
-      pathname: '/media/[id]' as any,
-      params: {
-        id: item.id,
-        itemData: JSON.stringify(item)
-      }
-    })
+    router.push(`/media/${item.id}` as any)
   }, [logger, router])
 
   // Only show full loading screen if we have no data at all

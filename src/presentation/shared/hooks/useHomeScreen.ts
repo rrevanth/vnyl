@@ -240,6 +240,8 @@ const useHomeScreenImpl = (): UseHomeScreenResult => {
     if (item.mediaType === 'person') {
       router.push(`/person/${item.id}` as any)
     } else {
+      // Store the selected item in the catalog store for direct access
+      catalogActions.setSelectedItem(item)
       router.push(`/media/${item.id}` as any)
     }
   }, [logger])

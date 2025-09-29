@@ -21,6 +21,8 @@ interface CatalogStoreState {
   successfulProviders: number
   totalProviders: number
   lastUpdated: Date | null
+  // Selected catalog item for navigation to media detail
+  selectedItem: CatalogItem | null
 }
 
 const initialState: CatalogStoreState = {
@@ -34,7 +36,8 @@ const initialState: CatalogStoreState = {
   totalItems: 0,
   successfulProviders: 0,
   totalProviders: 0,
-  lastUpdated: null
+  lastUpdated: null,
+  selectedItem: null
 }
 
 // Create the observable store
@@ -75,6 +78,13 @@ export const catalogActions = {
    */
   clearError: () => {
     catalogStore$.error.set(null)
+  },
+
+  /**
+   * Set selected catalog item for navigation
+   */
+  setSelectedItem: (item: CatalogItem | null) => {
+    catalogStore$.selectedItem.set(item)
   },
 
   /**
@@ -238,7 +248,12 @@ export const catalogSelectors = {
     successfulProviders: catalogStore$.successfulProviders.get(),
     totalProviders: catalogStore$.totalProviders.get(),
     lastUpdated: catalogStore$.lastUpdated.get()
-  }))
+  })),
+
+  /**
+   * Select the currently selected catalog item for navigation
+   */
+  selectedItem: computed(() => catalogStore$.selectedItem.get())
 }
 
 // Reactive computed values for performance optimization
