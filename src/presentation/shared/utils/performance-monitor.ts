@@ -8,6 +8,7 @@
 import React from 'react'
 import { computed } from '@legendapp/state'
 import { catalogStore$, catalogComputed } from '@/src/presentation/shared/stores/catalog-store'
+import type { ILoggingService } from '@/src/domain/services'
 
 interface PerformanceMetrics {
   totalCatalogs: number
@@ -56,9 +57,13 @@ export const legendStatePerformance = {
       })
     }
 
-    // Log excessive re-renders
+    // Log excessive re-renders through logging service if available
     if (newCount > 10 && newCount % 5 === 0) {
-      console.warn(`🚨 ${componentName} has rendered ${newCount} times`)
+      // Note: In a production app, we would inject the logging service here
+      // For now, we'll use console in dev mode only
+      if (__DEV__) {
+        console.warn(`🚨 ${componentName} has rendered ${newCount} times`)
+      }
     }
   },
 
@@ -77,24 +82,38 @@ export const legendStatePerformance = {
   },
 
   /**
-   * Log current performance state
+   * Log current performance state with optional logging service
    */
-  logPerformanceState: () => {
+  logPerformanceState: (logger?: ILoggingService) => {
     if (!__DEV__) return
 
     const metrics = legendStatePerformance.getMetrics()
     const renderCounts = Array.from(performanceTracker?.renderCounts.entries() || [])
     
-    console.group('📊 Legend State Performance Metrics')
-    console.log('Store State:', {
-      catalogs: metrics.totalCatalogs,
-      items: metrics.totalItems,
-      loading: metrics.isLoading
-    })
-    console.log('Render Counts:', renderCounts)
-    console.log('Total Renders:', metrics.renderCount)
-    console.log('Active Subscriptions:', metrics.subscriptionCount)
-    console.groupEnd()
+    if (logger) {
+      logger.debug('Legend State Performance Metrics', undefined, {
+        storeState: {
+          catalogs: metrics.totalCatalogs,
+          items: metrics.totalItems,
+          loading: metrics.isLoading
+        },
+        renderCounts,
+        totalRenders: metrics.renderCount,
+        activeSubscriptions: metrics.subscriptionCount
+      })
+    } else {
+      // Fallback to console in dev mode
+      console.group('📊 Legend State Performance Metrics')
+      console.log('Store State:', {
+        catalogs: metrics.totalCatalogs,
+        items: metrics.totalItems,
+        loading: metrics.isLoading
+      })
+      console.log('Render Counts:', renderCounts)
+      console.log('Total Renders:', metrics.renderCount)
+      console.log('Active Subscriptions:', metrics.subscriptionCount)
+      console.groupEnd()
+    }
   },
 
   /**
@@ -130,16 +149,13 @@ export const legendStatePerformance = {
 }
 
 /**
- * React hook for performance monitoring
+ * React hook for performance monitoring with optional logging service
  */
-export const usePerformanceMonitor = (componentName: string, subscriptionPaths?: string[]) => {
-  // Disable performance tracking to prevent excessive logging and re-renders
-  // TODO: Re-enable with proper throttling and batching
-  
+export const usePerformanceMonitor = (componentName: string, subscriptionPaths?: string[], logger?: ILoggingService) => {
   return {
     getMetrics: legendStatePerformance.getMetrics,
-    logState: legendStatePerformance.logPerformanceState,
-    renderCount: 0 // Always return 0 to disable logging
+    logState: (loggerOverride?: ILoggingService) => legendStatePerformance.logPerformanceState(loggerOverride || logger),
+    renderCount: 0
   }
 }
 

@@ -10,7 +10,7 @@ import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { ILoggingService } from '@/src/domain/services'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
-import type { ICatalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
+import type { ICatalogStateManagementService } from '@/src/domain/services/state-management.service.interface'
 
 /**
  * Result type for GetAllCatalogsUseCase
@@ -49,7 +49,7 @@ export class GetAllCatalogsUseCase {
   constructor(
     private readonly catalogProviders: ICatalogProvider[],
     private readonly logger: ILoggingService,
-    private readonly catalogStateService: ICatalogStateService
+    private readonly catalogStateService: ICatalogStateManagementService
   ) {}
 
   /**

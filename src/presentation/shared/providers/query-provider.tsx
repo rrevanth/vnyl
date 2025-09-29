@@ -71,7 +71,3 @@ export const QueryProvider: React.FC<QueryProviderProps> = ({ children }) => {
   )
 }
 
-/**
- * Legacy provider alias for backward compatibility
- */
-export const SimpleLegacyProvider = QueryProvider

@@ -1,5 +1,5 @@
 /**
- * CachedImage Component
+ * Image Component
  * 
  * Optimized image component using expo-image with comprehensive caching strategy
  * Supports progressive loading, error handling, and multiple image variants
@@ -7,7 +7,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { View, StyleSheet, ActivityIndicator } from 'react-native'
-import { Image, ImageStyle } from 'expo-image'
+import { Image as ExpoImage, ImageStyle } from 'expo-image'
 import { observer } from '@legendapp/state/react'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme/types'
@@ -35,9 +35,9 @@ export type ImageQuality = 'low' | 'medium' | 'high'
 type LoadingState = 'loading' | 'loaded' | 'error'
 
 /**
- * CachedImage component props
+ * Image component props
  */
-export interface CachedImageProps {
+export interface ImageProps {
   /** Image source URI */
   source: string | null | undefined
   /** Image type for optimized sizing and caching */
@@ -122,7 +122,7 @@ const DEFAULT_SIZES: Record<ImageType, { width: number; height: number }> = {
 //   still: 40 // 40MB for stills
 // }
 
-export const CachedImage: React.FC<CachedImageProps> = observer(({
+export const Image: React.FC<ImageProps> = observer(({
   source,
   imageType = 'poster',
   cachePolicy = 'memory-disk',
@@ -225,7 +225,7 @@ export const CachedImage: React.FC<CachedImageProps> = observer(({
   return (
     <View style={[styles.container, style]}>
       {imageSource && (
-        <Image
+        <ExpoImage
           source={imageSource}
           style={styles.image}
           contentFit={contentFit}
@@ -308,24 +308,24 @@ const createStyles = (
  * Pre-configured image components for common use cases
  */
 
-export const PosterImage: React.FC<Omit<CachedImageProps, 'imageType'>> = (props) => (
-  <CachedImage {...props} imageType="poster" />
+export const PosterImage: React.FC<Omit<ImageProps, 'imageType'>> = (props) => (
+  <Image {...props} imageType="poster" />
 )
 
-export const BackdropImage: React.FC<Omit<CachedImageProps, 'imageType'>> = (props) => (
-  <CachedImage {...props} imageType="backdrop" />
+export const BackdropImage: React.FC<Omit<ImageProps, 'imageType'>> = (props) => (
+  <Image {...props} imageType="backdrop" />
 )
 
-export const ProfileImage: React.FC<Omit<CachedImageProps, 'imageType'>> = (props) => (
-  <CachedImage {...props} imageType="profile" />
+export const ProfileImage: React.FC<Omit<ImageProps, 'imageType'>> = (props) => (
+  <Image {...props} imageType="profile" />
 )
 
-export const LogoImage: React.FC<Omit<CachedImageProps, 'imageType'>> = (props) => (
-  <CachedImage {...props} imageType="logo" />
+export const LogoImage: React.FC<Omit<ImageProps, 'imageType'>> = (props) => (
+  <Image {...props} imageType="logo" />
 )
 
-export const StillImage: React.FC<Omit<CachedImageProps, 'imageType'>> = (props) => (
-  <CachedImage {...props} imageType="still" />
+export const StillImage: React.FC<Omit<ImageProps, 'imageType'>> = (props) => (
+  <Image {...props} imageType="still" />
 )
 
 /**
@@ -361,7 +361,7 @@ export class ImageCacheManager {
     try {
       // Use expo-image preloading
       const preloadPromises = imageUrls.map(url => 
-        Image.prefetch(url)
+        ExpoImage.prefetch(url)
       )
       await Promise.allSettled(preloadPromises)
     } catch (error) {

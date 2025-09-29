@@ -10,7 +10,7 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native'
 import { observer } from '@legendapp/state/react'
-import { PosterImage } from '@/src/presentation/components/atoms/CachedImage'
+import { PosterImage } from '@/src/presentation/components/atoms'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
@@ -209,7 +209,7 @@ const createStyles = (theme: Theme, isFirstItem: boolean, isLastItem: boolean) =
     ...theme.shadows.md,
   },
   posterImage: {
-    // Removed styles since they're handled by CachedImage component
+    // Removed styles since they're handled by Image component
   },
   contentInfo: {
     paddingTop: theme.spacing.sm,

@@ -144,20 +144,6 @@ export default observer(function TMDBSettingsScreen() {
             {t('settings.providers.tmdb.authentication_description')}
           </Text>
 
-          {/* Bearer Token Field - Deprecated */}
-          <View style={[styles.inputContainer, styles.deprecatedContainer]}>
-            <TextInput
-              label={`${t('settings.providers.tmdb.bearer_token')} (${t('common.deprecated')})`}
-              description={t('settings.providers.tmdb.bearer_token_deprecated_description')}
-              value={localSettings.bearerToken || ''}
-              onChangeText={(value) => handleLocalChange({ bearerToken: value.trim() || undefined })}
-              placeholder={t('settings.providers.tmdb.bearer_token_placeholder')}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={false}
-            />
-          </View>
 
           <TextInput
             label={t('settings.providers.tmdb.api_key')}
@@ -266,7 +252,6 @@ interface TMDBSettingsStyles {
   sectionDescription: TextStyle
   actionsSection: ViewStyle
   inputContainer: ViewStyle
-  deprecatedContainer: ViewStyle
 }
 
 const createStyles = (theme: Theme): TMDBSettingsStyles => StyleSheet.create({
@@ -352,10 +337,4 @@ const createStyles = (theme: Theme): TMDBSettingsStyles => StyleSheet.create({
   inputContainer: {
     marginBottom: theme.spacing.md
   },
-  deprecatedContainer: {
-    opacity: 0.6,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.radius.sm,
-    padding: theme.spacing.sm
-  }
 })

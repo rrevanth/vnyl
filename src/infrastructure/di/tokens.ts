@@ -32,8 +32,8 @@ export const TOKENS = {
   GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),
   LOAD_MORE_CATALOG_ITEMS_USE_CASE: Symbol('LoadMoreCatalogItemsUseCase'),
 
-  // State Services
-  CATALOG_STATE_SERVICE: Symbol('ICatalogStateService'),
+  // State Management Services (Domain Layer Interfaces)
+  CATALOG_STATE_MANAGEMENT_SERVICE: Symbol('ICatalogStateManagementService'),
 
 } as const
 

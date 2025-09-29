@@ -6,12 +6,6 @@
 export interface TMDBSettings {
   /** TMDB API Key for authentication (TMDB v3 uses query parameter authentication only) */
   apiKey?: string
-  /** 
-   * Bearer token for enhanced authentication
-   * @deprecated TMDB v3 API does not support Bearer token authentication
-   * This field is kept for backward compatibility but is not used
-   */
-  bearerToken?: string
   /** Language preference (ISO 639-1 format, e.g., 'en', 'es', 'fr') */
   language: string
   /** Country/Region preference (ISO 3166-1 format, e.g., 'US', 'GB', 'CA') */

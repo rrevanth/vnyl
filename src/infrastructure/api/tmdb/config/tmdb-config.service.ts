@@ -110,11 +110,6 @@ export interface ITMDBConfigService {
    */
   getApiKey(): string
 
-  /**
-   * Get Bearer token for header authentication
-   * @deprecated TMDB v3 API only supports API key authentication via query parameters
-   */
-  getBearerToken(): string | undefined
 }
 
 /**
@@ -187,7 +182,6 @@ export class TMDBConfigService implements ITMDBConfigService {
         if (tmdbSettings.apiKey) {
           this.config.apiKey = tmdbSettings.apiKey
         }
-        // Note: TMDB v3 API does not support Bearer token authentication
         
         this.logger.debug('TMDB user preferences loaded successfully', undefined, {
           tmdbLanguage: this.userPreferences.language,
@@ -240,7 +234,6 @@ export class TMDBConfigService implements ITMDBConfigService {
       defaultHeaders: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-        // Note: TMDB v3 API uses api_key query parameter, not Authorization header
       }
     }
   }
@@ -352,12 +345,6 @@ export class TMDBConfigService implements ITMDBConfigService {
 
   getApiKey(): string {
     return this.config.apiKey
-  }
-
-  getBearerToken(): string | undefined {
-    // TMDB v3 API does not support Bearer token authentication
-    // This method is deprecated and returns undefined
-    return undefined
   }
 }
 

@@ -6,7 +6,7 @@
  */
 
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
-import { ImageType } from '@/src/presentation/components/atoms/CachedImage'
+import { ImageType } from '@/src/presentation/components/atoms'
 
 /**
  * Cache configuration interface

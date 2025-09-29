@@ -1,12 +1,12 @@
-# CachedImage Implementation - VNYL App
+# Image Component Implementation - VNYL App
 
 ## Overview
 
-Implemented optimized image caching using expo-image with comprehensive caching strategy, progressive loading, error handling, and multiple image variants for the VNYL app.
+Implemented optimized Image component using expo-image with comprehensive caching strategy, progressive loading, error handling, and multiple image variants for the VNYL app.
 
 ## Components Created
 
-### 1. CachedImage Component (`src/presentation/components/atoms/CachedImage.tsx`)
+### 1. Image Component (`src/presentation/components/atoms/Image.tsx`)
 
 **Features:**
 - **Progressive Loading**: Blur hash placeholders for smooth UX
@@ -22,6 +22,8 @@ Implemented optimized image caching using expo-image with comprehensive caching 
 - `ProfileImage` - Optimized for person profiles (2:3 aspect ratio)
 - `LogoImage` - Optimized for logos (1:1 aspect ratio)
 - `StillImage` - Optimized for episode stills (16:9 aspect ratio)
+
+**Note:** This is now the standard `Image` component - the optimized implementation replaces any basic React Native Image usage.
 
 ### 2. ImageCacheService (`src/infrastructure/services/image-cache.service.ts`)
 

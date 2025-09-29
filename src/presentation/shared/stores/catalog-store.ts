@@ -127,10 +127,6 @@ export const catalogActions = {
         catalogStore$.hasMore.set(newPagination.hasMore)
         catalogStore$.lastUpdated.set(new Date())
       })
-      
-      console.log(`✅ Added ${newItems.length} items to catalog ${catalogId}`)
-    } else {
-      console.warn(`❌ Catalog not found for ID: ${catalogId}`)
     }
   },
 
@@ -189,10 +185,10 @@ export const catalogPerformance = {
   },
 
   /**
-   * Log current store state for debugging
+   * Get current store state for debugging
    */
-  logStoreState: () => {
-    const state = {
+  getStoreState: () => {
+    return {
       catalogsCount: catalogStore$.catalogs.peek().length,
       totalItems: catalogStore$.totalItems.peek(),
       isLoading: catalogStore$.isLoading.peek(),
@@ -201,8 +197,6 @@ export const catalogPerformance = {
       hasError: catalogStore$.error.peek() !== null,
       lastUpdated: catalogStore$.lastUpdated.peek()
     }
-    console.log('📊 Catalog Store State:', state)
-    return state
   }
 }
 

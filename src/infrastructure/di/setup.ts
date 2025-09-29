@@ -1,6 +1,6 @@
 import { DIContainer } from './container'
 import { TOKENS } from './tokens'
-import { ILoggingService, IStorageService, IApiClient, IConfigClient, ApiConfig, IUserPreferenceService, IEnvironmentService } from '@/src/domain/services'
+import { ILoggingService, IStorageService, IApiClient, IConfigClient, ApiConfig, IUserPreferenceService, IEnvironmentService, ICatalogStateManagementService } from '@/src/domain/services'
 import { IUserRepository } from '@/src/domain/repositories'
 import { IProviderRegistry } from '@/src/domain/providers/base/provider-registry.interface'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
@@ -16,7 +16,7 @@ import {
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
-import { UserPreferenceService, EnvironmentService } from '@/src/infrastructure/services'
+import { UserPreferenceService, EnvironmentService, CatalogStateManagementService } from '@/src/infrastructure/services'
 import { createImageCacheService, ImageCacheService } from '@/src/infrastructure/services/image-cache.service'
 import { UserRepository } from '@/src/data/repositories/implementations/user.repository'
 import { createTMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
@@ -24,7 +24,7 @@ import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ProviderRegistry } from '@/src/infrastructure/providers/provider-registry.impl'
 import { TMDBProviderSource } from '@/src/infrastructure/providers/tmdb-provider-source'
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
-import { catalogStateService, type ICatalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
+import { catalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
 
 const container = new DIContainer()
 
@@ -207,10 +207,10 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     throw new Error(`Provider source initialization failed: ${errorMessage}`)
   }
 
-  // Register Catalog State Service (no dependencies - singleton presentation service)
-  container.registerSingleton<ICatalogStateService>(
-    TOKENS.CATALOG_STATE_SERVICE,
-    () => catalogStateService
+  // Register Catalog State Management Service (Infrastructure Adapter)
+  container.registerSingleton<ICatalogStateManagementService>(
+    TOKENS.CATALOG_STATE_MANAGEMENT_SERVICE,
+    () => new CatalogStateManagementService(catalogStateService)
   )
 
   // Register Catalog Use Cases (depend on provider registry, logging, and state service)
@@ -219,7 +219,7 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     () => {
       const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      const stateService = container.resolve<ICatalogStateService>(TOKENS.CATALOG_STATE_SERVICE)
+      const stateService = container.resolve<ICatalogStateManagementService>(TOKENS.CATALOG_STATE_MANAGEMENT_SERVICE)
       
       // Get all catalog providers from registry
       const catalogProviders = registry.getAllProviders().filter(

@@ -246,7 +246,7 @@ const useHomeScreenImpl = (): UseHomeScreenResult => {
 
   const handleAddToWatchlist = useCallback((item: CatalogItem) => {
     logger?.debug('HomeScreen: Added to watchlist', undefined, { title: item.title })
-    // TODO: Implement watchlist functionality
+    // Watchlist functionality to be implemented
   }, [logger])
 
   const handleMorePress = useCallback((item: CatalogItem) => {

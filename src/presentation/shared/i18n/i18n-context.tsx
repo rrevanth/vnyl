@@ -5,6 +5,7 @@ import { getLocales } from 'expo-localization'
 import { useGetOrCreateUserUseCase, useUpdateUserLocaleUseCase, useSafeLogging } from '@/src/infrastructure/di'
 import type { Locale, I18nContextValue, TranslationKey } from './types'
 import { en, es } from './locales'
+import { I18nError } from '@/src/domain/errors'
 
 const I18nContext = createContext<I18nContextValue | null>(null)
 
@@ -100,7 +101,12 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
   const setLocale = useCallback(async (locale: Locale) => {
     try {
       if (!translations[locale]) {
-        throw new Error(`Locale ${locale} not supported`)
+        throw new I18nError(
+          `Locale ${locale} not supported`,
+          locale,
+          undefined,
+          { supportedLocales: Object.keys(translations) }
+        )
       }
 
       i18nState.locale.set(locale)
@@ -160,7 +166,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = observer(({
 export const useTranslation = (): Pick<I18nContextValue, 't' | 'formatMessage'> => {
   const context = useContext(I18nContext)
   if (!context) {
-    throw new Error('useTranslation must be used within an I18nProvider')
+    throw new I18nError('useTranslation must be used within an I18nProvider')
   }
   return {
     t: context.t,
@@ -171,7 +177,7 @@ export const useTranslation = (): Pick<I18nContextValue, 't' | 'formatMessage'> 
 export const useLocale = (): Locale => {
   const context = useContext(I18nContext)
   if (!context) {
-    throw new Error('useLocale must be used within an I18nProvider')
+    throw new I18nError('useLocale must be used within an I18nProvider')
   }
   return context.locale
 }
@@ -179,7 +185,7 @@ export const useLocale = (): Locale => {
 export const useLocaleActions = (): Pick<I18nContextValue, 'setLocale'> => {
   const context = useContext(I18nContext)
   if (!context) {
-    throw new Error('useLocaleActions must be used within an I18nProvider')
+    throw new I18nError('useLocaleActions must be used within an I18nProvider')
   }
   return {
     setLocale: context.setLocale

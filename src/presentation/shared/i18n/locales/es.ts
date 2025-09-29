@@ -14,7 +14,6 @@ export const es: TranslationKey = {
     edit: 'Editar',
     done: 'Listo',
     close: 'Cerrar',
-    deprecated: 'Obsoleto'
   },
 
   navigation: {
@@ -140,7 +139,6 @@ export const es: TranslationKey = {
         api_key_placeholder: 'Ingresa tu clave API de TMDB',
         bearer_token: 'Token Bearer',
         bearer_token_description: 'Token Bearer para autenticación mejorada (recomendado)',
-        bearer_token_deprecated_description: 'Los tokens Bearer no son compatibles con la API v3 de TMDB. Por favor, usa la autenticación con clave API en su lugar.',
         bearer_token_placeholder: 'Ingresa tu token Bearer de TMDB',
         regional_settings: 'Configuración Regional',
         regional_description: 'Preferencias de idioma y ubicación',

@@ -19,8 +19,7 @@ import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
 import { CatalogItem } from './CatalogItem'
 import { MotionWrapper } from './MotionWrapper'
-// import { LazyContainer } from '@/src/presentation/shared/components/LazyContainer'
-import { useLazyLoading, useLazyLoadingPerformance } from '@/src/presentation/shared/hooks/useLazyLoading'
+import { useLazyLoadingPerformance } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { scale, moderateScale } from 'react-native-size-matters'
 
 interface CatalogRowProps {
@@ -57,20 +56,6 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
   // Performance monitoring
   useLazyLoadingPerformance(`CatalogRow-${catalog.id}`)
 
-  // Lazy loading for catalog items
-  const {
-    itemsToRender,
-    isLoading: isLazyLoading,
-    hasMore: hasMoreLazy,
-    loadMore: loadMoreLazy,
-    reset: resetLazy
-  } = useLazyLoading(catalog.items.length, {
-    initialCount: 5,
-    batchSize: 3,
-    threshold: 0.8,
-    loadDelay: 150
-  })
-
   // Track previous item count for animation detection
   const previousItemCount = useRef(catalog.items.length)
   const lastNewItemsCount = useRef(0)
@@ -91,20 +76,12 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
     }
   }, [catalog.items.length])
 
-  // Reset lazy loading when catalog items change
-  useEffect(() => {
-    resetLazy()
-  }, [catalog.items.length, resetLazy])
-
-  // Prepare data for Legend List with lazy loading support
+  // Prepare data for Legend List
   const listData = useMemo(() => {
     const totalItems = catalog.items.length
     const newItemsCount = lastNewItemsCount.current
     
-    // Only render items up to the lazy loading limit
-    const itemsToShow = catalog.items.slice(0, itemsToRender)
-    
-    const items = itemsToShow.map((item, itemIndex) => {
+    const items = catalog.items.map((item, itemIndex) => {
       // Check if this item is one of the newly added items
       const isNewItem = newItemsCount > 0 && itemIndex >= (totalItems - newItemsCount)
       // Stagger animation delay for new items
@@ -116,27 +93,14 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
         item,
         index: itemIndex,
         isFirstItem: itemIndex === 0,
-        isLastItem: itemIndex === itemsToShow.length - 1,
+        isLastItem: itemIndex === catalog.items.length - 1,
         isNewItem,
-        animationDelay,
-        isLazyLoaded: itemIndex >= 5 // Mark items after initial 5 as lazy loaded
+        animationDelay
       }
     })
 
-    // Add lazy loading indicator if more items available
-    if (hasMoreLazy && !isLazyLoading) {
-      items.push({
-        id: `${catalog.id}-lazy-load-more`,
-        item: null as any,
-        index: items.length,
-        isFirstItem: false,
-        isLastItem: true,
-        isLazyLoadTrigger: true
-      } as any)
-    }
-
     // Add loading indicator if loading more from API
-    if ((isLoading && hasMore) || isLazyLoading) {
+    if (isLoading && hasMore) {
       items.push({
         id: `${catalog.id}-loading-indicator`,
         item: null as any,
@@ -148,42 +112,20 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
     }
 
     return items
-  }, [catalog.items, catalog.id, itemsToRender, isLoading, hasMore, isLazyLoading, hasMoreLazy])
+  }, [catalog.items, catalog.id, isLoading, hasMore])
 
   const handleSeeAllPress = useCallback(() => {
     onSeeAllPress?.(catalog)
   }, [onSeeAllPress, catalog])
 
   const handleLoadMore = useCallback(async () => {
-    // First try lazy loading more local items
-    if (hasMoreLazy && !isLazyLoading) {
-      loadMoreLazy()
-      return
-    }
-    
-    // Then load more from API if available
+    // Load more from API if available
     if (hasMore && !isLoading && onLoadMore) {
       await onLoadMore(catalog)
     }
-  }, [hasMore, isLoading, onLoadMore, catalog, hasMoreLazy, isLazyLoading, loadMoreLazy])
+  }, [hasMore, isLoading, onLoadMore, catalog])
 
   const renderItem = useCallback(({ item: listItem }: { item: any }) => {
-    // Handle lazy load trigger
-    if (listItem.isLazyLoadTrigger) {
-      return (
-        <Pressable
-          onPress={loadMoreLazy}
-          style={styles.lazyLoadTrigger}
-          accessibilityRole="button"
-          accessibilityLabel={t('catalog.load_more_items')}
-        >
-          <Text style={styles.lazyLoadText}>
-            {formatMessage('catalog.show_more', { count: Math.min(3, catalog.items.length - itemsToRender) })}
-          </Text>
-        </Pressable>
-      )
-    }
-
     // Handle loading indicator
     if (listItem.isLoading) {
       return (
@@ -198,13 +140,13 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
           style={styles.loadingIndicator}
         >
           <Text style={styles.loadingText}>
-            {isLazyLoading ? t('catalog.loading_more') : t('common.loading')}
+            {t('common.loading')}
           </Text>
         </MotionWrapper>
       )
     }
 
-    // Handle catalog item - render directly without lazy container for now
+    // Handle catalog item
     if (listItem.item) {
       return (
         <CatalogItem
@@ -216,13 +158,12 @@ const CatalogRowImpl: React.FC<CatalogRowProps> = ({
           isLastItem={listItem.isLastItem}
           isNewItem={listItem.isNewItem}
           animationDelay={listItem.animationDelay}
-          isLazyLoaded={listItem.isLazyLoaded}
         />
       )
     }
 
     return null
-  }, [onItemPress, onItemLongPress, t, formatMessage, styles, loadMoreLazy, itemsToRender, catalog.items.length, isLazyLoading])
+  }, [onItemPress, onItemLongPress, t, styles])
 
   const getItemId = useCallback((item: typeof listData[0]) => item.id, [])
 
@@ -356,25 +297,5 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.secondary,
     fontSize: moderateScale(12),
     fontWeight: '500',
-  },
-  lazyLoadTrigger: {
-    width: scale(140),
-    height: scale(200),
-    marginLeft: theme.spacing.xs,
-    marginRight: theme.spacing.xs,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.primary,
-    borderStyle: 'dashed',
-  },
-  lazyLoadText: {
-    color: theme.colors.text.secondary,
-    fontSize: moderateScale(12),
-    fontWeight: '500',
-    textAlign: 'center',
-    paddingHorizontal: theme.spacing.sm,
   },
 })

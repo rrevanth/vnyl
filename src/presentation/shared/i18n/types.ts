@@ -1,4 +1,6 @@
-export type Locale = 'en' | 'es'
+import type { Locale } from '@/src/domain/entities/locale.entity'
+
+export type { Locale } from '@/src/domain/entities/locale.entity'
 
 export interface TranslationKey {
   // Common
@@ -15,7 +17,6 @@ export interface TranslationKey {
     edit: string
     done: string
     close: string
-    deprecated: string
   }
 
   // Navigation
@@ -145,7 +146,6 @@ export interface TranslationKey {
         api_key_placeholder: string
         bearer_token: string
         bearer_token_description: string
-        bearer_token_deprecated_description: string
         bearer_token_placeholder: string
         regional_settings: string
         regional_description: string
