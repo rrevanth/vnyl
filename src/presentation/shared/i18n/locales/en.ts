@@ -14,6 +14,8 @@ export const en: TranslationKey = {
     edit: 'Edit',
     done: 'Done',
     close: 'Close',
+    ok: 'OK',
+    go_back: 'Go Back',
   },
 
   navigation: {
@@ -226,6 +228,56 @@ export const en: TranslationKey = {
     duration: 'Duration',
     watchNow: 'Watch Now',
     addToLibrary: 'Add to Library'
+  },
+
+  mediaDetail: {
+    title: 'Media Details',
+    id_placeholder: 'Media ID: {{id}}',
+    coming_soon: 'Detailed media information will be displayed here.',
+    
+    // Loading states
+    loading_details: 'Loading media details...',
+    loading_content: 'Loading enriched content...',
+    
+    // Error states
+    error_title: 'Unable to Load Details',
+    error_message: 'Something went wrong while loading media information. Please try again.',
+    
+    // Hero section
+    runtime_minutes: '{{minutes}}m',
+    show_more: 'Show more',
+    show_less: 'Show less',
+    
+    // Action buttons
+    play: 'Play',
+    play_title: 'Play Media',
+    play_message: 'This would start playing the selected media.',
+    watchlist: 'Watchlist',
+    add_to_watchlist: 'Add to Watchlist',
+    remove_from_watchlist: 'Remove from Watchlist',
+    in_watchlist: 'In Watchlist',
+    added_to_watchlist: 'Added to watchlist',
+    removed_from_watchlist: 'Removed from watchlist',
+    share: 'Share',
+    share_title: 'Share Media',
+    share_message: 'Share "{{title}}" with friends',
+    
+    // External services
+    watch_on: 'Watch on',
+    
+    // Content sections
+    trailers: 'Trailers & Videos',
+    seasons: 'Seasons',
+    cast_crew: 'Cast & Crew',
+    you_might_like: 'You Might Also Like',
+    recommended: 'Recommended',
+    similar: 'Similar',
+    
+    // Season details
+    episode_count: '{{count}} episodes',
+    
+    // Navigation
+    go_back: 'Go Back'
   },
 
   search: {

@@ -11,7 +11,9 @@ import {
   UpdateUserThemeUseCase,
   UpdateUserLocaleUseCase,
   GetAllCatalogsUseCase,
-  LoadMoreCatalogItemsUseCase
+  LoadMoreCatalogItemsUseCase,
+  ResolveExternalIdsUseCase,
+  EnrichCatalogItemUseCase
 } from '@/src/domain/usecases'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
@@ -245,6 +247,27 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     }
   )
 
+  // Register Media Detail Use Cases (depend on provider registry and logging)
+  container.registerSingleton<ResolveExternalIdsUseCase>(
+    TOKENS.RESOLVE_EXTERNAL_IDS_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      return new ResolveExternalIdsUseCase(registry, logger)
+    }
+  )
+
+  container.registerSingleton<EnrichCatalogItemUseCase>(
+    TOKENS.ENRICH_CATALOG_ITEM_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      return new EnrichCatalogItemUseCase(registry, logger)
+    }
+  )
+
   // Log successful initialization
   logger.info('DI Container initialized successfully', {
     services: [
@@ -265,6 +288,8 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       'UpdateUserLocaleUseCase',
       'GetAllCatalogsUseCase',
       'LoadMoreCatalogItemsUseCase',
+      'ResolveExternalIdsUseCase',
+      'EnrichCatalogItemUseCase',
       'ImageCacheService'
     ]
   })

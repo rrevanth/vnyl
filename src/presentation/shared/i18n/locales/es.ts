@@ -14,6 +14,8 @@ export const es: TranslationKey = {
     edit: 'Editar',
     done: 'Listo',
     close: 'Cerrar',
+    ok: 'OK',
+    go_back: 'Volver',
   },
 
   navigation: {
@@ -226,6 +228,56 @@ export const es: TranslationKey = {
     duration: 'Duración',
     watchNow: 'Ver Ahora',
     addToLibrary: 'Agregar a Biblioteca'
+  },
+
+  mediaDetail: {
+    title: 'Detalles del Medio',
+    id_placeholder: 'ID del Medio: {{id}}',
+    coming_soon: 'La información detallada del medio se mostrará aquí.',
+    
+    // Loading states
+    loading_details: 'Cargando detalles del medio...',
+    loading_content: 'Cargando contenido enriquecido...',
+    
+    // Error states
+    error_title: 'No se pueden cargar los detalles',
+    error_message: 'Algo salió mal al cargar la información del medio. Por favor, intenta de nuevo.',
+    
+    // Hero section
+    runtime_minutes: '{{minutes}}m',
+    show_more: 'Mostrar más',
+    show_less: 'Mostrar menos',
+    
+    // Action buttons
+    play: 'Reproducir',
+    play_title: 'Reproducir Medio',
+    play_message: 'Esto comenzaría a reproducir el medio seleccionado.',
+    watchlist: 'Lista de Reproducción',
+    add_to_watchlist: 'Agregar a Lista',
+    remove_from_watchlist: 'Quitar de Lista',
+    in_watchlist: 'En Lista',
+    added_to_watchlist: 'Agregado a la lista',
+    removed_from_watchlist: 'Quitado de la lista',
+    share: 'Compartir',
+    share_title: 'Compartir Medio',
+    share_message: 'Compartir "{{title}}" con amigos',
+    
+    // External services
+    watch_on: 'Ver en',
+    
+    // Content sections
+    trailers: 'Tráilers y Videos',
+    seasons: 'Temporadas',
+    cast_crew: 'Reparto y Equipo',
+    you_might_like: 'También te puede gustar',
+    recommended: 'Recomendado',
+    similar: 'Similar',
+    
+    // Season details
+    episode_count: '{{count}} episodios',
+    
+    // Navigation
+    go_back: 'Volver'
   },
 
   search: {

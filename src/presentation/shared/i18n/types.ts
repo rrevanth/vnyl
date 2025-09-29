@@ -17,6 +17,8 @@ export interface TranslationKey {
     edit: string
     done: string
     close: string
+    ok: string
+    go_back: string
   }
 
   // Navigation
@@ -236,6 +238,57 @@ export interface TranslationKey {
     duration: string
     watchNow: string
     addToLibrary: string
+  }
+
+  // Media Detail
+  mediaDetail: {
+    title: string
+    id_placeholder: string
+    coming_soon: string
+    
+    // Loading states
+    loading_details: string
+    loading_content: string
+    
+    // Error states
+    error_title: string
+    error_message: string
+    
+    // Hero section
+    runtime_minutes: string
+    show_more: string
+    show_less: string
+    
+    // Action buttons
+    play: string
+    play_title: string
+    play_message: string
+    watchlist: string
+    add_to_watchlist: string
+    remove_from_watchlist: string
+    in_watchlist: string
+    added_to_watchlist: string
+    removed_from_watchlist: string
+    share: string
+    share_title: string
+    share_message: string
+    
+    // External services
+    watch_on: string
+    
+    // Content sections
+    trailers: string
+    seasons: string
+    cast_crew: string
+    you_might_like: string
+    recommended: string
+    similar: string
+    
+    // Season details
+    episode_count: string
+    
+    // Navigation
+    go_back: string
   }
 
   // Search

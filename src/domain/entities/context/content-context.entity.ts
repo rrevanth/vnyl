@@ -55,9 +55,6 @@ export interface EnrichmentResult {
   /** Enriched data */
   readonly data: unknown
   
-  /** Confidence score (0-1) */
-  readonly confidence: number
-  
   /** When this enrichment was performed */
   readonly enrichedAt: Date
   
@@ -66,17 +63,20 @@ export interface EnrichmentResult {
 }
 
 export enum ProviderCapability {
+  ACTIVITY = 'activity',
   CATALOG = 'catalog',
-  METADATA = 'metadata',
+  EXTERNAL_IDS = 'external_ids',
   IMAGES = 'images',
-  RATINGS = 'ratings',
-  REVIEWS = 'reviews',
-  RECOMMENDATIONS = 'recommendations',
+  METADATA = 'metadata',
   PEOPLE = 'people',
+  RATINGS = 'ratings',
+  RECOMMENDATIONS = 'recommendations',
+  REVIEWS = 'reviews',
+  SEARCH = 'search',
+  SEASONS_EPISODES = 'seasons_episodes',
   STREAMS = 'streams',
   SUBTITLES = 'subtitles',
-  WATCHLIST = 'watchlist',
-  ACTIVITY = 'activity'
+  WATCHLIST = 'watchlist'
 }
 
 /**

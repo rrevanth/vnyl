@@ -10,16 +10,18 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native'
 import { observer } from '@legendapp/state/react'
+import { useRouter } from 'expo-router'
 import { PosterImage } from '@/src/presentation/components/atoms'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
 import { useLazyLoadingPerformance, useProgressiveImageLoading } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { scale, moderateScale } from 'react-native-size-matters'
+import { stringifyCatalogItemForParams } from '@/src/presentation/shared/utils/catalog-item-serialization'
 
 interface CatalogItemProps {
   item: CatalogItemEntity
-  onPress: (item: CatalogItemEntity) => void
+  onPress?: (item: CatalogItemEntity) => void
   onLongPress?: (item: CatalogItemEntity) => void
   index: number
   isFirstItem?: boolean
@@ -45,6 +47,7 @@ const CatalogItemImpl: React.FC<CatalogItemProps> = ({
   isVisible = true
 }) => {
   const theme = useTheme()
+  const router = useRouter()
   const styles = useMemo(() => createStyles(theme, isFirstItem, isLastItem), [theme, isFirstItem, isLastItem])
 
   // Performance monitoring
@@ -93,8 +96,28 @@ const CatalogItemImpl: React.FC<CatalogItemProps> = ({
   }, [isNewItem, animationDelay, fadeAnim, scaleAnim, translateYAnim])
 
   const handlePress = useCallback(() => {
-    onPress(item)
-  }, [onPress, item])
+    // If onPress prop is provided, use it (for backward compatibility)
+    if (onPress) {
+      onPress(item)
+      return
+    }
+
+    // Navigate to MediaDetail screen with item data
+    if (item.mediaType === 'person') {
+      router.push(`/person/${item.id}` as any)
+    } else {
+      router.push({
+        pathname: '/media/[id]' as any,
+        params: { 
+          id: item.id,
+          // Pass complete serialized CatalogItem data for the detail screen
+          // This includes all fields: externalIds, contentContext, hasDetailedInfo, enrichedData, etc.
+          // MediaDetailScreen will deserialize this back to a complete CatalogItem object
+          itemData: stringifyCatalogItemForParams(item)
+        }
+      })
+    }
+  }, [onPress, item, router])
 
   const handleLongPress = useCallback(() => {
     onLongPress?.(item)
@@ -133,6 +156,9 @@ const CatalogItemImpl: React.FC<CatalogItemProps> = ({
           styles.pressable,
           pressed && styles.pressed
         ]}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.title}${releaseYear ? `, ${releaseYear}` : ''}`}
+        accessibilityHint={item.mediaType === 'person' ? 'Opens person details' : 'Opens media details'}
       >
         <View>
           {/* Poster Image */}

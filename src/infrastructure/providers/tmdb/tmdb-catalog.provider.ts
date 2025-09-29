@@ -7,7 +7,7 @@
 
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { Catalog, PaginationInfo, CatalogMetadata, CatalogUtils } from '@/src/domain/entities/media/catalog.entity'
-import { CatalogItem, CatalogItemUtils, MovieCatalogItem, TVCatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
+import { CatalogItem, CatalogItemUtils, MovieCatalogItem, TVCatalogItem, PersonCatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { MediaType, Genre } from '@/src/domain/entities/media/content-types'
 import { CatalogContext, PageInfo } from '@/src/domain/entities/context/catalog-context.entity'
 import { ContentContext, ContentContextUtils, ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
@@ -16,6 +16,7 @@ import { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
 import type { MovieSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
 import type { TVShowSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
+import type { PersonSummary } from '@/src/infrastructure/api/tmdb/endpoints/types/person.endpoints'
 import type { PaginatedResponse } from '@/src/infrastructure/api/tmdb/endpoints/types/base.types'
 
 /**
@@ -34,7 +35,11 @@ export const TMDB_CATALOG_TYPES = {
   TOP_RATED_TV: 'top_rated_tv',
   AIRING_TODAY_TV: 'airing_today_tv',
   ON_THE_AIR_TV: 'on_the_air_tv',
-  TRENDING_TV: 'trending_tv'
+  TRENDING_TV: 'trending_tv',
+  
+  // People catalogs
+  POPULAR_PEOPLE: 'popular_people',
+  TRENDING_PEOPLE: 'trending_people'
 } as const
 
 export type TMDBCatalogType = typeof TMDB_CATALOG_TYPES[keyof typeof TMDB_CATALOG_TYPES]
@@ -277,7 +282,7 @@ export class TMDBCatalogProvider implements ICatalogProvider {
   }
 
   private async fetchCatalogData(catalogId: string, page: number): Promise<{
-    response: PaginatedResponse<MovieSummary | TVShowSummary>
+    response: PaginatedResponse<MovieSummary | TVShowSummary | PersonSummary>
     mediaType: MediaType
     catalogName: string
   }> {
@@ -348,13 +353,27 @@ export class TMDBCatalogProvider implements ICatalogProvider {
           catalogName: 'Trending TV Shows'
         }
 
+      // People catalogs
+      case TMDB_CATALOG_TYPES.POPULAR_PEOPLE:
+        return {
+          response: await client.people.getPopular({ page }),
+          mediaType: MediaType.PERSON,
+          catalogName: 'Popular People'
+        }
+      case TMDB_CATALOG_TYPES.TRENDING_PEOPLE:
+        return {
+          response: await client.trending.getTrendingPeople('week'),
+          mediaType: MediaType.PERSON,
+          catalogName: 'Trending People'
+        }
+
       default:
         throw new Error(`Unsupported catalog type: ${catalogId}`)
     }
   }
 
   private mapTMDBItemToCatalogItem(
-    item: MovieSummary | TVShowSummary,
+    item: MovieSummary | TVShowSummary | PersonSummary,
     catalogContext: CatalogContext,
     positionInCatalog: number,
     mediaType: MediaType
@@ -372,49 +391,68 @@ export class TMDBCatalogProvider implements ICatalogProvider {
       mediaType,
       title: this.getTitle(item),
       originalTitle: this.getOriginalTitle(item),
-      overview: item.overview || undefined,
+      overview: ('overview' in item) ? item.overview || undefined : undefined,
       releaseDate: this.getReleaseDate(item),
       posterUrl: this.getPosterUrl(item),
       backdropUrl: this.getBackdropUrl(item),
-      voteAverage: item.vote_average || undefined,
-      voteCount: item.vote_count || undefined,
+      voteAverage: ('vote_average' in item) ? item.vote_average || undefined : undefined,
+      voteCount: ('vote_count' in item) ? item.vote_count || undefined : undefined,
       popularity: item.popularity || undefined,
-      originalLanguage: item.original_language as any,
-      genres: this.mapGenres(item.genre_ids),
+      originalLanguage: ('original_language' in item) ? item.original_language as any : undefined,
+      genres: ('genre_ids' in item) ? this.mapGenres(item.genre_ids) : undefined,
       originalMediaType: mediaType,
       contentContext,
       externalIds: this.createExternalIds(item.id),
       hasDetailedInfo: false,
-      isAdult: item.adult || undefined,
+      isAdult: ('adult' in item) ? item.adult || undefined : undefined,
       createdAt: new Date(),
       updatedAt: new Date()
     }
 
     if (mediaType === MediaType.MOVIE) {
       return baseItem as MovieCatalogItem
-    } else {
+    } else if (mediaType === MediaType.TV_SERIES) {
       const tvItem = item as TVShowSummary
       return {
         ...baseItem,
         firstAirDate: tvItem.first_air_date ? new Date(tvItem.first_air_date) : undefined,
         originCountries: tvItem.origin_country as any[]
       } as TVCatalogItem
+    } else if (mediaType === MediaType.PERSON) {
+      const personItem = item as PersonSummary
+      return {
+        ...baseItem,
+        biography: undefined, // Not available in summary
+        birthday: undefined, // Not available in summary
+        deathday: undefined, // Not available in summary
+        knownForDepartment: personItem.known_for_department,
+        knownFor: personItem.known_for?.map(item => ({ id: item.id, mediaType: item.media_type === 'movie' ? MediaType.MOVIE : MediaType.TV_SERIES, title: ('title' in item) ? item.title : item.name })) || [],
+        placeOfBirth: undefined, // Not available in summary
+        profileUrl: personItem.profile_path 
+          ? this.tmdbService.config.getImageUrl(personItem.profile_path, 'profile')
+          : null,
+        gender: personItem.gender as any,
+        alsoKnownAs: [],
+        externalIds: { ...baseItem.externalIds } as any
+      } as PersonCatalogItem
+    } else {
+      throw new Error(`Unsupported media type: ${mediaType}`)
     }
   }
 
-  private getTitle(item: MovieSummary | TVShowSummary): string {
+  private getTitle(item: MovieSummary | TVShowSummary | PersonSummary): string {
     if ('title' in item) return item.title
     if ('name' in item) return item.name
     return 'Unknown Title'
   }
 
-  private getOriginalTitle(item: MovieSummary | TVShowSummary): string | undefined {
+  private getOriginalTitle(item: MovieSummary | TVShowSummary | PersonSummary): string | undefined {
     if ('original_title' in item) return item.original_title
     if ('original_name' in item) return item.original_name
     return undefined
   }
 
-  private getReleaseDate(item: MovieSummary | TVShowSummary): Date | undefined {
+  private getReleaseDate(item: MovieSummary | TVShowSummary | PersonSummary): Date | undefined {
     let dateString: string | undefined
     
     if ('release_date' in item) {
@@ -426,16 +464,21 @@ export class TMDBCatalogProvider implements ICatalogProvider {
     return dateString ? new Date(dateString) : undefined
   }
 
-  private getPosterUrl(item: MovieSummary | TVShowSummary): string | null {
-    return item.poster_path 
-      ? this.tmdbService.config.getImageUrl(item.poster_path, 'poster')
-      : null
+  private getPosterUrl(item: MovieSummary | TVShowSummary | PersonSummary): string | null {
+    if ('poster_path' in item && item.poster_path) {
+      return this.tmdbService.config.getImageUrl(item.poster_path, 'poster')
+    }
+    if ('profile_path' in item && item.profile_path) {
+      return this.tmdbService.config.getImageUrl(item.profile_path, 'profile')
+    }
+    return null
   }
 
-  private getBackdropUrl(item: MovieSummary | TVShowSummary): string | null {
-    return item.backdrop_path 
-      ? this.tmdbService.config.getImageUrl(item.backdrop_path, 'backdrop')
-      : null
+  private getBackdropUrl(item: MovieSummary | TVShowSummary | PersonSummary): string | null {
+    if ('backdrop_path' in item && item.backdrop_path) {
+      return this.tmdbService.config.getImageUrl(item.backdrop_path, 'backdrop')
+    }
+    return null
   }
 
   private mapGenres(genreIds: number[]): Genre[] | undefined {

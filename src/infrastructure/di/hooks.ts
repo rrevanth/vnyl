@@ -13,6 +13,8 @@ import {
   GetAllCatalogsUseCase,
   LoadMoreCatalogItemsUseCase
 } from '@/src/domain/usecases'
+import { ResolveExternalIdsUseCase } from '@/src/domain/usecases/media/resolve-external-ids.use-case'
+import { EnrichCatalogItemUseCase } from '@/src/domain/usecases/enrichment/enrich-catalog-item.use-case'
 
 export const useDI = <T>(token: ServiceToken): T => {
   if (!container.isRegistered(token)) {
@@ -151,5 +153,22 @@ export const useImageCacheService = (): ImageCacheService => {
 
 export const useSafeImageCacheService = (): ImageCacheService | null => {
   return useSafeDI<ImageCacheService>(TOKENS.IMAGE_CACHE_SERVICE)
+}
+
+// Media Detail Use Case Hooks
+export const useResolveExternalIdsUseCase = (): ResolveExternalIdsUseCase => {
+  return useDI<ResolveExternalIdsUseCase>(TOKENS.RESOLVE_EXTERNAL_IDS_USE_CASE)
+}
+
+export const useSafeResolveExternalIdsUseCase = (): ResolveExternalIdsUseCase | null => {
+  return useSafeDI<ResolveExternalIdsUseCase>(TOKENS.RESOLVE_EXTERNAL_IDS_USE_CASE)
+}
+
+export const useEnrichCatalogItemUseCase = (): EnrichCatalogItemUseCase => {
+  return useDI<EnrichCatalogItemUseCase>(TOKENS.ENRICH_CATALOG_ITEM_USE_CASE)
+}
+
+export const useSafeEnrichCatalogItemUseCase = (): EnrichCatalogItemUseCase | null => {
+  return useSafeDI<EnrichCatalogItemUseCase>(TOKENS.ENRICH_CATALOG_ITEM_USE_CASE)
 }
 

@@ -27,3 +27,23 @@ export type {
   LoadMoreCatalogItemsResult, 
   LoadMetrics 
 } from '@/src/domain/usecases/load-more-catalog-items.usecase'
+
+// =============================================================================
+// Media Detail Workflow Use Cases
+// =============================================================================
+
+export { ResolveExternalIdsUseCase } from '@/src/domain/usecases/media/resolve-external-ids.use-case'
+export type {
+  ResolveExternalIdsRequest,
+  ResolveExternalIdsResult,
+  ExternalIdsResolutionMetrics,
+  ExternalIdsProviderError
+} from '@/src/domain/usecases/media/resolve-external-ids.use-case'
+
+export { EnrichCatalogItemUseCase } from '@/src/domain/usecases/enrichment/enrich-catalog-item.use-case'
+export type {
+  EnrichCatalogItemRequest,
+  EnrichCatalogItemResult,
+  EnrichmentMetrics,
+  EnrichmentProviderError
+} from '@/src/domain/usecases/enrichment/enrich-catalog-item.use-case'

@@ -9,6 +9,7 @@ import { TOKENS } from '@/src/infrastructure/di/tokens'
 import { TMDBCatalogProvider } from './tmdb/tmdb-catalog.provider'
 import { TMDBMetadataProvider } from './tmdb/tmdb-metadata.provider'
 import { TMDBImagesProvider } from './tmdb/tmdb-images.provider'
+import { TMDBExternalIdsProvider } from './tmdb/tmdb-external-ids.provider'
 
 /**
  * TMDB Provider Source
@@ -21,7 +22,7 @@ export class TMDBProviderSource implements IProviderSource {
   public readonly availableCapabilities: ProviderCapability[] = [
     ProviderCapability.CATALOG,
     ProviderCapability.METADATA,
-    ProviderCapability.IMAGES
+    ProviderCapability.EXTERNAL_IDS
   ]
 
   public readonly config: ProviderSourceConfig
@@ -100,7 +101,7 @@ export class TMDBProviderSource implements IProviderSource {
   }
 
   /**
-   * Register all TMDB providers with the registry
+   * Register individual TMDB providers with the registry
    */
   async registerProviders(registry: IProviderRegistry): Promise<void> {
     if (!this.isInitialized) {
@@ -109,27 +110,27 @@ export class TMDBProviderSource implements IProviderSource {
     }
 
     const startTime = Date.now()
-    this.logger.info('TMDBProviderSource: Starting provider registration')
+    this.logger.info('TMDBProviderSource: Starting individual provider registration')
 
     try {
       // Get required services from container
       const tmdbService = this.container.resolve<ITMDBService>(TOKENS.TMDB_SERVICE)
 
-      // Create and register catalog provider
-      const catalogProvider = this.createCatalogProvider(tmdbService)
+      // Create and register individual providers
+      const catalogProvider = new TMDBCatalogProvider(tmdbService, this.logger, this.id)
+      const metadataProvider = new TMDBMetadataProvider(tmdbService, this.logger, this.id)
+      const imagesProvider = new TMDBImagesProvider(tmdbService, this.logger, this.id)
+      const externalIdsProvider = new TMDBExternalIdsProvider(tmdbService, this.logger, this.id)
+
+      // Register each provider
       await this.registerSingleProvider(registry, catalogProvider, 'catalog')
-
-      // Create and register metadata provider
-      const metadataProvider = this.createMetadataProvider(tmdbService)
       await this.registerSingleProvider(registry, metadataProvider, 'metadata')
-
-      // Create and register images provider
-      const imagesProvider = this.createImagesProvider(tmdbService)
       await this.registerSingleProvider(registry, imagesProvider, 'images')
+      await this.registerSingleProvider(registry, externalIdsProvider, 'external-ids')
 
       const registrationTime = Date.now() - startTime
 
-      this.logger.info('TMDBProviderSource: All providers registered successfully', {
+      this.logger.info('TMDBProviderSource: Individual providers registered successfully', {
         sourceId: this.id,
         providerCount: this.providers.length,
         providersRegistered: this.providers.map(p => ({ id: p.id, name: p.name, capabilities: p.capabilities })),
@@ -181,62 +182,6 @@ export class TMDBProviderSource implements IProviderSource {
     return providers
   }
 
-  /**
-   * Create catalog provider
-   */
-  private createCatalogProvider(tmdbService: ITMDBService): TMDBCatalogProvider {
-    this.logger.debug('TMDBProviderSource: Creating catalog provider')
-
-    const provider = new TMDBCatalogProvider(tmdbService, this.logger, this.id)
-
-    this.logger.info('TMDBProviderSource: Catalog provider created', {
-      providerId: provider.id,
-      providerName: provider.name,
-      sourceId: provider.sourceId,
-      capabilities: provider.capabilities,
-      priority: provider.priority
-    })
-
-    return provider
-  }
-
-  /**
-   * Create metadata provider
-   */
-  private createMetadataProvider(tmdbService: ITMDBService): TMDBMetadataProvider {
-    this.logger.debug('TMDBProviderSource: Creating metadata provider')
-
-    const provider = new TMDBMetadataProvider(tmdbService, this.logger, this.id)
-
-    this.logger.info('TMDBProviderSource: Metadata provider created', {
-      providerId: provider.id,
-      providerName: provider.name,
-      sourceId: provider.sourceId,
-      capabilities: provider.capabilities,
-      priority: provider.priority
-    })
-
-    return provider
-  }
-
-  /**
-   * Create images provider
-   */
-  private createImagesProvider(tmdbService: ITMDBService): TMDBImagesProvider {
-    this.logger.debug('TMDBProviderSource: Creating images provider')
-
-    const provider = new TMDBImagesProvider(tmdbService, this.logger, this.id)
-
-    this.logger.info('TMDBProviderSource: Images provider created', {
-      providerId: provider.id,
-      providerName: provider.name,
-      sourceId: provider.sourceId,
-      capabilities: provider.capabilities,
-      priority: provider.priority
-    })
-
-    return provider
-  }
 
   /**
    * Register a single provider with comprehensive logging
