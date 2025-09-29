@@ -25,71 +25,34 @@ export interface PeopleSearchParams {
   readonly region?: string
 }
 
-/**
- * People result metadata
- */
-export interface PeopleResultMetadata {
-  /** Original search query */
-  readonly originalQuery: string
-
-  /** Search execution time in milliseconds */
-  readonly searchTime: number
-
-  /** Whether results were returned from cache */
-  readonly fromCache: boolean
-
-  /** Data quality score (0-1) indicating completeness */
-  readonly qualityScore: number
-
-  /** Provider-specific metadata */
-  readonly providerMetadata?: Record<string, any>
-}
-
-/**
- * People search result
- */
-export interface PeopleSearchResult {
-  /** Catalog containing people search results */
-  readonly catalog: Catalog
-
-  /** Search result metadata */
-  readonly metadata: PeopleResultMetadata
-
-  /** Timestamp when search was performed */
-  readonly searchedAt: Date
-}
 
 /**
  * People provider interface
  * Providers with this capability can search for and retrieve information about people (actors, directors, crew)
- * Enables comprehensive people-based content discovery and exploration
+ * Returns multiple catalogs to allow flexibility in people organization (cast, crew, directors, producers, etc.)
  */
 export interface IPeopleProvider extends IProvider {
   /**
    * Search for people by name or query
-   * Returns a catalog of people matching the search criteria
+   * Returns catalogs of people matching the search criteria
    * 
    * @param searchParams - Search parameters including query and filters
-   * @returns Promise that resolves to people search results
+   * @returns Promise that resolves to array of people catalogs
    * 
    * @example
    * ```typescript
-   * const result = await provider.getPeople({
+   * const catalogs = await provider.getPeople({
    *   query: "Tom Hanks",
    *   page: 1,
    *   limit: 20
    * })
    * 
-   * console.log(`Found ${result.catalog.items.length} people`)
-   * result.catalog.items.forEach(person => {
-   *   if (person.mediaType === MediaType.PERSON) {
-   *     const personItem = person as PersonCatalogItem
-   *     console.log(`${personItem.title} - ${personItem.knownForDepartment}`)
-   *   }
+   * catalogs.forEach(catalog => {
+   *   console.log(`${catalog.name}: ${catalog.items.length} people`)
    * })
    * ```
    */
-  getPeople(searchParams: PeopleSearchParams): Promise<PeopleSearchResult>
+  getPeople(searchParams: PeopleSearchParams): Promise<Catalog[]>
 
   /**
    * Get detailed information for a specific person
@@ -109,23 +72,23 @@ export interface IPeopleProvider extends IProvider {
 
   /**
    * Get people associated with a specific media item
-   * Fetches cast, crew, and other people related to movies, TV shows, etc.
+   * Returns multiple catalogs containing different types of people (cast, crew, directors, etc.)
+   * Providers can organize people by role, department, or any other logical grouping
    * 
    * @param mediaItem - The media catalog item to get people for
-   * @returns Promise that resolves to catalog of associated people
+   * @returns Promise that resolves to array of people catalogs
    * 
    * @example
    * ```typescript
-   * const peopleResult = await provider.getPeopleForMedia(movieItem)
-   * console.log(`Found ${peopleResult.catalog.items.length} people`)
+   * const catalogs = await provider.getPeopleForMedia(movieItem)
    * 
-   * // Filter by role type
-   * const actors = peopleResult.catalog.items.filter(person => 
-   *   (person as PersonCatalogItem).knownForDepartment === 'Acting'
-   * )
+   * catalogs.forEach(catalog => {
+   *   console.log(`${catalog.name}: ${catalog.items.length} people`)
+   *   console.log(`Type: ${catalog.catalogContext.catalogType}`)
+   * })
    * ```
    */
-  getPeopleForMedia(mediaItem: CatalogItem): Promise<PeopleSearchResult>
+  getPeopleForMedia(mediaItem: CatalogItem): Promise<Catalog[]>
 
   /**
    * Get popular people
@@ -133,15 +96,15 @@ export interface IPeopleProvider extends IProvider {
    * 
    * @param page - Page number for pagination (1-based, defaults to 1)
    * @param limit - Number of results per page (defaults to provider default)
-   * @returns Promise that resolves to catalog of popular people
+   * @returns Promise that resolves to array of popular people catalogs
    * 
    * @example
    * ```typescript
-   * const popularResult = await provider.getPopularPeople(1, 20)
-   * console.log(`Popular people: ${popularResult.catalog.items.length}`)
+   * const catalogs = await provider.getPopularPeople(1, 20)
+   * console.log(`Popular people catalogs: ${catalogs.length}`)
    * ```
    */
-  getPopularPeople(page?: number, limit?: number): Promise<PeopleSearchResult>
+  getPopularPeople(page?: number, limit?: number): Promise<Catalog[]>
 
   /**
    * Check if people data is supported for a given media type
