@@ -19,7 +19,7 @@ import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
 import { useHomeScreen } from '@/src/presentation/shared/hooks/useHomeScreen'
-import { usePerformanceMonitor } from '@/src/presentation/shared/utils/performance-monitor'
+// import { usePerformanceMonitor } from '@/src/presentation/shared/utils/performance-monitor'
 import { useViewportDetection } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { CatalogRow } from './CatalogRow'
 import { MotionWrapper } from './MotionWrapper'
@@ -52,16 +52,18 @@ const HomeScreenContentImpl: React.FC<HomeScreenContentProps> = ({
   const lastUpdateRef = useRef<number>(0)
   
   // Performance monitoring (dev only)
-  const { renderCount } = usePerformanceMonitor('HomeScreenContent', [
-    'state.catalogs',
-    'state.isLoading',
-    'state.isEmpty', 
-    'state.isError'
-  ])
+  // Disabled performance monitoring to prevent excessive logging
+  // const { renderCount } = usePerformanceMonitor('HomeScreenContent', [
+  //   'state.catalogs',
+  //   'state.isLoading',
+  //   'state.isEmpty', 
+  //   'state.isError'
+  // ])
   
-  if (__DEV__ && renderCount > 0) {
-    console.log(`🔄 HomeScreenContent render #${renderCount}, visible rows: ${visibleRows.size}`)
-  }
+  // Disabled performance logging to prevent excessive console output
+  // if (__DEV__ && renderCount > 0) {
+  //   console.log(`🔄 HomeScreenContent render #${renderCount}, visible rows: ${visibleRows.size}`)
+  // }
 
   // Calculate visible rows based on scroll position
   const updateVisibleRows = useCallback(() => {

@@ -133,14 +133,13 @@ export const legendStatePerformance = {
  * React hook for performance monitoring
  */
 export const usePerformanceMonitor = (componentName: string, subscriptionPaths?: string[]) => {
-  if (__DEV__) {
-    legendStatePerformance.trackRender(componentName, subscriptionPaths)
-  }
-
+  // Disable performance tracking to prevent excessive logging and re-renders
+  // TODO: Re-enable with proper throttling and batching
+  
   return {
     getMetrics: legendStatePerformance.getMetrics,
     logState: legendStatePerformance.logPerformanceState,
-    renderCount: performanceTracker?.renderCounts.get(componentName) || 0
+    renderCount: 0 // Always return 0 to disable logging
   }
 }
 

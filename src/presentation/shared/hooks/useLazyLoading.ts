@@ -215,39 +215,30 @@ export const useProgressiveImageLoading = () => {
  */
 export const useLazyLoadingPerformance = (componentName: string) => {
   const renderStartRef = useRef<number | undefined>(undefined)
-  const [metrics, setMetrics] = useState({
-    renderCount: 0,
-    averageRenderTime: 0,
-    totalRenderTime: 0
-  })
+  const renderCountRef = useRef<number>(0)
 
   const startRender = useCallback(() => {
-    renderStartRef.current = performance.now()
+    if (__DEV__) {
+      renderStartRef.current = performance.now()
+    }
   }, [])
 
   const endRender = useCallback(() => {
-    if (renderStartRef.current) {
+    if (__DEV__ && renderStartRef.current) {
       const renderTime = performance.now() - renderStartRef.current
+      renderCountRef.current += 1
       
-      setMetrics(prev => ({
-        renderCount: prev.renderCount + 1,
-        totalRenderTime: prev.totalRenderTime + renderTime,
-        averageRenderTime: (prev.totalRenderTime + renderTime) / (prev.renderCount + 1)
-      }))
-
-      if (__DEV__) {
+      // Only log in development, no state updates to prevent re-renders
+      if (renderCountRef.current <= 5) { // Only log first 5 renders to reduce noise
         console.log(`⚡ ${componentName} render: ${renderTime.toFixed(2)}ms`)
       }
+      
+      // Reset for next measurement
+      renderStartRef.current = undefined
     }
   }, [componentName])
 
-  useEffect(() => {
-    startRender()
-    return endRender
-  })
-
   return {
-    metrics,
     startRender,
     endRender
   }
