@@ -33,67 +33,21 @@ import { scale, moderateScale, verticalScale } from 'react-native-size-matters'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
 import type { Theme } from '@/src/presentation/shared/theme/types'
-
-/**
- * Episode data structure
- */
-export interface Episode {
-  /** Unique identifier for the episode */
-  id: string
-  /** Episode number within the season */
-  episodeNumber: number
-  /** Episode title */
-  title: string
-  /** Episode synopsis/description */
-  synopsis: string
-  /** Episode duration in minutes */
-  duration: number
-  /** Episode thumbnail/still image URL */
-  thumbnailUrl: string
-  /** Air date in ISO format */
-  airDate: string
-  /** Whether the episode has been watched */
-  isWatched?: boolean
-  /** Episode rating (0-10) */
-  rating?: number
-  /** Whether the episode is available for viewing */
-  isAvailable?: boolean
-}
-
-/**
- * Season data structure
- */
-export interface Season {
-  /** Unique identifier for the season */
-  id: string
-  /** Season number */
-  seasonNumber: number
-  /** Season title */
-  title: string
-  /** Season overview/description */
-  overview: string
-  /** Array of episodes in this season */
-  episodes: Episode[]
-  /** Season poster image URL */
-  posterUrl?: string
-  /** Total episode count */
-  episodeCount: number
-  /** Season air year */
-  year?: number
-}
+import type { Season } from '@/src/domain/providers/seasons/seasons-episodes-provider.interface'
+import type { EpisodeInfo } from '@/src/domain/entities/media/catalog-item.entity'
 
 /**
  * Props for SeasonsView component
  */
 interface SeasonsViewProps {
-  /** Array of seasons to display */
+  /** Array of seasons to display (now from enriched data as Season[]) */
   seasons: Season[]
   /** Currently selected season ID */
   selectedSeasonId?: string
   /** Callback when a season is selected */
   onSeasonSelect: (seasonId: string) => void
   /** Callback when an episode is pressed */
-  onEpisodePress: (episode: Episode, season: Season) => void
+  onEpisodePress: (episode: EpisodeInfo, season: Season) => void
   /** Optional section title override */
   title?: string
   /** Whether to show season selector */
@@ -104,9 +58,9 @@ interface SeasonsViewProps {
  * Props for EpisodeCard component
  */
 interface EpisodeCardProps {
-  episode: Episode
+  episode: EpisodeInfo
   season: Season
-  onPress: (episode: Episode, season: Season) => void
+  onPress: (episode: EpisodeInfo, season: Season) => void
   theme: Theme
   isExpanded: boolean
   onToggleExpanded: () => void
@@ -135,10 +89,11 @@ const formatDuration = (minutes: number): string => {
 }
 
 /**
- * Formats air date to readable format
+ * Formats air date to readable format from Date object or string
  */
-const formatAirDate = (isoDate: string): string => {
-  const date = new Date(isoDate)
+const formatAirDate = (airDate: Date | string | undefined): string => {
+  if (!airDate) return ''
+  const date = airDate instanceof Date ? airDate : new Date(airDate)
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -179,7 +134,7 @@ const SeasonSelector: React.FC<SeasonSelectorProps> = observer(({
               ]}
               onPress={() => onSeasonSelect(season.id)}
               accessibilityRole="button"
-              accessibilityLabel={`${season.title} - ${season.episodeCount} episodes`}
+              accessibilityLabel={`${season.name} - ${season.episodeCount} episodes`}
               accessibilityState={{ selected: isSelected }}
             >
               <Text
@@ -189,7 +144,7 @@ const SeasonSelector: React.FC<SeasonSelectorProps> = observer(({
                 ]}
                 numberOfLines={1}
               >
-                {season.title}
+                {season.name}
               </Text>
               <Text
                 style={[
@@ -229,32 +184,23 @@ const EpisodeCard: React.FC<EpisodeCardProps> = observer(({
       ]}
       onPress={() => onPress(episode, season)}
       accessibilityRole="button"
-      accessibilityLabel={`Episode ${episode.episodeNumber}: ${episode.title}`}
+      accessibilityLabel={`Episode ${episode.episodeNumber}: ${episode.name}`}
       accessibilityHint="Double tap to play episode"
     >
       <View style={styles.content}>
         {/* Episode thumbnail */}
         <View style={styles.thumbnailContainer}>
           <Image
-            source={{ uri: episode.thumbnailUrl }}
+            source={{ uri: episode.stillPath || '' }}
             style={styles.thumbnail}
             resizeMode="cover"
             accessibilityIgnoresInvertColors
           />
           
-          {/* Watch status indicator */}
-          {episode.isWatched && (
+          {/* Watch status indicator - using runtime as presence indicator */}
+          {episode.runtime && episode.runtime > 0 && (
             <View style={styles.watchedBadge}>
               <View style={styles.watchedIcon} />
-            </View>
-          )}
-
-          {/* Unavailable overlay */}
-          {!episode.isAvailable && (
-            <View style={styles.unavailableOverlay}>
-              <Text style={styles.unavailableText}>
-                {t('media_detail.episodes.unavailable')}
-              </Text>
             </View>
           )}
         </View>
@@ -266,22 +212,22 @@ const EpisodeCard: React.FC<EpisodeCardProps> = observer(({
               Episode {episode.episodeNumber}
             </Text>
             <Text style={styles.duration}>
-              {formatDuration(episode.duration)}
+              {formatDuration(episode.runtime || 0)}
             </Text>
           </View>
 
           <Text style={styles.title} numberOfLines={2}>
-            {episode.title}
+            {episode.name}
           </Text>
 
           <Text style={styles.airDate}>
             {formatAirDate(episode.airDate)}
           </Text>
 
-          {episode.rating && (
+          {episode.voteAverage && (
             <View style={styles.ratingContainer}>
               <Text style={styles.rating}>
-                ★ {episode.rating.toFixed(1)}
+                ★ {episode.voteAverage.toFixed(1)}
               </Text>
             </View>
           )}
@@ -297,10 +243,10 @@ const EpisodeCard: React.FC<EpisodeCardProps> = observer(({
               style={styles.synopsis}
               numberOfLines={isExpanded ? undefined : 2}
             >
-              {episode.synopsis}
+              {episode.overview || 'No description available.'}
             </Text>
             
-            {episode.synopsis.length > 100 && (
+            {episode.overview && episode.overview.length > 100 && (
               <Text style={styles.expandText}>
                 {isExpanded 
                   ? t('media_detail.episodes.show_less')
@@ -349,7 +295,7 @@ export const SeasonsView: React.FC<SeasonsViewProps> = observer(({
     })
   }, [])
 
-  const renderEpisode: ListRenderItem<Episode> = useCallback(({ item: episode }) => {
+  const renderEpisode: ListRenderItem<EpisodeInfo> = useCallback(({ item: episode }) => {
     if (!selectedSeason) return null
 
     return (
@@ -378,7 +324,7 @@ export const SeasonsView: React.FC<SeasonsViewProps> = observer(({
         <Text style={styles.headerTitle}>{sectionTitle}</Text>
         {selectedSeason && (
           <Text style={styles.headerSubtitle}>
-            {selectedSeason.overview}
+            {selectedSeason.overview || ''}
           </Text>
         )}
       </View>
@@ -398,10 +344,10 @@ export const SeasonsView: React.FC<SeasonsViewProps> = observer(({
         <FlatList
           data={selectedSeason.episodes}
           renderItem={renderEpisode}
-          keyExtractor={(episode) => episode.id}
+          keyExtractor={(episode) => episode.id || `episode-${episode.episodeNumber}`}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.episodesList}
-          accessibilityLabel={`${selectedSeason.title} episodes list`}
+          accessibilityLabel={`${selectedSeason.name} episodes list`}
         />
       )}
     </View>

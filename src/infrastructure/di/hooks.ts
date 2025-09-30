@@ -3,6 +3,7 @@ import { TOKENS, ServiceToken } from './tokens'
 import { ILoggingService, IStorageService, IApiClient, IConfigClient, IUserPreferenceService } from '@/src/domain/services'
 import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { IUserRepository } from '@/src/domain/repositories'
+import { IProviderRegistry } from '@/src/domain/providers/base/provider-registry.interface'
 import { ImageCacheService } from '@/src/infrastructure/services/image-cache.service'
 import {
   GetOrCreateUserUseCase,
@@ -11,7 +12,9 @@ import {
   UpdateUserThemeUseCase,
   UpdateUserLocaleUseCase,
   GetAllCatalogsUseCase,
-  LoadMoreCatalogItemsUseCase
+  LoadMoreCatalogItemsUseCase,
+  LoadMoreRecommendationsUseCase,
+  LoadMorePeopleUseCase
 } from '@/src/domain/usecases'
 import { ResolveExternalIdsUseCase } from '@/src/domain/usecases/media/resolve-external-ids.use-case'
 import { EnrichCatalogItemUseCase } from '@/src/domain/usecases/enrichment/enrich-catalog-item.use-case'
@@ -146,6 +149,22 @@ export const useSafeLoadMoreCatalogItemsUseCase = (): LoadMoreCatalogItemsUseCas
   return useSafeDI<LoadMoreCatalogItemsUseCase>(TOKENS.LOAD_MORE_CATALOG_ITEMS_USE_CASE)
 }
 
+export const useLoadMoreRecommendationsUseCase = (): LoadMoreRecommendationsUseCase => {
+  return useDI<LoadMoreRecommendationsUseCase>(TOKENS.LOAD_MORE_RECOMMENDATIONS_USE_CASE)
+}
+
+export const useSafeLoadMoreRecommendationsUseCase = (): LoadMoreRecommendationsUseCase | null => {
+  return useSafeDI<LoadMoreRecommendationsUseCase>(TOKENS.LOAD_MORE_RECOMMENDATIONS_USE_CASE)
+}
+
+export const useLoadMorePeopleUseCase = (): LoadMorePeopleUseCase => {
+  return useDI<LoadMorePeopleUseCase>(TOKENS.LOAD_MORE_PEOPLE_USE_CASE)
+}
+
+export const useSafeLoadMorePeopleUseCase = (): LoadMorePeopleUseCase | null => {
+  return useSafeDI<LoadMorePeopleUseCase>(TOKENS.LOAD_MORE_PEOPLE_USE_CASE)
+}
+
 // Image Cache Service Hooks
 export const useImageCacheService = (): ImageCacheService => {
   return useDI<ImageCacheService>(TOKENS.IMAGE_CACHE_SERVICE)
@@ -172,3 +191,11 @@ export const useSafeEnrichCatalogItemUseCase = (): EnrichCatalogItemUseCase | nu
   return useSafeDI<EnrichCatalogItemUseCase>(TOKENS.ENRICH_CATALOG_ITEM_USE_CASE)
 }
 
+// Provider Registry Hooks
+export const useProviderRegistry = (): IProviderRegistry => {
+  return useDI<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+}
+
+export const useSafeProviderRegistry = (): IProviderRegistry | null => {
+  return useSafeDI<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+}

@@ -284,6 +284,12 @@ export interface TranslationKey {
     recommended: string
     similar: string
     
+    // Load more functionality
+    load_more_title: string
+    load_more_message: string
+    load_more_error_title: string
+    load_more_error_message: string
+    
     // Season details
     episode_count: string
     

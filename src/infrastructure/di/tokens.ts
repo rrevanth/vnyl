@@ -31,6 +31,8 @@ export const TOKENS = {
   // Catalog Use Cases
   GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),
   LOAD_MORE_CATALOG_ITEMS_USE_CASE: Symbol('LoadMoreCatalogItemsUseCase'),
+  LOAD_MORE_RECOMMENDATIONS_USE_CASE: Symbol('LoadMoreRecommendationsUseCase'),
+  LOAD_MORE_PEOPLE_USE_CASE: Symbol('LoadMorePeopleUseCase'),
 
   // Media Detail Use Cases
   RESOLVE_EXTERNAL_IDS_USE_CASE: Symbol('ResolveExternalIdsUseCase'),

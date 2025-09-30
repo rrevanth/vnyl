@@ -12,6 +12,8 @@ import {
   UpdateUserLocaleUseCase,
   GetAllCatalogsUseCase,
   LoadMoreCatalogItemsUseCase,
+  LoadMoreRecommendationsUseCase,
+  LoadMorePeopleUseCase,
   ResolveExternalIdsUseCase,
   EnrichCatalogItemUseCase
 } from '@/src/domain/usecases'
@@ -26,7 +28,9 @@ import type { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ProviderRegistry } from '@/src/infrastructure/providers/provider-registry.impl'
 import { TMDBProviderSource } from '@/src/infrastructure/providers/tmdb-provider-source'
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
-import { catalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
+import { IRecommendationsProvider } from '@/src/domain/providers/recommendations/recommendations-provider.interface'
+import { IPeopleProvider } from '@/src/domain/providers/people/people-provider.interface'
+import { homescreenStateService } from '@/src/presentation/shared/services/homescreen-state.service'
 
 const container = new DIContainer()
 
@@ -212,7 +216,7 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
   // Register Catalog State Management Service (Infrastructure Adapter)
   container.registerSingleton<ICatalogStateManagementService>(
     TOKENS.CATALOG_STATE_MANAGEMENT_SERVICE,
-    () => new CatalogStateManagementService(catalogStateService)
+    () => new CatalogStateManagementService(homescreenStateService)
   )
 
   // Register Catalog Use Cases (depend on provider registry, logging, and state service)
@@ -244,6 +248,46 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       ) as ICatalogProvider[]
       
       return new LoadMoreCatalogItemsUseCase(catalogProviders, logger)
+    }
+  )
+
+  container.registerSingleton<LoadMoreRecommendationsUseCase>(
+    TOKENS.LOAD_MORE_RECOMMENDATIONS_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      // Get all recommendations providers from registry
+      const recommendationsProviders = registry.getAllProviders().filter(
+        provider => provider.capabilities.includes(ProviderCapability.RECOMMENDATIONS)
+      ) as IRecommendationsProvider[]
+      
+      logger.debug('DI Container: Registering LoadMoreRecommendationsUseCase', undefined, {
+        context: 'di_container_setup',
+        recommendationsProvidersCount: recommendationsProviders.length
+      })
+      
+      return new LoadMoreRecommendationsUseCase(recommendationsProviders, logger)
+    }
+  )
+
+  container.registerSingleton<LoadMorePeopleUseCase>(
+    TOKENS.LOAD_MORE_PEOPLE_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      // Get all people providers from registry
+      const peopleProviders = registry.getAllProviders().filter(
+        provider => provider.capabilities.includes(ProviderCapability.PEOPLE)
+      ) as IPeopleProvider[]
+      
+      logger.debug('DI Container: Registering LoadMorePeopleUseCase', undefined, {
+        context: 'di_container_setup',
+        peopleProvidersCount: peopleProviders.length
+      })
+      
+      return new LoadMorePeopleUseCase(peopleProviders, logger)
     }
   )
 
@@ -288,6 +332,8 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       'UpdateUserLocaleUseCase',
       'GetAllCatalogsUseCase',
       'LoadMoreCatalogItemsUseCase',
+      'LoadMoreRecommendationsUseCase',
+      'LoadMorePeopleUseCase',
       'ResolveExternalIdsUseCase',
       'EnrichCatalogItemUseCase',
       'ImageCacheService'

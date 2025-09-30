@@ -4,6 +4,7 @@ export const en: TranslationKey = {
   common: {
     loading: 'Loading...',
     loading_more: 'Loading more...',
+    load_more: 'Load More',
     error: 'Error',
     success: 'Success',
     retry: 'Retry',
@@ -272,6 +273,12 @@ export const en: TranslationKey = {
     you_might_like: 'You Might Also Like',
     recommended: 'Recommended',
     similar: 'Similar',
+    
+    // Load more functionality
+    load_more_title: 'Load More',
+    load_more_message: 'This would load more items from this section.',
+    load_more_error_title: 'Unable to Load More',
+    load_more_error_message: 'Something went wrong while loading more items. Please try again.',
     
     // Season details
     episode_count: '{{count}} episodes',

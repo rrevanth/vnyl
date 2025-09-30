@@ -15,65 +15,79 @@
  * ```
  */
 
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   StyleSheet,
-  Image
+  Image,
+  ActivityIndicator
 } from 'react-native'
 import { observer } from '@legendapp/state/react'
 import { scale, moderateScale, verticalScale } from 'react-native-size-matters'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
 import type { Theme } from '@/src/presentation/shared/theme/types'
+import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
+import type { CatalogItem, PersonCatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 
 /**
- * Person data structure
+ * Helper function to check if catalog item is a person
  */
-export interface Person {
-  /** Unique identifier for the person */
-  id: string
-  /** Person's full name */
-  name: string
-  /** Person's role in the production */
-  role: string
-  /** Character name (for cast members) */
-  character?: string
-  /** Profile image URL */
-  profileImageUrl?: string
-  /** Person's popularity ranking */
-  popularity?: number
-  /** Known for department (Acting, Directing, Writing, etc.) */
-  knownForDepartment?: string
+const isPersonCatalogItem = (item: CatalogItem): item is PersonCatalogItem => {
+  return 'personData' in item && item.personData !== undefined
 }
 
 /**
- * People catalog data structure
+ * Get person display name from catalog item
  */
-export interface PeopleCatalog {
-  /** Unique identifier for the catalog */
-  id: string
-  /** Catalog title (e.g., "Cast", "Directors", "Writers") */
-  title: string
-  /** Array of people in this catalog */
-  people: Person[]
-  /** Category type for styling */
-  category: 'cast' | 'crew' | 'directors' | 'writers' | 'producers'
-  /** Whether to show character names */
-  showCharacters?: boolean
+const getPersonDisplayName = (item: CatalogItem): string => {
+  if (isPersonCatalogItem(item) && item.personData?.name) {
+    return item.personData.name
+  }
+  return item.title || 'Unknown Person'
+}
+
+/**
+ * Get person role/character from catalog item
+ */
+const getPersonRole = (item: CatalogItem): string => {
+  if (isPersonCatalogItem(item) && item.personData) {
+    if (item.personData.character) {
+      return item.personData.character
+    }
+    if (item.personData.job) {
+      return item.personData.job
+    }
+    if (item.personData.knownForDepartment) {
+      return item.personData.knownForDepartment
+    }
+  }
+  return 'Person'
+}
+
+/**
+ * Get person profile image URL from catalog item
+ */
+const getPersonProfileUrl = (item: CatalogItem): string | undefined => {
+  if (isPersonCatalogItem(item) && item.personData?.profilePath) {
+    return item.personData.profilePath
+  }
+  return item.posterUrl
 }
 
 /**
  * Props for PeopleSection component
  */
 interface PeopleSectionProps {
-  /** Array of people catalogs to display */
-  catalogs: PeopleCatalog[]
+  /** Array of people catalogs to display (now coming from enriched data as Catalog[]) */
+  catalogs: Catalog[]
   /** Callback when a person card is pressed */
-  onPersonPress: (person: Person, catalog: PeopleCatalog) => void
+  onPersonPress: (person: CatalogItem, catalog: Catalog) => void
+  /** Callback when load more is requested for a catalog */
+  onLoadMore?: (catalogId: string) => Promise<void>
   /** Optional section title override */
   title?: string
   /** Whether to show the section header */
@@ -86,9 +100,9 @@ interface PeopleSectionProps {
  * Props for PersonCard component
  */
 interface PersonCardProps {
-  person: Person
-  catalog: PeopleCatalog
-  onPress: (person: Person, catalog: PeopleCatalog) => void
+  person: CatalogItem
+  catalog: Catalog
+  onPress: (person: CatalogItem, catalog: Catalog) => void
   theme: Theme
   showCharacter?: boolean
 }
@@ -97,8 +111,9 @@ interface PersonCardProps {
  * Props for PeopleCatalogRow component
  */
 interface PeopleCatalogRowProps {
-  catalog: PeopleCatalog
-  onPersonPress: (person: Person, catalog: PeopleCatalog) => void
+  catalog: Catalog
+  onPersonPress: (person: CatalogItem, catalog: Catalog) => void
+  onLoadMore?: (catalogId: string) => Promise<void>
   theme: Theme
   maxPeople?: number
 }
@@ -112,6 +127,13 @@ const getPlaceholderImage = (knownForDepartment?: string): string => {
 }
 
 /**
+ * Check if catalog contains cast members (for showing character names)
+ */
+const shouldShowCharacters = (catalog: Catalog): boolean => {
+  return catalog.name.toLowerCase().includes('cast')
+}
+
+/**
  * PersonCard - Individual person card with profile image and role
  */
 const PersonCard: React.FC<PersonCardProps> = observer(({
@@ -122,9 +144,15 @@ const PersonCard: React.FC<PersonCardProps> = observer(({
   showCharacter = true
 }) => {
   const styles = createPersonCardStyles(theme)
-  const imageSource = person.profileImageUrl 
-    ? { uri: person.profileImageUrl }
-    : { uri: getPlaceholderImage(person.knownForDepartment) }
+  const personName = getPersonDisplayName(person)
+  const personRole = getPersonRole(person)
+  const profileUrl = getPersonProfileUrl(person)
+  const characterName = isPersonCatalogItem(person) ? person.personData?.character : undefined
+  const popularity = isPersonCatalogItem(person) ? person.personData?.popularity : undefined
+  
+  const imageSource = profileUrl 
+    ? { uri: profileUrl }
+    : { uri: getPlaceholderImage(isPersonCatalogItem(person) ? person.personData?.knownForDepartment : undefined) }
 
   return (
     <Pressable
@@ -134,7 +162,7 @@ const PersonCard: React.FC<PersonCardProps> = observer(({
       ]}
       onPress={() => onPress(person, catalog)}
       accessibilityRole="button"
-      accessibilityLabel={`${person.name}${person.character ? ` as ${person.character}` : ''}`}
+      accessibilityLabel={`${personName}${characterName ? ` as ${characterName}` : ''}`}
       accessibilityHint="Double tap to view person details"
     >
       {/* Profile image */}
@@ -147,7 +175,7 @@ const PersonCard: React.FC<PersonCardProps> = observer(({
         />
         
         {/* Popularity indicator for top performers */}
-        {person.popularity && person.popularity > 50 && (
+        {popularity && popularity > 50 && (
           <View style={styles.popularityBadge}>
             <Text style={styles.popularityText}>★</Text>
           </View>
@@ -157,17 +185,17 @@ const PersonCard: React.FC<PersonCardProps> = observer(({
       {/* Person details */}
       <View style={styles.details}>
         <Text style={styles.name} numberOfLines={2}>
-          {person.name}
+          {personName}
         </Text>
         
-        {showCharacter && person.character && catalog.showCharacters && (
+        {showCharacter && characterName && shouldShowCharacters(catalog) && (
           <Text style={styles.character} numberOfLines={2}>
-            {person.character}
+            {characterName}
           </Text>
         )}
         
         <Text style={styles.role} numberOfLines={1}>
-          {person.role}
+          {personRole}
         </Text>
       </View>
     </Pressable>
@@ -180,14 +208,33 @@ const PersonCard: React.FC<PersonCardProps> = observer(({
 const PeopleCatalogRow: React.FC<PeopleCatalogRowProps> = observer(({
   catalog,
   onPersonPress,
+  onLoadMore,
   theme,
   maxPeople = 20
 }) => {
   const { t } = useTranslation()
   const styles = createPeopleCatalogRowStyles(theme)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   // Limit the number of people displayed
-  const displayPeople = catalog.people.slice(0, maxPeople)
+  const displayPeople = catalog.items.slice(0, maxPeople)
+  
+  // Handle load more functionality
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !catalog.pagination.hasMore || !onLoadMore) {
+      return
+    }
+    
+    try {
+      setIsLoadingMore(true)
+      await onLoadMore(catalog.id)
+    } catch (error) {
+      // Error handling is done by the parent component
+      console.warn('Failed to load more people:', error)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [isLoadingMore, catalog.pagination.hasMore, catalog.id, onLoadMore])
 
   if (displayPeople.length === 0) {
     return null
@@ -197,9 +244,9 @@ const PeopleCatalogRow: React.FC<PeopleCatalogRowProps> = observer(({
     <View style={styles.container}>
       {/* Catalog header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{catalog.title}</Text>
+        <Text style={styles.title}>{catalog.name}</Text>
         <Text style={styles.count}>
-          {catalog.people.length} {catalog.people.length === 1 ? 'person' : 'people'}
+          {catalog.items.length} {catalog.items.length === 1 ? 'person' : 'people'}
         </Text>
       </View>
 
@@ -211,7 +258,7 @@ const PeopleCatalogRow: React.FC<PeopleCatalogRowProps> = observer(({
         decelerationRate="fast"
         snapToInterval={scale(120)}
         snapToAlignment="start"
-        accessibilityLabel={`${catalog.title} horizontal scroll`}
+        accessibilityLabel={`${catalog.name} horizontal scroll`}
       >
         {displayPeople.map((person) => (
           <PersonCard
@@ -220,31 +267,79 @@ const PeopleCatalogRow: React.FC<PeopleCatalogRowProps> = observer(({
             catalog={catalog}
             onPress={onPersonPress}
             theme={theme}
-            showCharacter={catalog.showCharacters}
+            showCharacter={shouldShowCharacters(catalog)}
           />
         ))}
 
-        {/* Show more indicator if there are more people */}
-        {catalog.people.length > maxPeople && (
+        {/* Load More button or loading indicator */}
+        {catalog.pagination.hasMore && onLoadMore && (
+          <>
+            {isLoadingMore ? (
+              <View style={styles.loadingCard}>
+                <ActivityIndicator 
+                  size="small" 
+                  color={theme.colors.interactive.primary}
+                  accessibilityLabel={t('common.loading')}
+                />
+                <Text style={styles.loadingText}>
+                  {t('common.loading')}
+                </Text>
+              </View>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loadMoreCard,
+                  pressed && styles.loadMorePressed
+                ]}
+                onPress={handleLoadMore}
+                accessibilityRole="button"
+                accessibilityLabel={`Load more ${catalog.name}`}
+                accessibilityHint="Double tap to load more people"
+              >
+                <View style={styles.loadMoreContent}>
+                  <Text style={styles.loadMoreText}>
+                    {t('common.load_more')}
+                  </Text>
+                  <Text style={styles.loadMoreLabel}>
+                    {catalog.pagination.totalItems 
+                      ? `${catalog.items.length} of ${catalog.pagination.totalItems}`
+                      : `${catalog.items.length} items`
+                    }
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+          </>
+        )}
+
+        {/* Show more indicator if there are more people (fallback for when loadMore is not available) */}
+        {catalog.items.length > maxPeople && !catalog.pagination.hasMore && (
           <Pressable
             style={styles.showMoreCard}
             onPress={() => {
               // This could navigate to a full people list screen
-              // For now, we'll just trigger the callback with a special person
-              const morePerson: Person = {
+              // For now, we'll just trigger the callback with a placeholder item
+              // Create a placeholder catalog item for "show more"
+              const morePerson: CatalogItem = {
                 id: 'show-more',
-                name: t('media_detail.people.show_more'),
-                role: '',
-                profileImageUrl: ''
+                title: t('media_detail.people.show_more'),
+                overview: '',
+                posterUrl: '',
+                backdropUrl: '',
+                mediaType: catalog.mediaType,
+                externalIds: {},
+                contentContext: catalog.catalogContext,
+                createdAt: new Date(),
+                updatedAt: new Date()
               }
               onPersonPress(morePerson, catalog)
             }}
             accessibilityRole="button"
-            accessibilityLabel={`Show all ${catalog.title}`}
+            accessibilityLabel={`Show all ${catalog.name}`}
           >
             <View style={styles.showMoreContent}>
               <Text style={styles.showMoreText}>
-                +{catalog.people.length - maxPeople}
+                +{catalog.items.length - maxPeople}
               </Text>
               <Text style={styles.showMoreLabel}>
                 {t('media_detail.people.more')}
@@ -263,6 +358,7 @@ const PeopleCatalogRow: React.FC<PeopleCatalogRowProps> = observer(({
 export const PeopleSection: React.FC<PeopleSectionProps> = observer(({
   catalogs,
   onPersonPress,
+  onLoadMore,
   title,
   showHeader = true,
   maxPeoplePerCatalog = 20
@@ -272,7 +368,7 @@ export const PeopleSection: React.FC<PeopleSectionProps> = observer(({
   const styles = createPeopleSectionStyles(theme)
 
   // Filter out empty catalogs
-  const validCatalogs = catalogs.filter(catalog => catalog.people.length > 0)
+  const validCatalogs = catalogs.filter(catalog => catalog.items.length > 0)
 
   // Don't render if no valid catalogs
   if (validCatalogs.length === 0) {
@@ -298,6 +394,7 @@ export const PeopleSection: React.FC<PeopleSectionProps> = observer(({
           key={catalog.id}
           catalog={catalog}
           onPersonPress={onPersonPress}
+          onLoadMore={onLoadMore}
           theme={theme}
           maxPeople={maxPeoplePerCatalog}
         />
@@ -381,6 +478,53 @@ const createPeopleCatalogRowStyles = (theme: Theme) => StyleSheet.create({
     fontSize: theme.typography.caption.fontSize,
     color: theme.colors.text.secondary,
     textAlign: 'center'
+  },
+  loadingCard: {
+    width: scale(100),
+    height: verticalScale(160),
+    marginLeft: theme.spacing.sm,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.sm
+  },
+  loadingText: {
+    fontSize: theme.typography.caption.fontSize,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xs,
+    textAlign: 'center'
+  },
+  loadMoreCard: {
+    width: scale(100),
+    height: verticalScale(160),
+    marginLeft: theme.spacing.sm,
+    backgroundColor: theme.colors.interactive.primary,
+    borderRadius: theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.md
+  },
+  loadMorePressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }]
+  },
+  loadMoreContent: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  loadMoreText: {
+    fontSize: theme.typography.caption.fontSize,
+    fontWeight: '600',
+    color: theme.colors.text.inverse,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs
+  },
+  loadMoreLabel: {
+    fontSize: moderateScale(10),
+    color: theme.colors.text.inverse,
+    textAlign: 'center',
+    opacity: 0.8
   }
 })
 

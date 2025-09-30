@@ -28,6 +28,18 @@ export type {
   LoadMetrics 
 } from '@/src/domain/usecases/load-more-catalog-items.usecase'
 
+export { LoadMoreRecommendationsUseCase } from '@/src/domain/usecases/load-more-recommendations.usecase'
+export type {
+  LoadMoreRecommendationsRequest,
+  LoadMoreRecommendationsResult
+} from '@/src/domain/usecases/load-more-recommendations.usecase'
+
+export { LoadMorePeopleUseCase } from '@/src/domain/usecases/load-more-people.usecase'
+export type {
+  LoadMorePeopleRequest,
+  LoadMorePeopleResult
+} from '@/src/domain/usecases/load-more-people.usecase'
+
 // =============================================================================
 // Media Detail Workflow Use Cases
 // =============================================================================

@@ -13,7 +13,7 @@
 
 /* @jsxImportSource react */
 
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   View,
   Text,
@@ -41,20 +41,31 @@ import type { Theme } from '@/src/presentation/shared/theme/types'
 import { 
   useResolveExternalIdsUseCase, 
   useEnrichCatalogItemUseCase,
-  useLogging
+  useLogging,
+  useSafeLoadMoreRecommendationsUseCase,
+  useSafeLoadMorePeopleUseCase
 } from '@/src/infrastructure/di'
 import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
+import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
 import { CatalogItemUtils } from '@/src/domain/entities/media/catalog-item.entity'
-import { catalogSelectors, catalogActions } from '@/src/presentation/shared/stores/catalog-store'
+import { mediaDetailActions, mediaDetailSelectors } from '@/src/presentation/shared/stores/media-detail-store'
+import { homescreenSelectors, homescreenActions } from '@/src/presentation/shared/stores/homescreen-store'
 import type { 
   ResolveExternalIdsResult 
 } from '@/src/domain/usecases/media/resolve-external-ids.use-case'
 import type { 
   EnrichCatalogItemResult 
 } from '@/src/domain/usecases/enrichment/enrich-catalog-item.use-case'
+import type {
+  LoadMoreRecommendationsRequest
+} from '@/src/domain/usecases/load-more-recommendations.usecase'
+import type {
+  LoadMorePeopleRequest
+} from '@/src/domain/usecases/load-more-people.usecase'
 import { CatalogRow } from '@/src/presentation/components/home/CatalogRow'
+import { SeasonsView } from '@/src/presentation/features/media-detail/components/SeasonsView'
 
 // Screen dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
@@ -88,9 +99,12 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
   // Use cases from DI container
   const resolveExternalIdsUseCase = useResolveExternalIdsUseCase()
   const enrichCatalogItemUseCase = useEnrichCatalogItemUseCase()
+  const loadMoreRecommendationsUseCase = useSafeLoadMoreRecommendationsUseCase()
+  const loadMorePeopleUseCase = useSafeLoadMorePeopleUseCase()
 
-  // Get the selected catalog item directly from the store (no serialization needed)
-  const selectedItem = catalogSelectors.selectedItem.get()
+  // Get the selected catalog item directly from the homescreen store (no serialization needed)
+  // We still need this as the entry point, but we'll manage the enriched item in MediaDetail store
+  const selectedItem = homescreenSelectors.selectedItem.get()
 
   // Use the selected item as initial item - this is the complete CatalogItem object
   const initialItem = selectedItem
@@ -197,6 +211,67 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
   const isEnrichingContent = isEnriching && !enrichmentResult
   const isFullyLoaded = !!enrichmentResult?.enrichedItem
 
+  // Extract enriched data for sections - extract from new provider structure
+  const enrichedData = enrichedItem?.enrichedData
+  const metadata = enrichedData?.enrichments.get(ProviderCapability.METADATA)?.data as any
+  const peopleResult = enrichedData?.enrichments.get(ProviderCapability.PEOPLE)?.data as any
+  const recommendationsResult = enrichedData?.enrichments.get(ProviderCapability.RECOMMENDATIONS)?.data as any
+  const seasonsResult = enrichedData?.enrichments.get(ProviderCapability.SEASONS_EPISODES)?.data as any
+  
+  // Extract catalogs from the new provider structure (used for initial loading)
+  const extractedPeopleCatalogs = useMemo(() => {
+    return peopleResult?.people || (Array.isArray(peopleResult) ? peopleResult : [])
+  }, [peopleResult])
+  
+  const extractedRecommendationCatalogs = useMemo(() => {
+    return recommendationsResult?.recommendations || (Array.isArray(recommendationsResult) ? recommendationsResult : [])
+  }, [recommendationsResult])
+  
+  const extractedSeasonsData = useMemo(() => {
+    return seasonsResult?.seasons ? seasonsResult : (seasonsResult && typeof seasonsResult === 'object' && 'seasons' in seasonsResult ? seasonsResult : null)
+  }, [seasonsResult])
+
+  // Get catalogs from MediaDetail store (preferred source after initial loading)
+  const storedPeopleCatalogs = mediaDetailSelectors.peopleCatalogs.get()
+  const storedRecommendationCatalogs = mediaDetailSelectors.recommendationCatalogs.get()
+  const storedSeasonsData = mediaDetailSelectors.seasonDetails.get()
+  
+  // Use store data if available, otherwise fall back to extracted data
+  const peopleCatalogs = storedPeopleCatalogs.length > 0 ? storedPeopleCatalogs : extractedPeopleCatalogs
+  const recommendationCatalogs = storedRecommendationCatalogs.length > 0 ? storedRecommendationCatalogs : extractedRecommendationCatalogs
+  const seasonsData = storedSeasonsData || extractedSeasonsData
+
+  // Store enriched data in MediaDetail store when enrichment data is available
+  useEffect(() => {
+    if (isFullyLoaded && enrichedItem) {
+      // Store the enriched item
+      mediaDetailActions.setEnrichedItem(enrichedItem)
+      
+      // Store people catalogs (use extracted data, not store data)
+      if (extractedPeopleCatalogs.length > 0) {
+        mediaDetailActions.setPeopleCatalogs(extractedPeopleCatalogs)
+      }
+      
+      // Store recommendation catalogs (use extracted data, not store data)
+      if (extractedRecommendationCatalogs.length > 0) {
+        mediaDetailActions.setRecommendationCatalogs(extractedRecommendationCatalogs)
+      }
+      
+      // Store seasons data (use extracted data, not store data)
+      if (extractedSeasonsData) {
+        mediaDetailActions.setSeasonDetails(extractedSeasonsData)
+      }
+      
+      logger.info('Stored enriched data in MediaDetail store', {
+        context: 'media_detail_screen',
+        enrichedItemId: enrichedItem.id,
+        peopleCount: extractedPeopleCatalogs.length,
+        recommendationsCount: extractedRecommendationCatalogs.length,
+        hasSeasons: !!extractedSeasonsData
+      })
+    }
+  }, [isFullyLoaded, enrichedItem, extractedPeopleCatalogs, extractedRecommendationCatalogs, extractedSeasonsData, logger])
+
   // Error handling - only show errors if we have no data to display
   const criticalError = (resolveIdsError || enrichmentError) && !hasInitialData
   useEffect(() => {
@@ -275,15 +350,16 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
     mediaDetailState.expandedOverview.set(!mediaDetailState.expandedOverview.get())
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- May be used in future season navigation
   const handleSeasonChange = useCallback((seasonNumber: number) => {
     mediaDetailState.selectedSeason.set(seasonNumber)
   }, [])
 
-  const handlePersonPress = useCallback((person: any) => {
+  const handlePersonPress = useCallback((person: CatalogItem) => {
     logger.info('Person pressed', {
       context: 'media_detail_screen',
       personId: person.id,
-      personName: person.name
+      personTitle: person.title
     })
     // Navigate to person detail screen
   }, [logger])
@@ -295,11 +371,133 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
       title: item.title
     })
     
-    // Store the selected item in the catalog store for direct access
-    catalogActions.setSelectedItem(item)
+    // Store the selected item in the homescreen store for navigation to new media detail screen
+    // This is needed for the next MediaDetailScreen instance to have initial data
+    homescreenActions.setSelectedItem(item)
     // Navigate to the new media detail screen
     router.push(`/media/${item.id}` as any)
   }, [logger, router])
+
+  const handleEpisodePress = useCallback((episode: any, season: any) => {
+    logger.info('Episode pressed', {
+      context: 'media_detail_screen',
+      episodeId: episode.id,
+      episodeName: episode.name,
+      seasonNumber: season.seasonNumber
+    })
+    // Handle episode playback or navigation
+  }, [logger])
+
+  // Load more handler for catalogs
+  const handleCatalogLoadMore = useCallback(async (catalog: Catalog) => {
+    if (!enrichedItem) return
+    
+    logger.info('Load more catalog requested', {
+      context: 'media_detail_screen',
+      catalogItemId: enrichedItem.id,
+      catalogId: catalog.id,
+      catalogType: catalog.catalogContext?.catalogType
+    })
+    
+    // Determine which load more function to use based on catalog type
+    const catalogType = catalog.catalogContext?.catalogType
+    const nextPage = catalog.pagination.page + 1
+    
+    try {
+      mediaDetailActions.clearError()
+      
+      if (catalogType === 'recommendations' && loadMoreRecommendationsUseCase) {
+        mediaDetailActions.setLoadingMoreRecommendations(true)
+        
+        const request: LoadMoreRecommendationsRequest = {
+          providerId: catalog.catalogContext?.providerId || 'tmdb-recommendations',
+          catalogId: catalog.id,
+          catalog: catalog,
+          originalMediaItem: enrichedItem,
+          page: nextPage,
+          limit: 20,
+          originalCatalogContext: catalog.catalogContext,
+          originalPagination: catalog.pagination
+        }
+        
+        const result = await loadMoreRecommendationsUseCase.execute(request)
+        
+        if (result.items && result.items.length > 0) {
+          mediaDetailActions.addMoreRecommendationItems(catalog.id, result.items, result.pagination)
+          
+          logger.info('MediaDetail: More recommendations loaded successfully', {
+            catalogId: catalog.id,
+            newItemsCount: result.items.length,
+            hasMore: result.pagination.hasMore
+          })
+        } else {
+          logger.warn('MediaDetail: No new recommendations received')
+        }
+        
+      } else if (catalogType === 'people' && loadMorePeopleUseCase) {
+        mediaDetailActions.setLoadingMorePeople(true)
+        
+        const request: LoadMorePeopleRequest = {
+          providerId: catalog.catalogContext?.providerId || 'tmdb-people',
+          catalogId: catalog.id,
+          catalog: catalog,
+          originalMediaItem: enrichedItem,
+          page: nextPage,
+          limit: 20,
+          originalCatalogContext: catalog.catalogContext,
+          originalPagination: catalog.pagination
+        }
+        
+        const result = await loadMorePeopleUseCase.execute(request)
+        
+        if (result.items && result.items.length > 0) {
+          mediaDetailActions.addMorePeopleItems(catalog.id, result.items, result.pagination)
+          
+          logger.info('MediaDetail: More people loaded successfully', {
+            catalogId: catalog.id,
+            newItemsCount: result.items.length,
+            hasMore: result.pagination.hasMore
+          })
+        } else {
+          logger.warn('MediaDetail: No new people received')
+        }
+        
+      } else {
+        logger.warn('Unknown catalog type for load more or use case not available', undefined, {
+          context: 'media_detail_screen',
+          catalogType,
+          catalogId: catalog.id,
+          hasRecommendationsUseCase: !!loadMoreRecommendationsUseCase,
+          hasPeopleUseCase: !!loadMorePeopleUseCase
+        })
+        
+        Alert.alert(
+          t('mediaDetail.load_more_title'),
+          t('mediaDetail.load_more_message'),
+          [{ text: t('common.ok'), style: 'default' }]
+        )
+      }
+    } catch (error) {
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      mediaDetailActions.setError(errorInstance.message)
+      logger.error('MediaDetail: Load more catalog failed', errorInstance, {
+        context: 'media_detail_screen',
+        catalogType,
+        catalogId: catalog.id
+      })
+      
+      Alert.alert(
+        t('mediaDetail.load_more_error_title'),
+        t('mediaDetail.load_more_error_message'),
+        [{ text: t('common.ok'), style: 'default' }]
+      )
+    } finally {
+      // Reset loading states regardless of catalog type
+      mediaDetailActions.setLoadingMorePeople(false)
+      mediaDetailActions.setLoadingMoreRecommendations(false)
+    }
+  }, [enrichedItem, logger, t, loadMoreRecommendationsUseCase, loadMorePeopleUseCase])
+
 
   // Only show full loading screen if we have no data at all
   if (!hasInitialData) {
@@ -336,12 +534,6 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
     return null // This should never happen due to the checks above
   }
 
-  // Extract enriched data for sections
-  const enrichedData = enrichedItem.enrichedData
-  const metadata = enrichedData?.enrichments.get(ProviderCapability.METADATA)?.data as any
-  const people = enrichedData?.enrichments.get(ProviderCapability.PEOPLE)?.data as any
-  const recommendations = enrichedData?.enrichments.get(ProviderCapability.RECOMMENDATIONS)?.data as any
-  const seasons = enrichedData?.enrichments.get(ProviderCapability.SEASONS_EPISODES)?.data as any
 
   const displayTitle = CatalogItemUtils.getDisplayTitle(enrichedItem)
   const releaseYear = CatalogItemUtils.getReleaseYear(enrichedItem)
@@ -351,8 +543,9 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
   // Helper functions for rendering sections
   const hasStreamingServices = metadata && typeof metadata === 'object' && 'streamingServices' in metadata && Array.isArray(metadata.streamingServices)
   const hasVideos = metadata && typeof metadata === 'object' && 'videos' in metadata && Array.isArray(metadata.videos) && metadata.videos.length > 0
-  const hasPeople = people && typeof people === 'object' && ('cast' in people || 'crew' in people)
-  const hasRecommendations = recommendations && typeof recommendations === 'object' && ('recommended' in recommendations || 'similar' in recommendations)
+  const hasPeopleCatalogs = Array.isArray(peopleCatalogs) && peopleCatalogs.length > 0
+  const hasRecommendationCatalogs = Array.isArray(recommendationCatalogs) && recommendationCatalogs.length > 0
+  const hasSeasonsData = seasonsData && ((Array.isArray(seasonsData) && seasonsData.length > 0) || (typeof seasonsData === 'object' && 'seasons' in seasonsData && Array.isArray(seasonsData.seasons) && seasonsData.seasons.length > 0))
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -541,30 +734,15 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
           )}
 
           {/* Seasons Section (TV Series only) - only show when fully enriched */}
-          {CatalogItemUtils.isTVItem(enrichedItem) && seasons && Array.isArray(seasons) && isFullyLoaded && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('mediaDetail.seasons')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.seasonsContainer}>
-                {seasons.map((season: any, index: number) => (
-                  <Pressable
-                    key={season?.seasonNumber || index}
-                    style={[
-                      styles.seasonCard,
-                      mediaDetailState.selectedSeason.get() === season?.seasonNumber && styles.selectedSeasonCard
-                    ]}
-                    onPress={() => handleSeasonChange(season?.seasonNumber || 1)}
-                  >
-                    <Text style={styles.seasonNumber}>S{season?.seasonNumber || index + 1}</Text>
-                    <Text style={styles.seasonName} numberOfLines={2}>
-                      {season?.name || `Season ${season?.seasonNumber || index + 1}`}
-                    </Text>
-                    <Text style={styles.episodeCount}>
-                      {formatMessage('mediaDetail.episode_count', { count: season?.episodeCount || 0 })}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
+          {CatalogItemUtils.isTVItem(enrichedItem) && hasSeasonsData && isFullyLoaded && (
+            <SeasonsView
+              seasons={Array.isArray(seasonsData) ? seasonsData : seasonsData.seasons}
+              selectedSeasonId={mediaDetailState.selectedSeason.get().toString()}
+              onSeasonSelect={(seasonId) => mediaDetailState.selectedSeason.set(parseInt(seasonId))}
+              onEpisodePress={handleEpisodePress}
+              title={t('mediaDetail.seasons')}
+              showSeasonSelector={(Array.isArray(seasonsData) ? seasonsData : seasonsData.seasons).length > 1}
+            />
           )}
 
           {/* Loading state for seasons (TV only) */}
@@ -579,35 +757,21 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
           )}
 
           {/* People Section - only show when fully enriched */}
-          {hasPeople && isFullyLoaded && (
+          {hasPeopleCatalogs && isFullyLoaded && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('mediaDetail.cast_crew')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.peopleContainer}>
-                {/* Cast */}
-                {people && 'cast' in people && Array.isArray(people.cast) && people.cast.slice(0, 10).map((person: any, index: number) => (
-                  <Pressable key={`cast-${person?.id || index}`} style={styles.personCard} onPress={() => handlePersonPress(person)}>
-                    <View style={styles.personImage}>
-                      {person?.profileUrl ? (
-                        <ImageBackground
-                          source={{ uri: person.profileUrl }}
-                          style={styles.personImageBackground}
-                          imageStyle={styles.personImageStyle}
-                        />
-                      ) : (
-                        <View style={[styles.personImageBackground, styles.personImagePlaceholder]}>
-                          <Ionicons name="person" size={24} color={theme.colors.text.secondary} />
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.personName} numberOfLines={2}>
-                      {person?.name || 'Cast Member'}
-                    </Text>
-                    <Text style={styles.personRole} numberOfLines={1}>
-                      {person?.character || person?.job || 'Actor'}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
+              {peopleCatalogs.map((catalog, catalogIndex) => (
+                <CatalogRow
+                  key={catalog.id}
+                  catalog={catalog}
+                  onItemPress={handlePersonPress}
+                  onLoadMore={handleCatalogLoadMore}
+                  isLoading={false}
+                  hasMore={catalog.pagination.hasMore}
+                  index={catalogIndex}
+                  isVisible={true}
+                />
+              ))}
             </View>
           )}
 
@@ -623,77 +787,21 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
           )}
 
           {/* Recommendations Section - only show when fully enriched */}
-          {hasRecommendations && isFullyLoaded && (
+          {hasRecommendationCatalogs && isFullyLoaded && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('mediaDetail.you_might_like')}</Text>
-              {recommendations && 'recommended' in recommendations && Array.isArray(recommendations.recommended) && (
+              {recommendationCatalogs.map((catalog, catalogIndex) => (
                 <CatalogRow
-                  catalog={{
-                    id: 'recommended',
-                    name: t('mediaDetail.recommended'),
-                    mediaType: enrichedItem.mediaType,
-                    items: recommendations.recommended.slice(0, 20),
-                    pagination: {
-                      page: 1,
-                      totalItems: recommendations.recommended.length,
-                      hasMore: false
-                    },
-                    catalogContext: {
-                      catalogId: 'recommended',
-                      catalogName: t('mediaDetail.recommended'),
-                      catalogType: 'recommendations',
-                      providerId: enrichedItem.contentContext.providerId,
-                      providerName: enrichedItem.contentContext.providerId,
-                      pageInfo: { currentPage: 1, pageSize: 20, hasMorePages: false },
-                      lastFetchAt: new Date(),
-                      requestId: `recommendations-${Date.now()}`
-                    },
-                    metadata: {
-                      fetchTime: 0,
-                      cacheHit: true,
-                      itemCount: recommendations.recommended.length
-                    },
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                  }}
+                  key={catalog.id}
+                  catalog={catalog}
                   onItemPress={handleRecommendationPress}
-                  index={0}
+                  onLoadMore={handleCatalogLoadMore}
+                  isLoading={false}
+                  hasMore={catalog.pagination.hasMore}
+                  index={catalogIndex}
+                  isVisible={true}
                 />
-              )}
-              {recommendations && 'similar' in recommendations && Array.isArray(recommendations.similar) && (
-                <CatalogRow
-                  catalog={{
-                    id: 'similar',
-                    name: t('mediaDetail.similar'),
-                    mediaType: enrichedItem.mediaType,
-                    items: recommendations.similar.slice(0, 20),
-                    pagination: {
-                      page: 1,
-                      totalItems: recommendations.similar.length,
-                      hasMore: false
-                    },
-                    catalogContext: {
-                      catalogId: 'similar',
-                      catalogName: t('mediaDetail.similar'),
-                      catalogType: 'similar',
-                      providerId: enrichedItem.contentContext.providerId,
-                      providerName: enrichedItem.contentContext.providerId,
-                      pageInfo: { currentPage: 1, pageSize: 20, hasMorePages: false },
-                      lastFetchAt: new Date(),
-                      requestId: `similar-${Date.now()}`
-                    },
-                    metadata: {
-                      fetchTime: 0,
-                      cacheHit: true,
-                      itemCount: recommendations.similar.length
-                    },
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                  }}
-                  onItemPress={handleRecommendationPress}
-                  index={1}
-                />
-              )}
+              ))}
             </View>
           )}
 

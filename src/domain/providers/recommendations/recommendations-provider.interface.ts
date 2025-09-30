@@ -1,111 +1,67 @@
 import { IProvider } from '@/src/domain/providers/base/provider.interface'
 import { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
-import { MediaType } from '@/src/domain/entities/media/content-types'
-
-/**
- * Recommendation parameters
- */
-export interface RecommendationParams {
-  /** Page number for pagination (1-based, defaults to 1) */
-  readonly page?: number
-
-  /** Number of results per page (defaults to provider default) */
-  readonly limit?: number
-
-  /** Include adult content in results (defaults to false) */
-  readonly includeAdult?: boolean
-
-  /** Language preference for results (ISO 639-1 code) */
-  readonly language?: string
-
-  /** Region preference for results (ISO 3166-1 code) */
-  readonly region?: string
-
-  /** Minimum vote average filter */
-  readonly minVoteAverage?: number
-
-  /** Minimum vote count filter */
-  readonly minVoteCount?: number
-
-  /** Release date range filter */
-  readonly releaseDateRange?: {
-    readonly from?: Date
-    readonly to?: Date
-  }
-
-  /** Genre filters to include */
-  readonly includeGenres?: string[]
-
-  /** Genre filters to exclude */
-  readonly excludeGenres?: string[]
-}
+import { PaginationOptions } from '@/src/domain/providers/base/pagination-options.interface'
 
 /**
  * Recommendations provider interface
  * Providers with this capability can generate content recommendations based on catalog items
- * Returns multiple catalogs to allow flexibility in recommendation types (recommendations, similar, trending, etc.)
+ * Returns catalogs containing different types of recommendations (similar, trending, etc.)
+ * Supports pagination for infinite scroll and loadMore functionality
  */
 export interface IRecommendationsProvider extends IProvider {
   /**
    * Get recommendations based on a catalog item
-   * Returns multiple catalogs containing different types of recommendations
-   * Providers can return recommendations, similar content, trending, etc. as separate catalogs
+   * Returns catalogs containing recommendations, similar content, trending items, etc.
+   * Providers organize recommendations into semantic catalogs for flexibility
    * 
    * @param catalogItem - The source item to base recommendations on
-   * @param params - Optional parameters to customize recommendations
-   * @returns Promise that resolves to array of recommendation catalogs
+   * @param options - Optional pagination parameters
+   * @returns Promise that resolves to recommendations result with catalogs array
    * 
    * @example
    * ```typescript
-   * const catalogs = await provider.getRecommendations(movieItem, {
-   *   limit: 20,
-   *   minVoteAverage: 7.0,
-   *   excludeGenres: ['Horror']
-   * })
-   * 
-   * catalogs.forEach(catalog => {
+   * // Initial load
+   * const result = await provider.getRecommendations(movieItem, { page: 1, limit: 20 })
+   * result.recommendations.forEach(catalog => {
    *   console.log(`${catalog.name}: ${catalog.items.length} items`)
-   *   console.log(`Type: ${catalog.catalogContext.catalogType}`)
+   *   console.log(`Has more: ${catalog.pagination.hasMore}`)
    * })
    * ```
    */
   getRecommendations(
-    catalogItem: CatalogItem,
-    params?: RecommendationParams
-  ): Promise<Catalog[]>
+    catalogItem: CatalogItem, 
+    options?: PaginationOptions
+  ): Promise<{ recommendations: Catalog[] }>
+
 
   /**
-   * Check if recommendations are supported for a given media type
-   * Determines if the provider can generate recommendations for specific content types
+   * Load more items for a specific catalog (pagination)
+   * Uses the catalog object to access context and metadata for proper pagination
+   * Includes the original media item context for API calls that require it
+   * Follows the ICatalogProvider.loadMoreItems pattern for consistency
    * 
-   * @param mediaType - The media type to check support for
-   * @returns Whether recommendations are supported for this media type
+   * @param catalog - The catalog to load more items for (contains pagination state)
+   * @param originalMediaItem - The media item the recommendations are based on
+   * @param page - The page number to load
+   * @param limit - Optional limit for items per page
+   * @returns Promise that resolves to array of catalog items
    * 
    * @example
    * ```typescript
-   * if (provider.supportsRecommendationsForMediaType(MediaType.MOVIE)) {
-   *   const catalogs = await provider.getRecommendations(movieItem)
-   * }
+   * // Load more similar movies based on a source movie
+   * const moreSimilar = await provider.loadMoreItems(
+   *   similarCatalog,
+   *   sourceMovieItem,
+   *   2,
+   *   20
+   * )
    * ```
    */
-  supportsRecommendationsForMediaType(mediaType: MediaType): boolean
-
-  /**
-   * Validate if recommendations can be generated for a catalog item
-   * Performs pre-flight checks without making expensive API calls
-   * 
-   * @param catalogItem - The catalog item to validate
-   * @returns Whether recommendations can be generated for this item
-   * 
-   * @example
-   * ```typescript
-   * if (provider.canGenerateRecommendations(item)) {
-   *   const catalogs = await provider.getRecommendations(item)
-   * } else {
-   *   console.log('Recommendations not available for this item')
-   * }
-   * ```
-   */
-  canGenerateRecommendations(catalogItem: CatalogItem): boolean
+  loadMoreItems(
+    catalog: Catalog,
+    originalMediaItem: CatalogItem,
+    page: number,
+    limit?: number
+  ): Promise<CatalogItem[]>
 }

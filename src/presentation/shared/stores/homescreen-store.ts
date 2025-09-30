@@ -1,7 +1,7 @@
 /**
- * Catalog Store using Legend State
+ * HomeScreen Store using Legend State
  * 
- * Single source of truth for catalog data with reactive UI updates.
+ * Single source of truth for homescreen data with reactive UI updates.
  * Uses TanStack Query for API caching only, Legend State for UI state.
  */
 
@@ -9,7 +9,7 @@ import { observable, computed, batch } from '@legendapp/state'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 
-interface CatalogStoreState {
+interface HomescreenStoreState {
   catalogs: Catalog[]
   isLoading: boolean
   isLoadingMore: boolean
@@ -25,7 +25,7 @@ interface CatalogStoreState {
   selectedItem: CatalogItem | null
 }
 
-const initialState: CatalogStoreState = {
+const initialState: HomescreenStoreState = {
   catalogs: [],
   isLoading: false,
   isLoadingMore: false,
@@ -41,50 +41,50 @@ const initialState: CatalogStoreState = {
 }
 
 // Create the observable store
-export const catalogStore$ = observable<CatalogStoreState>(initialState)
+export const homescreenStore$ = observable<HomescreenStoreState>(initialState)
 
 // Store actions
-export const catalogActions = {
+export const homescreenActions = {
   /**
    * Set loading state
    */
   setLoading: (loading: boolean) => {
-    catalogStore$.isLoading.set(loading)
+    homescreenStore$.isLoading.set(loading)
   },
 
   /**
    * Set loading more state
    */
   setLoadingMore: (loading: boolean) => {
-    catalogStore$.isLoadingMore.set(loading)
+    homescreenStore$.isLoadingMore.set(loading)
   },
 
   /**
    * Set refreshing state
    */
   setRefreshing: (refreshing: boolean) => {
-    catalogStore$.refreshing.set(refreshing)
+    homescreenStore$.refreshing.set(refreshing)
   },
 
   /**
    * Set error
    */
   setError: (error: string | null) => {
-    catalogStore$.error.set(error)
+    homescreenStore$.error.set(error)
   },
 
   /**
    * Clear error
    */
   clearError: () => {
-    catalogStore$.error.set(null)
+    homescreenStore$.error.set(null)
   },
 
   /**
    * Set selected catalog item for navigation
    */
   setSelectedItem: (item: CatalogItem | null) => {
-    catalogStore$.selectedItem.set(item)
+    homescreenStore$.selectedItem.set(item)
   },
 
   /**
@@ -95,19 +95,19 @@ export const catalogActions = {
     totalProviders: number
   }) => {
     batch(() => {
-      catalogStore$.catalogs.set(catalogs)
-      catalogStore$.totalCatalogs.set(catalogs.length)
-      catalogStore$.totalItems.set(
+      homescreenStore$.catalogs.set(catalogs)
+      homescreenStore$.totalCatalogs.set(catalogs.length)
+      homescreenStore$.totalItems.set(
         catalogs.reduce((sum, catalog) => sum + catalog.items.length, 0)
       )
-      catalogStore$.hasMore.set(
+      homescreenStore$.hasMore.set(
         catalogs.some(catalog => catalog.pagination.hasMore)
       )
-      catalogStore$.lastUpdated.set(new Date())
+      homescreenStore$.lastUpdated.set(new Date())
       
       if (stats) {
-        catalogStore$.successfulProviders.set(stats.successfulProviders)
-        catalogStore$.totalProviders.set(stats.totalProviders)
+        homescreenStore$.successfulProviders.set(stats.successfulProviders)
+        homescreenStore$.totalProviders.set(stats.totalProviders)
       }
     })
   },
@@ -117,7 +117,9 @@ export const catalogActions = {
    */
   addMoreItemsToCatalog: (catalogId: string, newItems: CatalogItem[], newPagination: any) => {
     // Find the catalog by ID or by catalog context type (flexible matching)
-    const catalogIndex = catalogStore$.catalogs.peek().findIndex(cat => {
+    const catalogs = homescreenStore$.catalogs.peek()
+    
+    const catalogIndex = catalogs.findIndex(cat => {
       return cat.id === catalogId || 
              cat.catalogContext?.catalogId === catalogId ||
              cat.catalogContext?.catalogType === catalogId.replace(/^catalog_/, '').replace(/_tmdb.*$/, '')
@@ -125,7 +127,7 @@ export const catalogActions = {
     
     if (catalogIndex >= 0) {
       batch(() => {
-        const catalog$ = catalogStore$.catalogs[catalogIndex]
+        const catalog$ = homescreenStore$.catalogs[catalogIndex]
         
         // Append new items efficiently without full re-render
         catalog$.items.push(...newItems)
@@ -133,9 +135,9 @@ export const catalogActions = {
         catalog$.updatedAt.set(new Date())
         
         // Update aggregate stats
-        catalogStore$.totalItems.set(prev => prev + newItems.length)
-        catalogStore$.hasMore.set(newPagination.hasMore)
-        catalogStore$.lastUpdated.set(new Date())
+        homescreenStore$.totalItems.set(prev => prev + newItems.length)
+        homescreenStore$.hasMore.set(newPagination.hasMore)
+        homescreenStore$.lastUpdated.set(new Date())
       })
     }
   },
@@ -144,20 +146,20 @@ export const catalogActions = {
    * Update a specific catalog completely - batched for performance
    */
   updateCatalog: (catalogId: string, updatedCatalog: Catalog) => {
-    const catalogs = catalogStore$.catalogs.peek()
+    const catalogs = homescreenStore$.catalogs.peek()
     const updatedCatalogs = catalogs.map(catalog => 
       catalog.id === catalogId ? updatedCatalog : catalog
     )
 
     batch(() => {
-      catalogStore$.catalogs.set(updatedCatalogs)
-      catalogStore$.totalItems.set(
+      homescreenStore$.catalogs.set(updatedCatalogs)
+      homescreenStore$.totalItems.set(
         updatedCatalogs.reduce((sum, catalog) => sum + catalog.items.length, 0)
       )
-      catalogStore$.hasMore.set(
+      homescreenStore$.hasMore.set(
         updatedCatalogs.some(catalog => catalog.pagination.hasMore)
       )
-      catalogStore$.lastUpdated.set(new Date())
+      homescreenStore$.lastUpdated.set(new Date())
     })
   },
 
@@ -165,26 +167,26 @@ export const catalogActions = {
    * Find catalog by ID (non-reactive read)
    */
   getCatalogById: (catalogId: string): Catalog | undefined => {
-    return catalogStore$.catalogs.peek().find(catalog => catalog.id === catalogId)
+    return homescreenStore$.catalogs.peek().find(catalog => catalog.id === catalogId)
   },
 
   /**
    * Get catalogs by type (non-reactive read)
    */
   getCatalogsByType: (mediaType: string): Catalog[] => {
-    return catalogStore$.catalogs.peek().filter(catalog => catalog.mediaType === mediaType)
+    return homescreenStore$.catalogs.peek().filter(catalog => catalog.mediaType === mediaType)
   },
 
   /**
    * Reset store to initial state
    */
   reset: () => {
-    catalogStore$.set(initialState)
+    homescreenStore$.set(initialState)
   }
 }
 
 // Performance monitoring utilities
-export const catalogPerformance = {
+export const homescreenPerformance = {
   /**
    * Get subscription count for debugging
    */
@@ -199,102 +201,102 @@ export const catalogPerformance = {
    */
   getStoreState: () => {
     return {
-      catalogsCount: catalogStore$.catalogs.peek().length,
-      totalItems: catalogStore$.totalItems.peek(),
-      isLoading: catalogStore$.isLoading.peek(),
-      isLoadingMore: catalogStore$.isLoadingMore.peek(),
-      refreshing: catalogStore$.refreshing.peek(),
-      hasError: catalogStore$.error.peek() !== null,
-      lastUpdated: catalogStore$.lastUpdated.peek()
+      catalogsCount: homescreenStore$.catalogs.peek().length,
+      totalItems: homescreenStore$.totalItems.peek(),
+      isLoading: homescreenStore$.isLoading.peek(),
+      isLoadingMore: homescreenStore$.isLoadingMore.peek(),
+      refreshing: homescreenStore$.refreshing.peek(),
+      hasError: homescreenStore$.error.peek() !== null,
+      lastUpdated: homescreenStore$.lastUpdated.peek()
     }
   }
 }
 
 // Selective state selectors for optimized component subscriptions
-export const catalogSelectors = {
+export const homescreenSelectors = {
   /**
    * Select only essential loading state
    */
   loadingState: computed(() => ({
-    isLoading: catalogStore$.isLoading.get(),
-    isLoadingMore: catalogStore$.isLoadingMore.get(),
-    refreshing: catalogStore$.refreshing.get()
+    isLoading: homescreenStore$.isLoading.get(),
+    isLoadingMore: homescreenStore$.isLoadingMore.get(),
+    refreshing: homescreenStore$.refreshing.get()
   })),
 
   /**
    * Select only error state
    */
   errorState: computed(() => ({
-    error: catalogStore$.error.get(),
-    isError: catalogStore$.error.get() !== null
+    error: homescreenStore$.error.get(),
+    isError: homescreenStore$.error.get() !== null
   })),
 
   /**
    * Select only data state
    */
   dataState: computed(() => ({
-    catalogs: catalogStore$.catalogs.get(),
-    totalCatalogs: catalogStore$.totalCatalogs.get(),
-    totalItems: catalogStore$.totalItems.get(),
-    hasMore: catalogStore$.hasMore.get(),
-    isEmpty: catalogStore$.catalogs.get().length === 0,
-    hasData: catalogStore$.catalogs.get().length > 0
+    catalogs: homescreenStore$.catalogs.get(),
+    totalCatalogs: homescreenStore$.totalCatalogs.get(),
+    totalItems: homescreenStore$.totalItems.get(),
+    hasMore: homescreenStore$.hasMore.get(),
+    isEmpty: homescreenStore$.catalogs.get().length === 0,
+    hasData: homescreenStore$.catalogs.get().length > 0
   })),
 
   /**
    * Select only stats state
    */
   statsState: computed(() => ({
-    successfulProviders: catalogStore$.successfulProviders.get(),
-    totalProviders: catalogStore$.totalProviders.get(),
-    lastUpdated: catalogStore$.lastUpdated.get()
+    successfulProviders: homescreenStore$.successfulProviders.get(),
+    totalProviders: homescreenStore$.totalProviders.get(),
+    lastUpdated: homescreenStore$.lastUpdated.get()
   })),
 
   /**
    * Select the currently selected catalog item for navigation
    */
-  selectedItem: computed(() => catalogStore$.selectedItem.get())
+  selectedItem: computed(() => homescreenStore$.selectedItem.get())
 }
 
 // Reactive computed values for performance optimization
-export const catalogComputed = {
+export const homescreenComputed = {
   /**
    * Check if store is empty (reactive)
    */
-  isEmpty: computed(() => catalogStore$.catalogs.get().length === 0),
+  isEmpty: computed(() => homescreenStore$.catalogs.get().length === 0),
 
   /**
    * Check if store has data (reactive)
    */
-  hasData: computed(() => catalogStore$.catalogs.get().length > 0),
+  hasData: computed(() => homescreenStore$.catalogs.get().length > 0),
 
   /**
    * Check if there's an error (reactive)
    */
-  isError: computed(() => catalogStore$.error.get() !== null),
+  isError: computed(() => homescreenStore$.error.get() !== null),
 
   /**
    * Check if any catalog has more items to load (reactive)
    */
-  hasMoreItems: computed(() => catalogStore$.catalogs.get().some(catalog => catalog.pagination.hasMore)),
+  hasMoreItems: computed(() => homescreenStore$.catalogs.get().some(catalog => catalog.pagination.hasMore)),
 
   /**
    * Get catalogs count (reactive)
    */
-  catalogsCount: computed(() => catalogStore$.catalogs.get().length),
+  catalogsCount: computed(() => homescreenStore$.catalogs.get().length),
 
   /**
    * Get total items across all catalogs (reactive)
    */
   totalItemsComputed: computed(() => 
-    catalogStore$.catalogs.get().reduce((sum, catalog) => sum + catalog.items.length, 0)
+    homescreenStore$.catalogs.get().reduce((sum, catalog) => sum + catalog.items.length, 0)
   ),
 
   /**
    * Check if currently loading (reactive)
    */
   isLoading: computed(() => 
-    catalogStore$.isLoading.get() || catalogStore$.isLoadingMore.get() || catalogStore$.refreshing.get()
+    homescreenStore$.isLoading.get() || homescreenStore$.isLoadingMore.get() || homescreenStore$.refreshing.get()
   ),
 
   /**
@@ -302,7 +304,7 @@ export const catalogComputed = {
    */
   getFreshCatalogs: (maxAgeSeconds: number): Catalog[] => {
     const cutoff = new Date(Date.now() - maxAgeSeconds * 1000)
-    return catalogStore$.catalogs.peek().filter(catalog => 
+    return homescreenStore$.catalogs.peek().filter(catalog => 
       catalog.updatedAt > cutoff
     )
   }

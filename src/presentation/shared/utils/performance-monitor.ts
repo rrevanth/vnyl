@@ -7,7 +7,7 @@
 
 import React from 'react'
 import { computed } from '@legendapp/state'
-import { catalogStore$, catalogComputed } from '@/src/presentation/shared/stores/catalog-store'
+import { homescreenStore$, homescreenComputed } from '@/src/presentation/shared/stores/homescreen-store'
 import type { ILoggingService } from '@/src/domain/services'
 
 interface PerformanceMetrics {
@@ -72,9 +72,9 @@ export const legendStatePerformance = {
    */
   getMetrics: (): PerformanceMetrics => {
     return {
-      totalCatalogs: catalogStore$.totalCatalogs.peek(),
-      totalItems: catalogStore$.totalItems.peek(),
-      isLoading: catalogComputed.isLoading.peek(),
+      totalCatalogs: homescreenStore$.totalCatalogs.peek(),
+      totalItems: homescreenStore$.totalItems.peek(),
+      isLoading: homescreenComputed.isLoading.peek(),
       subscriptionCount: performanceTracker?.subscriptions.size || 0,
       lastRenderTime: Date.now(),
       renderCount: Array.from(performanceTracker?.renderCounts.values() || []).reduce((sum, count) => sum + count, 0)
@@ -183,10 +183,10 @@ export const withPerformanceTracking = <P extends object>(
  */
 export const performanceSelector = computed(() => ({
   storeState: {
-    catalogsCount: catalogStore$.totalCatalogs.get(),
-    itemsCount: catalogStore$.totalItems.get(),
-    isLoading: catalogComputed.isLoading.get(),
-    hasError: catalogComputed.isError.get()
+    catalogsCount: homescreenStore$.totalCatalogs.get(),
+    itemsCount: homescreenStore$.totalItems.get(),
+    isLoading: homescreenComputed.isLoading.get(),
+    hasError: homescreenComputed.isError.get()
   },
   performance: legendStatePerformance.getMetrics(),
   timestamp: Date.now()

@@ -15,77 +15,83 @@
  * ```
  */
 
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   StyleSheet,
-  Image
+  Image,
+  ActivityIndicator
 } from 'react-native'
 import { observer } from '@legendapp/state/react'
 import { scale, moderateScale, verticalScale } from 'react-native-size-matters'
 import { useTheme } from '@/src/presentation/shared/theme'
 import { useTranslation } from '@/src/presentation/shared/i18n'
 import type { Theme } from '@/src/presentation/shared/theme/types'
+import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
+import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 
 /**
- * Media recommendation data structure
+ * Helper functions for extracting data from CatalogItem
  */
-export interface MediaRecommendation {
-  /** Unique identifier for the media */
-  id: string
-  /** Media title */
-  title: string
-  /** Media overview/synopsis */
-  overview: string
-  /** Poster image URL */
-  posterUrl: string
-  /** Media type (movie, tv, etc.) */
-  mediaType: 'movie' | 'tv' | 'person'
-  /** Release date in ISO format */
-  releaseDate?: string
-  /** Media rating (0-10) */
-  rating?: number
-  /** Genre names */
-  genres?: string[]
-  /** Runtime in minutes */
-  runtime?: number
-  /** Number of seasons (for TV shows) */
-  seasonCount?: number
-  /** Popularity score */
-  popularity?: number
-  /** Whether the media is available for viewing */
-  isAvailable?: boolean
+
+/**
+ * Format release year from CatalogItem
+ */
+const getMediaReleaseYear = (media: CatalogItem): string => {
+  if (media.releaseDate) {
+    const year = new Date(media.releaseDate).getFullYear()
+    return year ? `${year}` : ''
+  }
+  return ''
 }
 
 /**
- * Recommendation catalog data structure
+ * Get media rating from CatalogItem
  */
-export interface RecommendationCatalog {
-  /** Unique identifier for the catalog */
-  id: string
-  /** Catalog title (e.g., "Recommended for You", "Similar Movies") */
-  title: string
-  /** Catalog description */
-  description?: string
-  /** Array of recommended media */
-  media: MediaRecommendation[]
-  /** Catalog type for analytics */
-  catalogType: 'recommended' | 'similar' | 'trending' | 'popular' | 'related'
-  /** Algorithm used for recommendations */
-  algorithm?: string
+const getMediaRating = (media: CatalogItem): number | undefined => {
+  return media.voteAverage
+}
+
+/**
+ * Get media genres from CatalogItem
+ */
+const getMediaGenres = (media: CatalogItem): string[] => {
+  return media.genres || []
+}
+
+/**
+ * Get runtime from CatalogItem (for movies)
+ */
+const getMediaRuntime = (media: CatalogItem): number | undefined => {
+  if ('runtime' in media) {
+    return (media as any).runtime
+  }
+  return undefined
+}
+
+/**
+ * Get season count from CatalogItem (for TV shows)
+ */
+const getMediaSeasonCount = (media: CatalogItem): number | undefined => {
+  if ('numberOfSeasons' in media) {
+    return (media as any).numberOfSeasons
+  }
+  return undefined
 }
 
 /**
  * Props for RecommendationsSection component
  */
 interface RecommendationsSectionProps {
-  /** Array of recommendation catalogs to display */
-  catalogs: RecommendationCatalog[]
+  /** Array of recommendation catalogs to display (now coming from enriched data as Catalog[]) */
+  catalogs: Catalog[]
   /** Callback when a media item is pressed */
-  onMediaPress: (media: MediaRecommendation, catalog: RecommendationCatalog) => void
+  onMediaPress: (media: CatalogItem, catalog: Catalog) => void
+  /** Callback when load more is requested for a catalog */
+  onLoadMore?: (catalogId: string) => Promise<void>
   /** Optional section title override */
   title?: string
   /** Whether to show the section header */
@@ -100,9 +106,9 @@ interface RecommendationsSectionProps {
  * Props for MediaCard component
  */
 interface MediaCardProps {
-  media: MediaRecommendation
-  catalog: RecommendationCatalog
-  onPress: (media: MediaRecommendation, catalog: RecommendationCatalog) => void
+  media: CatalogItem
+  catalog: Catalog
+  onPress: (media: CatalogItem, catalog: Catalog) => void
   theme: Theme
   showRating?: boolean
 }
@@ -111,20 +117,12 @@ interface MediaCardProps {
  * Props for RecommendationCatalogRow component
  */
 interface RecommendationCatalogRowProps {
-  catalog: RecommendationCatalog
-  onMediaPress: (media: MediaRecommendation, catalog: RecommendationCatalog) => void
+  catalog: Catalog
+  onMediaPress: (media: CatalogItem, catalog: Catalog) => void
+  onLoadMore?: (catalogId: string) => Promise<void>
   theme: Theme
   maxMedia?: number
   showRatings?: boolean
-}
-
-/**
- * Format release year from ISO date
- */
-const formatReleaseYear = (releaseDate?: string): string => {
-  if (!releaseDate) return ''
-  const year = new Date(releaseDate).getFullYear()
-  return year ? `${year}` : ''
 }
 
 /**
@@ -146,8 +144,10 @@ const formatRuntime = (minutes?: number): string => {
 const getMediaTypeText = (mediaType: string, seasonCount?: number): string => {
   switch (mediaType) {
     case 'tv':
+    case 'TV_SERIES':
       return seasonCount ? `${seasonCount} Season${seasonCount > 1 ? 's' : ''}` : 'TV Series'
     case 'movie':
+    case 'MOVIE':
       return 'Movie'
     default:
       return ''
@@ -165,16 +165,19 @@ const MediaCard: React.FC<MediaCardProps> = observer(({
   showRating = true
 }) => {
   const styles = createMediaCardStyles(theme)
-  const releaseYear = formatReleaseYear(media.releaseDate)
-  const mediaTypeText = getMediaTypeText(media.mediaType, media.seasonCount)
-  const runtimeText = formatRuntime(media.runtime)
+  const releaseYear = getMediaReleaseYear(media)
+  const mediaRating = getMediaRating(media)
+  const genres = getMediaGenres(media)
+  const runtime = getMediaRuntime(media)
+  const seasonCount = getMediaSeasonCount(media)
+  const mediaTypeText = getMediaTypeText(media.mediaType, seasonCount)
+  const runtimeText = formatRuntime(runtime)
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        pressed && styles.cardPressed,
-        !media.isAvailable && styles.unavailableCard
+        pressed && styles.cardPressed
       ]}
       onPress={() => onPress(media, catalog)}
       accessibilityRole="button"
@@ -191,18 +194,11 @@ const MediaCard: React.FC<MediaCardProps> = observer(({
         />
         
         {/* Rating badge */}
-        {showRating && media.rating && (
+        {showRating && mediaRating && (
           <View style={styles.ratingBadge}>
             <Text style={styles.ratingText}>
-              {media.rating.toFixed(1)}
+              {mediaRating.toFixed(1)}
             </Text>
-          </View>
-        )}
-
-        {/* Unavailable overlay */}
-        {!media.isAvailable && (
-          <View style={styles.unavailableOverlay}>
-            <Text style={styles.unavailableText}>Coming Soon</Text>
           </View>
         )}
 
@@ -234,10 +230,10 @@ const MediaCard: React.FC<MediaCardProps> = observer(({
         )}
 
         {/* Genres */}
-        {media.genres && media.genres.length > 0 && (
+        {genres && genres.length > 0 && (
           <View style={styles.genresContainer}>
             <Text style={styles.genres} numberOfLines={1}>
-              {media.genres.slice(0, 2).join(' • ')}
+              {genres.slice(0, 2).join(' • ')}
             </Text>
           </View>
         )}
@@ -252,15 +248,34 @@ const MediaCard: React.FC<MediaCardProps> = observer(({
 const RecommendationCatalogRow: React.FC<RecommendationCatalogRowProps> = observer(({
   catalog,
   onMediaPress,
+  onLoadMore,
   theme,
   maxMedia = 20,
   showRatings = true
 }) => {
   const { t } = useTranslation()
   const styles = createRecommendationCatalogRowStyles(theme)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   // Limit the number of media items displayed
-  const displayMedia = catalog.media.slice(0, maxMedia)
+  const displayMedia = catalog.items.slice(0, maxMedia)
+  
+  // Handle load more functionality
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !catalog.pagination.hasMore || !onLoadMore) {
+      return
+    }
+    
+    try {
+      setIsLoadingMore(true)
+      await onLoadMore(catalog.id)
+    } catch (error) {
+      // Error handling is done by the parent component
+      console.warn('Failed to load more recommendations:', error)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [isLoadingMore, catalog.pagination.hasMore, catalog.id, onLoadMore])
 
   if (displayMedia.length === 0) {
     return null
@@ -271,13 +286,10 @@ const RecommendationCatalogRow: React.FC<RecommendationCatalogRowProps> = observ
       {/* Catalog header */}
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{catalog.title}</Text>
-          {catalog.description && (
-            <Text style={styles.description}>{catalog.description}</Text>
-          )}
+          <Text style={styles.title}>{catalog.name}</Text>
         </View>
         <Text style={styles.count}>
-          {catalog.media.length} {catalog.media.length === 1 ? 'item' : 'items'}
+          {catalog.items.length} {catalog.items.length === 1 ? 'item' : 'items'}
         </Text>
       </View>
 
@@ -289,7 +301,7 @@ const RecommendationCatalogRow: React.FC<RecommendationCatalogRowProps> = observ
         decelerationRate="fast"
         snapToInterval={scale(140)}
         snapToAlignment="start"
-        accessibilityLabel={`${catalog.title} horizontal scroll`}
+        accessibilityLabel={`${catalog.name} horizontal scroll`}
       >
         {displayMedia.map((media) => (
           <MediaCard
@@ -302,28 +314,74 @@ const RecommendationCatalogRow: React.FC<RecommendationCatalogRowProps> = observ
           />
         ))}
 
-        {/* Show more indicator if there are more items */}
-        {catalog.media.length > maxMedia && (
+        {/* Load More button or loading indicator */}
+        {catalog.pagination.hasMore && onLoadMore && (
+          <>
+            {isLoadingMore ? (
+              <View style={styles.loadingCard}>
+                <ActivityIndicator 
+                  size="small" 
+                  color={theme.colors.interactive.primary}
+                  accessibilityLabel={t('common.loading')}
+                />
+                <Text style={styles.loadingText}>
+                  {t('common.loading')}
+                </Text>
+              </View>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loadMoreCard,
+                  pressed && styles.loadMorePressed
+                ]}
+                onPress={handleLoadMore}
+                accessibilityRole="button"
+                accessibilityLabel={`Load more ${catalog.name}`}
+                accessibilityHint="Double tap to load more recommendations"
+              >
+                <View style={styles.loadMoreContent}>
+                  <Text style={styles.loadMoreText}>
+                    {t('common.load_more')}
+                  </Text>
+                  <Text style={styles.loadMoreLabel}>
+                    {catalog.pagination.totalItems 
+                      ? `${catalog.items.length} of ${catalog.pagination.totalItems}`
+                      : `${catalog.items.length} items`
+                    }
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+          </>
+        )}
+
+        {/* Show more indicator if there are more items (fallback for when loadMore is not available) */}
+        {catalog.items.length > maxMedia && !catalog.pagination.hasMore && (
           <Pressable
             style={styles.showMoreCard}
             onPress={() => {
               // This could navigate to a full recommendations screen
-              // For now, we'll just trigger the callback with a special media item
-              const moreMedia: MediaRecommendation = {
+              // For now, we'll just trigger the callback with a placeholder item
+              const moreMedia: CatalogItem = {
                 id: 'show-more',
                 title: t('media_detail.recommendations.show_more'),
                 overview: '',
                 posterUrl: '',
-                mediaType: 'movie'
+                backdropUrl: '',
+                mediaType: catalog.mediaType,
+                externalIds: {},
+                contentContext: catalog.catalogContext,
+                createdAt: new Date(),
+                updatedAt: new Date()
               }
               onMediaPress(moreMedia, catalog)
             }}
             accessibilityRole="button"
-            accessibilityLabel={`Show all ${catalog.title}`}
+            accessibilityLabel={`Show all ${catalog.name}`}
           >
             <View style={styles.showMoreContent}>
               <Text style={styles.showMoreText}>
-                +{catalog.media.length - maxMedia}
+                +{catalog.items.length - maxMedia}
               </Text>
               <Text style={styles.showMoreLabel}>
                 {t('media_detail.recommendations.more')}
@@ -342,6 +400,7 @@ const RecommendationCatalogRow: React.FC<RecommendationCatalogRowProps> = observ
 export const RecommendationsSection: React.FC<RecommendationsSectionProps> = observer(({
   catalogs,
   onMediaPress,
+  onLoadMore,
   title,
   showHeader = true,
   maxMediaPerCatalog = 20,
@@ -352,7 +411,7 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = obs
   const styles = createRecommendationsSectionStyles(theme)
 
   // Filter out empty catalogs
-  const validCatalogs = catalogs.filter(catalog => catalog.media.length > 0)
+  const validCatalogs = catalogs.filter(catalog => catalog.items.length > 0)
 
   // Don't render if no valid catalogs
   if (validCatalogs.length === 0) {
@@ -378,6 +437,7 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = obs
           key={catalog.id}
           catalog={catalog}
           onMediaPress={onMediaPress}
+          onLoadMore={onLoadMore}
           theme={theme}
           maxMedia={maxMediaPerCatalog}
           showRatings={showRatings}
@@ -472,6 +532,53 @@ const createRecommendationCatalogRowStyles = (theme: Theme) => StyleSheet.create
     fontSize: theme.typography.caption.fontSize,
     color: theme.colors.text.secondary,
     textAlign: 'center'
+  },
+  loadingCard: {
+    width: scale(120),
+    height: verticalScale(220),
+    marginLeft: theme.spacing.sm,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.sm
+  },
+  loadingText: {
+    fontSize: theme.typography.caption.fontSize,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xs,
+    textAlign: 'center'
+  },
+  loadMoreCard: {
+    width: scale(120),
+    height: verticalScale(220),
+    marginLeft: theme.spacing.sm,
+    backgroundColor: theme.colors.interactive.primary,
+    borderRadius: theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.md
+  },
+  loadMorePressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }]
+  },
+  loadMoreContent: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  loadMoreText: {
+    fontSize: theme.typography.caption.fontSize,
+    fontWeight: '600',
+    color: theme.colors.text.inverse,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs
+  },
+  loadMoreLabel: {
+    fontSize: moderateScale(10),
+    color: theme.colors.text.inverse,
+    textAlign: 'center',
+    opacity: 0.8
   }
 })
 

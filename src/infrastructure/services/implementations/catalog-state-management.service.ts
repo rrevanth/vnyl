@@ -1,5 +1,5 @@
 /**
- * Catalog State Management Service Implementation
+ * HomeScreen State Management Service Implementation
  * 
  * Infrastructure layer implementation that bridges domain interface with presentation state management.
  * This service acts as an adapter between the domain layer and Legend State.
@@ -8,15 +8,15 @@
 import type { ICatalogStateManagementService } from '@/src/domain/services/state-management.service.interface'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
-import type { ICatalogStateService } from '@/src/presentation/shared/services/catalog-state.service'
+import type { IHomescreenStateService } from '@/src/presentation/shared/services/homescreen-state.service'
 
 /**
- * Infrastructure implementation of catalog state management
+ * Infrastructure implementation of homescreen state management
  * Adapts domain interface to presentation service
  */
 export class CatalogStateManagementService implements ICatalogStateManagementService {
   constructor(
-    private readonly presentationStateService: ICatalogStateService
+    private readonly presentationStateService: IHomescreenStateService
   ) {}
 
   reset(): void {

@@ -13,7 +13,7 @@ import { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { IMetadataProvider } from '@/src/domain/providers/metadata/metadata-provider.interface'
 import { IPeopleProvider } from '@/src/domain/providers/people/people-provider.interface'
 import { IRecommendationsProvider } from '@/src/domain/providers/recommendations/recommendations-provider.interface'
-import { ISeasonsEpisodesProvider } from '@/src/domain/providers/seasons/seasons-episodes-provider.interface'
+import { ISeasonsProvider } from '@/src/domain/providers/seasons/seasons-episodes-provider.interface'
 import { IProviderRegistry } from '@/src/domain/providers/base/provider-registry.interface'
 import { ProviderCapability, EnrichedData, EnrichmentResult, EnrichedDataUtils } from '@/src/domain/entities/context/content-context.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
@@ -544,7 +544,7 @@ export class EnrichCatalogItemUseCase {
         case ProviderCapability.RECOMMENDATIONS:
           return await this.providerRegistry.getProvidersByCapability<IRecommendationsProvider>(capability)
         case ProviderCapability.SEASONS_EPISODES:
-          return await this.providerRegistry.getProvidersByCapability<ISeasonsEpisodesProvider>(capability)
+          return await this.providerRegistry.getProvidersByCapability<ISeasonsProvider>(capability)
         default:
           this.logger.warn('Unsupported capability for enrichment', undefined, {
             context: 'enrich_catalog_item_usecase',
@@ -583,18 +583,74 @@ export class EnrichCatalogItemUseCase {
 
       case ProviderCapability.PEOPLE:
         const peopleProvider = provider as IPeopleProvider
-        return await peopleProvider.getPeopleForMedia(catalogItem)
+        const peopleResult = await peopleProvider.getPeople(catalogItem)
+        
+        // Handle both direct Catalog[] return and wrapped { people: Catalog[] } return
+        if (Array.isArray(peopleResult)) {
+          return peopleResult
+        } else if (peopleResult && typeof peopleResult === 'object' && 'people' in peopleResult) {
+          return (peopleResult as { people: any[] }).people
+        } else {
+          this.logger.warn('Unexpected people provider return structure', undefined, {
+            context: 'enrich_catalog_item_usecase',
+            requestId,
+            capability,
+            providerId: provider.id,
+            resultType: typeof peopleResult
+          })
+          return Array.isArray(peopleResult) ? peopleResult : []
+        }
 
       case ProviderCapability.RECOMMENDATIONS:
         const recommendationsProvider = provider as IRecommendationsProvider
-        return await recommendationsProvider.getRecommendations(catalogItem)
+        const recommendationsResult = await recommendationsProvider.getRecommendations(catalogItem)
+        
+        // Handle both direct Catalog[] return and wrapped { recommendations: Catalog[] } return
+        if (Array.isArray(recommendationsResult)) {
+          return recommendationsResult
+        } else if (recommendationsResult && typeof recommendationsResult === 'object' && 'recommendations' in recommendationsResult) {
+          return (recommendationsResult as { recommendations: any[] }).recommendations
+        } else {
+          this.logger.warn('Unexpected recommendations provider return structure', undefined, {
+            context: 'enrich_catalog_item_usecase',
+            requestId,
+            capability,
+            providerId: provider.id,
+            resultType: typeof recommendationsResult
+          })
+          return Array.isArray(recommendationsResult) ? recommendationsResult : []
+        }
 
       case ProviderCapability.SEASONS_EPISODES:
-        const seasonsProvider = provider as ISeasonsEpisodesProvider
+        const seasonsProvider = provider as ISeasonsProvider
         if (catalogItem.mediaType !== MediaType.TV_SERIES) {
           throw new Error('Seasons/episodes only available for TV series')
         }
-        return await seasonsProvider.getAllSeasons(catalogItem as any)
+        
+        const seasonsResult = await seasonsProvider.getSeasons(catalogItem as any)
+        
+        // Handle both direct SeasonsEpisodesResult return and wrapped { seasons: Season[] } return
+        if (seasonsResult && typeof seasonsResult === 'object') {
+          if ('seasons' in seasonsResult && Array.isArray((seasonsResult as any).seasons)) {
+            // Check if it's wrapped { seasons: Season[] } format
+            const wrapped = seasonsResult as { seasons: any[] }
+            if (!('tvSeries' in seasonsResult)) {
+              // This is the wrapped format, extract seasons array
+              return wrapped.seasons
+            }
+          }
+          // This is the full SeasonsEpisodesResult format
+          return seasonsResult
+        } else {
+          this.logger.warn('Unexpected seasons provider return structure', undefined, {
+            context: 'enrich_catalog_item_usecase',
+            requestId,
+            capability,
+            providerId: provider.id,
+            resultType: typeof seasonsResult
+          })
+          return seasonsResult
+        }
 
       default:
         throw new Error(`Unsupported capability: ${capability}`)

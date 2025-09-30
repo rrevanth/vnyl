@@ -1,21 +1,21 @@
 /**
- * Catalog State Service
+ * HomeScreen State Service
  * 
- * Manages catalog UI state through Legend State with clean interface for domain layer.
+ * Manages homescreen UI state through Legend State with clean interface for domain layer.
  * Provides proper separation between domain logic and presentation state management.
  * Follows CLEAN architecture by exposing domain-friendly interfaces.
  */
 
-import { catalogStore$, catalogActions, catalogComputed } from '@/src/presentation/shared/stores/catalog-store'
+import { homescreenStore$, homescreenActions, homescreenComputed } from '@/src/presentation/shared/stores/homescreen-store'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 
 /**
- * Interface for catalog state management service
+ * Interface for homescreen state management service
  * Domain layer uses this interface without knowing about Legend State
  */
-export interface ICatalogStateService {
-  /** Reset all catalog state */
+export interface IHomescreenStateService {
+  /** Reset all homescreen state */
   reset(): void
   
   /** Set loading state */
@@ -39,7 +39,7 @@ export interface ICatalogStateService {
   /** Add more items to a specific catalog */
   addItemsToCatalog(catalogId: string, newItems: CatalogItem[], newPagination: any): void
   
-  /** Get current catalog state (read-only) */
+  /** Get current homescreen state (read-only) */
   getCurrentState(): {
     catalogs: Catalog[]
     isLoading: boolean
@@ -50,39 +50,39 @@ export interface ICatalogStateService {
 }
 
 /**
- * Catalog State Service Implementation
+ * HomeScreen State Service Implementation
  * Concrete implementation using Legend State
  */
-export class CatalogStateService implements ICatalogStateService {
+export class HomescreenStateService implements IHomescreenStateService {
   reset(): void {
-    catalogActions.reset()
+    homescreenActions.reset()
   }
 
   setLoading(loading: boolean): void {
-    catalogActions.setLoading(loading)
+    homescreenActions.setLoading(loading)
   }
 
   setError(error: string | null): void {
-    catalogActions.setError(error)
+    homescreenActions.setError(error)
   }
 
   clearError(): void {
-    catalogActions.clearError()
+    homescreenActions.clearError()
   }
 
   setRefreshing(refreshing: boolean): void {
-    catalogActions.setRefreshing(refreshing)
+    homescreenActions.setRefreshing(refreshing)
   }
 
   updateCatalogs(catalogs: Catalog[], stats?: {
     successfulProviders: number
     totalProviders: number
   }): void {
-    catalogActions.setCatalogs(catalogs, stats)
+    homescreenActions.setCatalogs(catalogs, stats)
   }
 
   addItemsToCatalog(catalogId: string, newItems: CatalogItem[], newPagination: any): void {
-    catalogActions.addMoreItemsToCatalog(catalogId, newItems, newPagination)
+    homescreenActions.addMoreItemsToCatalog(catalogId, newItems, newPagination)
   }
 
   getCurrentState(): {
@@ -93,11 +93,11 @@ export class CatalogStateService implements ICatalogStateService {
     hasData: boolean
   } {
     return {
-      catalogs: catalogStore$.catalogs.get(),
-      isLoading: catalogStore$.isLoading.get(),
-      error: catalogStore$.error.get(),
-      isEmpty: catalogComputed.isEmpty,
-      hasData: catalogComputed.hasData
+      catalogs: homescreenStore$.catalogs.get(),
+      isLoading: homescreenStore$.isLoading.get(),
+      error: homescreenStore$.error.get(),
+      isEmpty: homescreenComputed.isEmpty,
+      hasData: homescreenComputed.hasData
     }
   }
 }
@@ -105,4 +105,4 @@ export class CatalogStateService implements ICatalogStateService {
 /**
  * Singleton instance for dependency injection
  */
-export const catalogStateService = new CatalogStateService()
+export const homescreenStateService = new HomescreenStateService()

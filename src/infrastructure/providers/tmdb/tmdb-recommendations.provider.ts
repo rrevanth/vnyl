@@ -6,12 +6,9 @@
  */
 
 import { 
-  IRecommendationsProvider, 
-  RecommendationParams, 
-  RecommendationResult, 
-  RecommendationMetadata, 
-  RecommendationAlgorithm 
+  IRecommendationsProvider
 } from '@/src/domain/providers/recommendations/recommendations-provider.interface'
+import { PaginationOptions } from '@/src/domain/providers/base/pagination-options.interface'
 import { CatalogItem, MovieCatalogItem, TVCatalogItem, CatalogItemUtils } from '@/src/domain/entities/media/catalog-item.entity'
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
@@ -53,216 +50,276 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
 
   /**
    * Get recommendations based on a catalog item
+   * Returns multiple catalogs containing different types of recommendations
    * Implements IRecommendationsProvider.getRecommendations
    */
   async getRecommendations(
     catalogItem: CatalogItem,
-    params?: RecommendationParams
-  ): Promise<RecommendationResult> {
-    return this.getRecommendationsByAlgorithm(
-      catalogItem,
-      RecommendationAlgorithm.HYBRID,
-      params
-    )
-  }
-
-  /**
-   * Get recommendations using a specific algorithm
-   * Implements IRecommendationsProvider.getRecommendationsByAlgorithm
-   */
-  async getRecommendationsByAlgorithm(
-    catalogItem: CatalogItem,
-    algorithm: RecommendationAlgorithm,
-    params?: RecommendationParams
-  ): Promise<RecommendationResult> {
+    options?: PaginationOptions
+  ): Promise<{ recommendations: Catalog[] }> {
     const startTime = Date.now()
     
     try {
-      this.logger.info('Fetching recommendations by algorithm', {
+      this.logger.info('Fetching recommendations', {
         provider: 'tmdb_recommendations',
         mediaId: catalogItem.id,
-        mediaType: catalogItem.mediaType,
-        algorithm
+        mediaType: catalogItem.mediaType
       })
 
-      const tmdbId = this.extractTmdbId(catalogItem.id)
+      // Use the TMDB ID directly from external IDs
+      const tmdbId = catalogItem.externalIds?.tmdb
+      if (!tmdbId) {
+        throw new Error('No TMDB ID found in catalog item external IDs')
+      }
       
       let recommendationsData: { page: number; results: any[]; total_pages: number; total_results: number } | undefined
       let similarData: { page: number; results: any[]; total_pages: number; total_results: number } | undefined
 
+      const page = options?.page || 1
+      const limit = options?.limit || 20
+      
       // Fetch recommendations and similar content from TMDB
       if (catalogItem.mediaType === MediaType.MOVIE) {
-        const response: TMDBMovieDetails = await this.tmdbService.client.movies.getDetails(tmdbId, {
-          append_to_response: 'recommendations,similar'
-        })
-        recommendationsData = response.recommendations
-        similarData = response.similar
+        // For first page, use details endpoint with append_to_response for efficiency
+        if (page === 1) {
+          const response: TMDBMovieDetails = await this.tmdbService.client.movies.getDetails(tmdbId, {
+            append_to_response: 'recommendations,similar'
+          })
+          recommendationsData = response.recommendations
+          similarData = response.similar
+        } else {
+          // For subsequent pages, fetch directly from endpoints
+          const [recResponse, simResponse] = await Promise.allSettled([
+            this.tmdbService.client.movies.getRecommendations(tmdbId, { page }),
+            this.tmdbService.client.movies.getSimilar(tmdbId, { page })
+          ])
+          
+          recommendationsData = recResponse.status === 'fulfilled' ? recResponse.value : undefined
+          similarData = simResponse.status === 'fulfilled' ? simResponse.value : undefined
+        }
       } else if (catalogItem.mediaType === MediaType.TV_SERIES) {
-        const response: TMDBTVShowDetails = await this.tmdbService.client.tv.getDetails(tmdbId, {
-          append_to_response: 'recommendations,similar'
-        })
-        recommendationsData = response.recommendations
-        similarData = response.similar
+        // For first page, use details endpoint with append_to_response for efficiency
+        if (page === 1) {
+          const response: TMDBTVShowDetails = await this.tmdbService.client.tv.getDetails(tmdbId, {
+            append_to_response: 'recommendations,similar'
+          })
+          recommendationsData = response.recommendations
+          similarData = response.similar
+        } else {
+          // For subsequent pages, fetch directly from endpoints
+          const [recResponse, simResponse] = await Promise.allSettled([
+            this.tmdbService.client.tv.getRecommendations(tmdbId, { page }),
+            this.tmdbService.client.tv.getSimilar(tmdbId, { page })
+          ])
+          
+          recommendationsData = recResponse.status === 'fulfilled' ? recResponse.value : undefined
+          similarData = simResponse.status === 'fulfilled' ? simResponse.value : undefined
+        }
       } else {
         throw new Error(`Unsupported media type for recommendations: ${catalogItem.mediaType}`)
       }
 
-      // Select data based on algorithm
-      let resultsData: { page: number; results: any[]; total_pages: number; total_results: number }
-      let algorithmUsed: RecommendationAlgorithm
+      const catalogs: Catalog[] = []
 
-      switch (algorithm) {
-        case RecommendationAlgorithm.SIMILAR:
-          resultsData = similarData || { page: 1, results: [], total_pages: 1, total_results: 0 }
-          algorithmUsed = RecommendationAlgorithm.SIMILAR
-          break
-        case RecommendationAlgorithm.CONTENT_BASED:
-          // Use recommendations as they're more content-based
-          resultsData = recommendationsData || { page: 1, results: [], total_pages: 1, total_results: 0 }
-          algorithmUsed = RecommendationAlgorithm.CONTENT_BASED
-          break
-        case RecommendationAlgorithm.HYBRID:
-        default:
-          // Combine both sources, prioritize recommendations
-          const recResults = recommendationsData?.results || []
-          const simResults = similarData?.results || []
-          
-          // Take top results from both, deduplicating by ID
-          const seenIds = new Set<number>()
-          const hybridResults: any[] = []
-          
-          // Add recommendations first
-          for (const item of recResults.slice(0, 10)) {
-            if (!seenIds.has(item.id)) {
-              hybridResults.push({ ...item, _source: 'recommendations' })
-              seenIds.add(item.id)
-            }
-          }
-          
-          // Add similar items to fill gaps
-          for (const item of simResults.slice(0, 10)) {
-            if (!seenIds.has(item.id) && hybridResults.length < 20) {
-              hybridResults.push({ ...item, _source: 'similar' })
-              seenIds.add(item.id)
-            }
-          }
-
-          resultsData = {
-            page: 1,
-            results: hybridResults,
-            total_pages: 1,
-            total_results: hybridResults.length
-          }
-          algorithmUsed = RecommendationAlgorithm.HYBRID
-          break
-      }
-
-      // Apply filters if provided
-      let filteredResults = resultsData.results
-      if (params) {
-        filteredResults = this.applyFilters(filteredResults, params)
-      }
-
-      // Limit results
-      const limit = params?.limit || 20
-      const limitedResults = filteredResults.slice(0, limit)
-
-      // Transform to CatalogItems
-      const recommendedItems = this.transformToCatalogItems(limitedResults, catalogItem.mediaType)
-
-      // Create catalog
-      const catalog: Catalog = {
-        id: `recommendations-${catalogItem.id}-${algorithm}-${Date.now()}`,
-        name: `${this.getAlgorithmDisplayName(algorithmUsed)} for "${catalogItem.title}"`,
-        mediaType: catalogItem.mediaType,
-        items: recommendedItems,
-        pagination: {
-          page: 1,
-          totalItems: limitedResults.length,
-          hasMore: false
-        },
-        catalogContext: {
-          catalogId: `recommendations-${catalogItem.id}-${algorithm}`,
-          catalogName: `${this.getAlgorithmDisplayName(algorithmUsed)} for "${catalogItem.title}"`,
-          catalogType: 'recommendations',
-          providerId: this.id,
-          providerName: this.name,
-          pageInfo: {
-            currentPage: 1,
-            pageSize: recommendedItems.length,
-            hasMorePages: false
+      // Create Recommendations catalog
+      if (recommendationsData && recommendationsData.results.length > 0) {
+        const filteredResults = recommendationsData.results
+        const recommendedItems = this.transformToCatalogItems(
+          filteredResults.slice(0, limit),
+          catalogItem.mediaType
+        )
+        
+        // Calculate if there are more pages available
+        const hasMorePages = recommendationsData.total_pages > page && page < 1000 // TMDB API limit
+        const hasMoreItems = filteredResults.length > limit
+        
+        const recommendationsCatalog: Catalog = {
+          id: `recommendations-${catalogItem.id}`,
+          name: `Recommendations`,
+          mediaType: catalogItem.mediaType,
+          items: recommendedItems,
+          pagination: {
+            page: page,
+            totalPages: Math.min(recommendationsData.total_pages, 1000),
+            totalItems: recommendationsData.total_results,
+            hasMore: hasMorePages || hasMoreItems
           },
-          lastFetchAt: new Date(),
-          requestId: `rec-${Date.now()}`
-        },
-        metadata: {
-          fetchTime: Date.now() - startTime,
-          cacheHit: false,
-          itemCount: recommendedItems.length
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-
-      // Create metadata
-      const metadata: RecommendationMetadata = {
-        algorithm: algorithmUsed,
-        sourceItem: catalogItem,
-        confidenceScore: this.calculateConfidenceScore(limitedResults, algorithmUsed),
-        generationTime: Date.now() - startTime,
-        fromCache: false,
-        diversityScore: this.calculateDiversityScore(limitedResults),
-        explanations: this.generateExplanations(limitedResults, catalogItem, algorithmUsed),
-        providerMetadata: {
-          tmdb_recommendations_count: recommendationsData?.results.length || 0,
-          tmdb_similar_count: similarData?.results.length || 0,
-          algorithm_used: algorithmUsed,
-          filters_applied: !!params,
-          provider: 'tmdb'
+          catalogContext: {
+            catalogId: `recommendations-${catalogItem.id}`,
+            catalogName: 'Recommendations',
+            catalogType: 'recommendations',
+            providerId: this.id,
+            providerName: this.name,
+            pageInfo: {
+              currentPage: page,
+              pageSize: recommendedItems.length,
+              hasMorePages: hasMorePages || hasMoreItems
+            },
+            lastFetchAt: new Date(),
+            requestId: `rec-${Date.now()}`
+          },
+          metadata: {
+            fetchTime: Date.now() - startTime,
+            cacheHit: false,
+            itemCount: recommendedItems.length
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
+        catalogs.push(recommendationsCatalog)
       }
 
-      const result: RecommendationResult = {
-        catalog,
-        metadata,
-        generatedAt: new Date()
+      // Create Similar catalog
+      if (similarData && similarData.results.length > 0) {
+        const filteredResults = similarData.results
+        const similarItems = this.transformToCatalogItems(
+          filteredResults.slice(0, limit),
+          catalogItem.mediaType
+        )
+        
+        // Calculate if there are more pages available
+        const hasMorePages = similarData.total_pages > page && page < 1000 // TMDB API limit
+        const hasMoreItems = filteredResults.length > limit
+
+        const similarCatalog: Catalog = {
+          id: `similar-${catalogItem.id}`,
+          name: `Similar`,
+          mediaType: catalogItem.mediaType,
+          items: similarItems,
+          pagination: {
+            page: page,
+            totalPages: Math.min(similarData.total_pages, 1000),
+            totalItems: similarData.total_results,
+            hasMore: hasMorePages || hasMoreItems
+          },
+          catalogContext: {
+            catalogId: `similar-${catalogItem.id}`,
+            catalogName: 'Similar',
+            catalogType: 'recommendations',
+            providerId: this.id,
+            providerName: this.name,
+            pageInfo: {
+              currentPage: page,
+              pageSize: similarItems.length,
+              hasMorePages: hasMorePages || hasMoreItems
+            },
+            lastFetchAt: new Date(),
+            requestId: `sim-${Date.now()}`
+          },
+          metadata: {
+            fetchTime: Date.now() - startTime,
+            cacheHit: false,
+            itemCount: similarItems.length
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+        catalogs.push(similarCatalog)
       }
 
       this.logger.info('Successfully fetched recommendations', {
         provider: 'tmdb_recommendations',
         mediaId: catalogItem.id,
-        algorithm: algorithmUsed,
-        resultCount: recommendedItems.length,
-        confidenceScore: metadata.confidenceScore,
-        generationTime: metadata.generationTime
+        catalogCount: catalogs.length,
+        totalItems: catalogs.reduce((sum, cat) => sum + cat.items.length, 0),
+        generationTime: Date.now() - startTime
       })
 
-      return result
+      return { recommendations: catalogs }
 
     } catch (error) {
       const errorInstance = error instanceof Error ? error : new Error(String(error))
       this.logger.error('Failed to fetch recommendations', errorInstance, {
         provider: 'tmdb_recommendations',
-        mediaId: catalogItem.id,
-        algorithm
+        mediaId: catalogItem.id
       })
       throw errorInstance
     }
   }
 
+
   /**
-   * Get similar items to a catalog item
-   * Implements IRecommendationsProvider.getSimilarItems
+   * Load more items for a specific catalog (pagination)
+   * Uses the catalog object to access context and metadata for proper pagination
+   * Includes the original media item context for API calls that require it
+   * Follows the ICatalogProvider.loadMoreItems pattern for consistency
    */
-  async getSimilarItems(
-    catalogItem: CatalogItem,
-    params?: RecommendationParams
-  ): Promise<RecommendationResult> {
-    return this.getRecommendationsByAlgorithm(
-      catalogItem,
-      RecommendationAlgorithm.SIMILAR,
-      params
-    )
+  async loadMoreItems(
+    catalog: Catalog,
+    originalMediaItem: CatalogItem,
+    page: number,
+    limit?: number
+  ): Promise<CatalogItem[]> {
+    const startTime = Date.now()
+    
+    try {
+      this.logger.info('Loading more items for catalog using loadMoreItems method', {
+        provider: 'tmdb_recommendations',
+        catalogId: catalog.id,
+        catalogType: catalog.catalogContext?.catalogType,
+        page,
+        limit
+      })
+
+      // Use the TMDB ID directly from external IDs
+      const tmdbId = originalMediaItem.externalIds?.tmdb
+      if (!tmdbId) {
+        throw new Error('No TMDB ID found in original media item external IDs')
+      }
+      
+      // Determine which catalog type we're loading more for using catalog ID prefix
+      const isSimilar = catalog.id.startsWith('similar-')
+      const isRecommendations = catalog.id.startsWith('recommendations-')
+      
+      if (!isSimilar && !isRecommendations) {
+        throw new Error(`Unknown catalog type for ID: ${catalog.id}`)
+      }
+
+      let data: { page: number; results: any[]; total_pages: number; total_results: number } | undefined
+
+      // Fetch the appropriate data based on catalog type and media type
+      if (originalMediaItem.mediaType === MediaType.MOVIE) {
+        if (isRecommendations) {
+          data = await this.tmdbService.client.movies.getRecommendations(tmdbId, { page })
+        } else {
+          data = await this.tmdbService.client.movies.getSimilar(tmdbId, { page })
+        }
+      } else if (originalMediaItem.mediaType === MediaType.TV_SERIES) {
+        if (isRecommendations) {
+          data = await this.tmdbService.client.tv.getRecommendations(tmdbId, { page })
+        } else {
+          data = await this.tmdbService.client.tv.getSimilar(tmdbId, { page })
+        }
+      } else {
+        throw new Error(`Unsupported media type for recommendations: ${originalMediaItem.mediaType}`)
+      }
+
+      if (!data || !data.results.length) {
+        return []
+      }
+
+      // Transform and return items
+      const items = this.transformToCatalogItems(data.results, originalMediaItem.mediaType)
+      
+      this.logger.info('Successfully loaded more items for catalog', {
+        provider: 'tmdb_recommendations',
+        catalogId: catalog.id,
+        page,
+        itemCount: items.length,
+        loadTime: Date.now() - startTime
+      })
+      
+      return items
+
+    } catch (error) {
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      this.logger.error('Failed to load more items for catalog', errorInstance, {
+        provider: 'tmdb_recommendations',
+        catalogId: catalog.id,
+        page
+      })
+      throw errorInstance
+    }
   }
 
   /**
@@ -273,41 +330,9 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
     return mediaType === MediaType.MOVIE || mediaType === MediaType.TV_SERIES
   }
 
-  /**
-   * Get supported recommendation algorithms
-   * Implements IRecommendationsProvider.getSupportedAlgorithms
-   */
-  getSupportedAlgorithms(): RecommendationAlgorithm[] {
-    return [
-      RecommendationAlgorithm.HYBRID,
-      RecommendationAlgorithm.SIMILAR,
-      RecommendationAlgorithm.CONTENT_BASED
-    ]
-  }
 
-  /**
-   * Check if explanations are provided with recommendations
-   * Implements IRecommendationsProvider.providesExplanations
-   */
-  providesExplanations(): boolean {
-    return true
-  }
 
-  /**
-   * Get the maximum number of recommendations supported per request
-   * Implements IRecommendationsProvider.getMaxRecommendationsPerRequest
-   */
-  getMaxRecommendationsPerRequest(): number {
-    return 50
-  }
 
-  /**
-   * Check if the provider supports recommendation filtering
-   * Implements IRecommendationsProvider.supportsRecommendationFiltering
-   */
-  supportsRecommendationFiltering(): boolean {
-    return true
-  }
 
   /**
    * Validate if recommendations can be generated for a catalog item
@@ -315,53 +340,9 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
    */
   canGenerateRecommendations(catalogItem: CatalogItem): boolean {
     return this.supportsRecommendationsForMediaType(catalogItem.mediaType) &&
-           catalogItem.id.includes('tmdb') &&
-           this.canExtractTmdbId(catalogItem.id)
+           catalogItem.externalIds?.tmdb !== undefined
   }
 
-  /**
-   * Get recommendation confidence threshold
-   * Implements IRecommendationsProvider.getConfidenceThreshold
-   */
-  getConfidenceThreshold(): number {
-    return 0.6
-  }
-
-  /**
-   * Apply filters to recommendation results
-   */
-  private applyFilters(results: any[], params: RecommendationParams): any[] {
-    let filtered = results
-
-    // Apply vote average filter
-    if (params.minVoteAverage !== undefined) {
-      filtered = filtered.filter(item => item.vote_average >= params.minVoteAverage!)
-    }
-
-    // Apply vote count filter
-    if (params.minVoteCount !== undefined) {
-      filtered = filtered.filter(item => item.vote_count >= params.minVoteCount!)
-    }
-
-    // Apply release date range filter
-    if (params.releaseDateRange) {
-      filtered = filtered.filter(item => {
-        const releaseDate = new Date(item.release_date || item.first_air_date)
-        
-        if (params.releaseDateRange!.from && releaseDate < params.releaseDateRange!.from) {
-          return false
-        }
-        
-        if (params.releaseDateRange!.to && releaseDate > params.releaseDateRange!.to) {
-          return false
-        }
-        
-        return true
-      })
-    }
-
-    return filtered
-  }
 
   /**
    * Transform TMDB response items to CatalogItems
@@ -413,7 +394,7 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
           genres: [],
           originalMediaType: MediaType.MOVIE,
           contentContext,
-          externalIds: { tmdb_id: item.id },
+          externalIds: { tmdb: item.id },
           hasDetailedInfo: false,
           isAdult: item.adult,
           createdAt: new Date(),
@@ -442,7 +423,7 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
           genres: [],
           originalMediaType: MediaType.TV_SERIES,
           contentContext,
-          externalIds: { tmdb_id: item.id },
+          externalIds: { tmdb: item.id },
           hasDetailedInfo: false,
           isAdult: item.adult,
           createdAt: new Date(),
@@ -452,111 +433,9 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
     })
   }
 
-  /**
-   * Calculate confidence score for recommendations
-   */
-  private calculateConfidenceScore(results: any[], algorithm: RecommendationAlgorithm): number {
-    if (results.length === 0) return 0
 
-    let totalScore = 0
-    for (const item of results) {
-      let score = 0.5 // Base score
-      
-      // Higher vote average = higher confidence
-      if (item.vote_average && item.vote_average > 7) score += 0.2
-      if (item.vote_average && item.vote_average > 8) score += 0.1
-      
-      // More votes = higher confidence
-      if (item.vote_count && item.vote_count > 100) score += 0.1
-      if (item.vote_count && item.vote_count > 500) score += 0.1
-      
-      // Algorithm-specific adjustments
-      if (algorithm === RecommendationAlgorithm.HYBRID && item._source === 'recommendations') {
-        score += 0.1 // Prefer TMDB recommendations in hybrid mode
-      }
-      
-      totalScore += Math.min(score, 1.0)
-    }
 
-    return totalScore / results.length
-  }
 
-  /**
-   * Calculate diversity score for recommendations
-   */
-  private calculateDiversityScore(results: any[]): number {
-    if (results.length === 0) return 0
-
-    // Simple diversity calculation based on genre variety
-    const genres = new Set()
-    const languages = new Set()
-    
-    for (const item of results) {
-      if (item.genre_ids) {
-        item.genre_ids.forEach((genreId: number) => genres.add(genreId))
-      }
-      if (item.original_language) {
-        languages.add(item.original_language)
-      }
-    }
-
-    // Normalize diversity score
-    const genreDiversity = Math.min(genres.size / 10, 1) // Assume 10 is max reasonable genres
-    const languageDiversity = Math.min(languages.size / 5, 1) // Assume 5 is max reasonable languages
-    
-    return (genreDiversity + languageDiversity) / 2
-  }
-
-  /**
-   * Generate explanations for recommendations
-   */
-  private generateExplanations(
-    results: any[], 
-    sourceItem: CatalogItem, 
-    algorithm: RecommendationAlgorithm
-  ): Record<string, string> {
-    const explanations: Record<string, string> = {}
-
-    for (const item of results) {
-      const itemId = CatalogItemUtils.createCatalogItemId(sourceItem.mediaType, item.id, 'tmdb')
-      
-      switch (algorithm) {
-        case RecommendationAlgorithm.SIMILAR:
-          explanations[itemId] = `Similar to "${sourceItem.title}" based on themes and style`
-          break
-        case RecommendationAlgorithm.CONTENT_BASED:
-          explanations[itemId] = `Recommended based on your interest in "${sourceItem.title}"`
-          break
-        case RecommendationAlgorithm.HYBRID:
-          if (item._source === 'recommendations') {
-            explanations[itemId] = `Recommended for fans of "${sourceItem.title}"`
-          } else {
-            explanations[itemId] = `Similar themes and style to "${sourceItem.title}"`
-          }
-          break
-        default:
-          explanations[itemId] = `Related to "${sourceItem.title}"`
-      }
-    }
-
-    return explanations
-  }
-
-  /**
-   * Get display name for algorithm
-   */
-  private getAlgorithmDisplayName(algorithm: RecommendationAlgorithm): string {
-    switch (algorithm) {
-      case RecommendationAlgorithm.SIMILAR:
-        return 'Similar Content'
-      case RecommendationAlgorithm.CONTENT_BASED:
-        return 'Recommended'
-      case RecommendationAlgorithm.HYBRID:
-        return 'Recommendations'
-      default:
-        return 'Related Content'
-    }
-  }
 
   /**
    * Check if TMDB ID can be extracted from catalog item ID
@@ -575,7 +454,7 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
    */
   private extractTmdbId(catalogItemId: string): number {
     const parts = catalogItemId.split('_')
-    const tmdbId = parseInt(parts[parts.length - 1], 10)
+    const tmdbId = parseInt(parts[1], 10)
     if (isNaN(tmdbId)) {
       throw new Error(`Invalid TMDB ID in catalog item: ${catalogItemId}`)
     }
