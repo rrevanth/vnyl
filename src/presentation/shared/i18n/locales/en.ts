@@ -317,24 +317,29 @@ export const en: TranslationKey = {
 
   person_detail: {
     // Loading states
+    loading_person: 'Loading person...',
     loading_details: 'Loading person details...',
     loading_filmography: 'Loading filmography...',
     loading_biography: 'Loading biography...',
-    
+
     // Error states
     error_title: 'Unable to Load Person Details',
     error_message: 'Something went wrong while loading person information. Please try again.',
-    
+
     // Hero section
     age: '{{age}} years old',
     age_at_death: 'Died at {{age}} years old',
     born: 'Born {{date}}',
+    died: 'Died',
     life_dates: '{{birth}} - {{death}}',
-    
+    place_of_birth: 'Place of Birth',
+    known_for_works: 'Known For',
+
     // Personal information
     biography: 'Biography',
     also_known_as: 'Also Known As',
     personal_details: 'Personal Details',
+    personal_info: 'Personal Information',
     known_for_department: 'Known For',
     gender: 'Gender',
     popularity: 'Popularity',
@@ -342,25 +347,95 @@ export const en: TranslationKey = {
     years_old: 'years old',
     show_more: 'Show more',
     show_less: 'Show less',
-    
+    read_more: 'Read more',
+
+    // Apple TV+ style sections
+    about: 'About',
+    information: 'Information',
+    career_highlights: 'Career Highlights',
+
+    // Action buttons
+    share: 'Share',
+    share_title: 'Share Person',
+    share_message: 'Check out {{name}} on VNYL',
+
     // Filmography section
     filmography: {
       title: 'Filmography',
       loading: 'Loading filmography...',
       loading_more: 'Loading more...',
       total_works: '{{count}} total works',
+      see_all: 'See All',
+      load_more: 'Load More',
       movies: 'Movies',
-      tv_shows: 'TV Shows',
+      tv_shows: 'Shows',  // Apple TV+ style naming
       acting: 'Acting',
-      crew: 'Crew',
+      crew: 'Production',  // Apple TV+ style naming
       directing: 'Directing',
       writing: 'Writing',
       producing: 'Producing'
     },
-    
+
     // Load more functionality
     load_more_error_title: 'Unable to Load More',
-    load_more_error_message: 'Something went wrong while loading more filmography. Please try again.'
+    load_more_error_message: 'Something went wrong while loading more filmography. Please try again.',
+
+    // Awards section
+    awards_nominations: 'Awards & Nominations',
+    wins: 'Wins',
+    nominations: 'Nominations',
+    major_awards: 'Major Awards',
+    win: 'Win',
+    nomination: 'Nomination',
+    loading_awards: 'Loading awards...',
+    loading_more_awards: 'Loading more awards...',
+
+    // Career timeline section
+    career_timeline: 'Career Timeline',
+    major_milestones: 'Major Milestones',
+    breakthroughs: 'Breakthroughs',
+    award_milestones: 'Award Milestones',
+    early_career: 'Early Career',
+    established_career: 'Established Career',
+    mature_career: 'Mature Career',
+    loading_timeline: 'Loading timeline...',
+    loading_more_timeline: 'Loading more timeline...',
+
+    // Trivia section
+    trivia_facts: 'Trivia & Facts',
+    trivia_summary: 'Interesting Facts',
+    show_more_trivia: 'Show More Trivia',
+    loading_trivia: 'Loading trivia...',
+    loading_more_trivia: 'Loading more trivia...',
+
+    // Related people section
+    related_people: 'Related People',
+    collaborations: 'Collaborations',
+    connections_summary: 'Connections',
+    related_to: 'Related to',
+    for_work: 'for work',
+    in_work: 'in work',
+    notable: 'Notable',
+    loading_related_people: 'Loading related people...',
+    loading_more_relations: 'Loading more relations...',
+
+    // Social media section
+    social_media: 'Social Media',
+    social_profiles: 'Social Profiles',
+    professional_links: 'Professional Links',
+    followers: 'Followers',
+    source: 'Source',
+    loading_social_media: 'Loading social media...',
+    loading_more_social: 'Loading more social...',
+    external_link_title: 'External Link',
+    external_link_message: 'This will open in your web browser.',
+    link_error_title: 'Unable to Open Link',
+    link_error_message: 'There was an error opening this link.',
+    invalid_url_title: 'Invalid Link',
+    invalid_url_message: 'This link appears to be invalid.',
+    unsupported_url_title: 'Unsupported Link',
+    unsupported_url_message: 'This type of link is not supported.',
+    external_links_security: 'External links are verified for security before opening.'
   },
 
   search: {

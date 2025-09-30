@@ -21,6 +21,8 @@ import {
   GetPersonFilmographyUseCase,
   LoadMoreFilmographyUseCase
 } from '@/src/domain/usecases'
+import type { GetSelectedPersonUseCase } from '@/src/domain/usecases/person/get-selected-person.usecase'
+import { GetSelectedPersonUseCaseImpl } from '@/src/infrastructure/usecases/person/get-selected-person.usecase.impl'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
 import { AxiosApiClient, ConfigClient } from '@/src/infrastructure/api'
@@ -353,18 +355,26 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     () => {
       const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
       const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
-      
+
       // Get all filmography providers from registry
       const filmographyProviders = registry.getAllProviders().filter(
         provider => provider.capabilities.includes(ProviderCapability.FILMOGRAPHY)
       ) as IFilmographyProvider[]
-      
+
       logger.debug('DI Container: Registering LoadMoreFilmographyUseCase', undefined, {
         context: 'di_container_setup',
         filmographyProvidersCount: filmographyProviders.length
       })
-      
+
       return new LoadMoreFilmographyUseCase(filmographyProviders, logger)
+    }
+  )
+
+  container.registerSingleton<GetSelectedPersonUseCase>(
+    TOKENS.GET_SELECTED_PERSON_USE_CASE,
+    () => {
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      return new GetSelectedPersonUseCaseImpl(logger)
     }
   )
 
@@ -396,6 +406,7 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       'EnrichPersonUseCase',
       'GetPersonFilmographyUseCase',
       'LoadMoreFilmographyUseCase',
+      'GetSelectedPersonUseCase',
       'ImageCacheService'
     ]
   })

@@ -329,24 +329,29 @@ export interface TranslationKey {
   // Person Detail
   person_detail: {
     // Loading states
+    loading_person: string
     loading_details: string
     loading_filmography: string
     loading_biography: string
-    
+
     // Error states
     error_title: string
     error_message: string
-    
+
     // Hero section
     age: string
     age_at_death: string
     born: string
+    died: string
     life_dates: string
-    
+    place_of_birth: string
+    known_for_works: string
+
     // Personal information
     biography: string
     also_known_as: string
     personal_details: string
+    personal_info: string
     known_for_department: string
     gender: string
     popularity: string
@@ -354,13 +359,26 @@ export interface TranslationKey {
     years_old: string
     show_more: string
     show_less: string
-    
+    read_more: string
+
+    // Apple TV+ style sections
+    about: string
+    information: string
+    career_highlights: string
+
+    // Action buttons
+    share: string
+    share_title: string
+    share_message: string
+
     // Filmography section
     filmography: {
       title: string
       loading: string
       loading_more: string
       total_works: string
+      see_all: string
+      load_more: string
       movies: string
       tv_shows: string
       acting: string
@@ -369,10 +387,67 @@ export interface TranslationKey {
       writing: string
       producing: string
     }
-    
+
     // Load more functionality
     load_more_error_title: string
     load_more_error_message: string
+
+    // Awards section
+    awards_nominations: string
+    wins: string
+    nominations: string
+    major_awards: string
+    win: string
+    nomination: string
+    loading_awards: string
+    loading_more_awards: string
+
+    // Career timeline section
+    career_timeline: string
+    major_milestones: string
+    breakthroughs: string
+    award_milestones: string
+    early_career: string
+    established_career: string
+    mature_career: string
+    loading_timeline: string
+    loading_more_timeline: string
+
+    // Trivia section
+    trivia_facts: string
+    trivia_summary: string
+    show_more_trivia: string
+    loading_trivia: string
+    loading_more_trivia: string
+
+    // Related people section
+    related_people: string
+    collaborations: string
+    connections_summary: string
+    related_to: string
+    for_work: string
+    in_work: string
+    notable: string
+    loading_related_people: string
+    loading_more_relations: string
+
+    // Social media section
+    social_media: string
+    social_profiles: string
+    professional_links: string
+    followers: string
+    source: string
+    loading_social_media: string
+    loading_more_social: string
+    external_link_title: string
+    external_link_message: string
+    link_error_title: string
+    link_error_message: string
+    invalid_url_title: string
+    invalid_url_message: string
+    unsupported_url_title: string
+    unsupported_url_message: string
+    external_links_security: string
   }
 
   // Search

@@ -1,12 +1,13 @@
 /**
  * PersonInfoSection Component
- * 
- * Information section for person detail screen featuring:
- * - Biography with expand/collapse functionality
- * - Also known as (alternative names)
- * - Personal details in a clean layout
- * - Progressive loading states
- * - Native React Native components with theme integration
+ *
+ * Apple TV+ inspired information section for person detail screen featuring:
+ * - Clean "Information" section matching Apple TV+ design patterns
+ * - Professional biographical information organization
+ * - Smart content hierarchy with visual consistency
+ * - Enhanced accessibility and responsive layout
+ * - "How to Watch" equivalent with filmography highlights
+ * - Premium typography matching Apple's design language
  */
 
 import React, { useMemo } from 'react'
@@ -33,6 +34,8 @@ interface PersonInfoSectionProps {
   expandedBiography?: boolean
   /** Callback when biography toggle is pressed */
   onBiographyToggle?: () => void
+  /** Callback when known work is pressed */
+  onKnownForPress?: (work: any) => void
   /** Whether person data is currently being enriched */
   isLoading?: boolean
   /** Whether enrichment is complete */
@@ -40,56 +43,87 @@ interface PersonInfoSectionProps {
 }
 
 /**
- * Format popularity score for display
+ * Format person's biographical details for Apple TV+ style display
  */
-const formatPopularity = (popularity?: number): string | null => {
-  if (!popularity) return null
-  
-  if (popularity >= 100) return 'Very High'
-  if (popularity >= 50) return 'High'
-  if (popularity >= 20) return 'Medium'
-  if (popularity >= 5) return 'Low'
-  return 'Emerging'
-}
+const formatPersonBiography = (person: PersonCatalogItem): {
+  born?: string
+  died?: string
+  age?: string
+  birthPlace?: string
+  profession?: string
+  popularity?: string
+} => {
+  const details: any = {}
 
-/**
- * Get gender display text
- */
-const getGenderDisplay = (gender?: number): string | null => {
-  switch (gender) {
-    case 1: return 'Female'
-    case 2: return 'Male'
-    case 3: return 'Non-binary'
-    default: return null
-  }
-}
+  // Format birth information
+  if (person.birthday) {
+    const birthDate = new Date(person.birthday)
+    details.born = birthDate.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
 
-/**
- * Extract also known as names from enriched data
- */
-const getAlsoKnownAs = (person: PersonCatalogItem): string[] => {
-  // Check if we have enriched data with also known as information
-  const enrichedData = person.enrichedData
-  if (!enrichedData) return []
-  
-  // Try to extract from various possible enrichment sources
-  const alsoKnownAs: string[] = []
-  
-  // Add any alternative names from the overview if it contains semicolon-separated names
-  if (person.overview && person.overview !== person.title) {
-    const names = person.overview.split(';').map(name => name.trim()).filter(Boolean)
-    if (names.length > 1) {
-      alsoKnownAs.push(...names.slice(1)) // Skip first name as it's likely the main name
+    // Calculate age
+    const currentYear = new Date().getFullYear()
+    const birthYear = birthDate.getFullYear()
+    if (person.deathday) {
+      const deathYear = new Date(person.deathday).getFullYear()
+      details.age = `${deathYear - birthYear} years`
+    } else {
+      details.age = `${currentYear - birthYear} years old`
     }
   }
-  
-  return alsoKnownAs.filter((name, index, arr) => arr.indexOf(name) === index) // Remove duplicates
+
+  // Format death information
+  if (person.deathday) {
+    const deathDate = new Date(person.deathday)
+    details.died = deathDate.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  // Other details
+  if (person.placeOfBirth) {
+    details.birthPlace = person.placeOfBirth
+  }
+
+  if (person.knownForDepartment) {
+    details.profession = person.knownForDepartment
+  }
+
+  // Format popularity
+  if (person.popularity) {
+    if (person.popularity >= 100) details.popularity = 'Very High'
+    else if (person.popularity >= 50) details.popularity = 'High'
+    else if (person.popularity >= 20) details.popularity = 'Medium'
+    else if (person.popularity >= 5) details.popularity = 'Low'
+    else details.popularity = 'Emerging'
+  }
+
+  return details
+}
+
+/**
+ * Extract highlight works from known for array
+ */
+const getHighlightWorks = (person: PersonCatalogItem): { title: string; character?: string; year?: string }[] => {
+  if (!person.knownFor || person.knownFor.length === 0) return []
+
+  return person.knownFor.slice(0, 3).map(work => ({
+    title: work.title || 'Unknown Title',
+    character: (work as any).character, // Type assertion since character may not be in interface
+    year: work.releaseDate ? new Date(work.releaseDate).getFullYear().toString() : undefined
+  }))
 }
 
 export const PersonInfoSection: React.FC<PersonInfoSectionProps> = observer(({
   person,
   expandedBiography = false,
   onBiographyToggle,
+  onKnownForPress,
   isLoading = false,
   isFullyLoaded = false
 }) => {
@@ -97,150 +131,126 @@ export const PersonInfoSection: React.FC<PersonInfoSectionProps> = observer(({
   const theme = useTheme()
   const styles = createStyles(theme)
 
-  // Extract person data
-  const {
-    overview: biography,
-    popularity,
-    gender,
-    knownForDepartment,
-    birthday,
-    deathday
-  } = person
+  // Format person details for Apple TV+ style display
+  const biographyDetails = useMemo(() => formatPersonBiography(person), [person])
+  const highlightWorks = useMemo(() => getHighlightWorks(person), [person])
 
-  // Process additional information
-  const alsoKnownAs = useMemo(() => getAlsoKnownAs(person), [person])
-  const popularityDisplay = useMemo(() => formatPopularity(popularity), [popularity])
-  const genderDisplay = useMemo(() => getGenderDisplay(gender), [gender])
+  // Biography display logic
+  const { overview: biography } = person
+  const shouldShowBiography = biography && biography.trim().length > 0 && biography !== person.title
+  const hasBiographyToggle = shouldShowBiography && biography.length > 300
 
-  // Determine if we should show biography
-  const hasBiography = biography && biography.trim().length > 0 && biography !== person.title
-  const shouldShowBiographyToggle = hasBiography && biography.length > 200
+  // Information section data
+  const informationRows = useMemo(() => {
+    const rows: { label: string; value: string }[] = []
 
-  // Personal details for the grid
-  const personalDetails = useMemo(() => {
-    const details: { key: string; label: string; value: string }[] = []
-    
-    if (knownForDepartment) {
-      details.push({
-        key: 'department',
-        label: t('person_detail.known_for_department'),
-        value: knownForDepartment
-      })
+    if (biographyDetails.born) {
+      rows.push({ label: 'Born', value: biographyDetails.born })
     }
-    
-    if (genderDisplay) {
-      details.push({
-        key: 'gender',
-        label: t('person_detail.gender'),
-        value: genderDisplay
-      })
-    }
-    
-    if (popularityDisplay) {
-      details.push({
-        key: 'popularity',
-        label: t('person_detail.popularity'),
-        value: popularityDisplay
-      })
-    }
-    
-    if (birthday && !deathday) { // Only show if person is still alive
-      const age = new Date().getFullYear() - birthday.getFullYear()
-      details.push({
-        key: 'age',
-        label: t('person_detail.age_label'),
-        value: `${age} ${t('person_detail.years_old')}`
-      })
-    }
-    
-    return details
-  }, [knownForDepartment, genderDisplay, popularityDisplay, birthday, deathday, t])
 
-  // Don't render if no meaningful content
-  if (!hasBiography && alsoKnownAs.length === 0 && personalDetails.length === 0 && !isLoading) {
+    if (biographyDetails.died) {
+      rows.push({ label: 'Died', value: biographyDetails.died })
+    }
+
+    if (biographyDetails.birthPlace) {
+      rows.push({ label: 'Place of Birth', value: biographyDetails.birthPlace })
+    }
+
+    if (biographyDetails.profession) {
+      rows.push({ label: 'Known For', value: biographyDetails.profession })
+    }
+
+    if (biographyDetails.popularity) {
+      rows.push({ label: 'Popularity', value: biographyDetails.popularity })
+    }
+
+    return rows
+  }, [biographyDetails])
+
+  // Don't render if no meaningful content and not loading
+  if (informationRows.length === 0 && !shouldShowBiography && highlightWorks.length === 0 && !isLoading) {
     return null
   }
 
   return (
     <View style={styles.container}>
-      {/* Biography Section */}
-      {(hasBiography || isLoading) && (
+      {/* How to Watch Equivalent - Career Highlights */}
+      {highlightWorks.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('person_detail.biography')}</Text>
-          
-          {hasBiography && (
-            <View style={styles.biographyContainer}>
-              <Text
-                style={styles.biographyText}
-                numberOfLines={expandedBiography ? undefined : 4}
+          <Text style={styles.sectionTitle}>Career Highlights</Text>
+          <View style={styles.highlightsContainer}>
+            {highlightWorks.map((work, index) => (
+              <Pressable
+                key={index}
+                style={styles.highlightItem}
+                onPress={() => onKnownForPress?.(work)}
               >
-                {biography}
-              </Text>
-              
-              {shouldShowBiographyToggle && onBiographyToggle && (
-                <Pressable onPress={onBiographyToggle} style={styles.expandButton}>
-                  <Text style={styles.expandButtonText}>
-                    {expandedBiography ? t('person_detail.show_less') : t('person_detail.show_more')}
-                  </Text>
-                  <Ionicons 
-                    name={expandedBiography ? 'chevron-up' : 'chevron-down'} 
-                    size={16} 
-                    color={theme.colors.interactive.primary} 
-                  />
-                </Pressable>
-              )}
-            </View>
-          )}
-          
-          {isLoading && !hasBiography && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.interactive.primary} />
-              <Text style={styles.loadingText}>
-                {t('person_detail.loading_biography')}
-              </Text>
-            </View>
-          )}
+                <View style={styles.highlightContent}>
+                  <Text style={styles.highlightTitle}>{work.title}</Text>
+                  {work.year && (
+                    <Text style={styles.highlightYear}>{work.year}</Text>
+                  )}
+                  {work.character && (
+                    <Text style={styles.highlightCharacter}>as {work.character}</Text>
+                  )}
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.colors.text.secondary}
+                />
+              </Pressable>
+            ))}
+          </View>
         </View>
       )}
 
-      {/* Also Known As Section */}
-      {alsoKnownAs.length > 0 && (
+      {/* About Section - Full Biography */}
+      {shouldShowBiography && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('person_detail.also_known_as')}</Text>
-          <View style={styles.alsoKnownAsContainer}>
-            {alsoKnownAs.map((name, index) => (
-              <View key={index} style={styles.alsoKnownAsItem}>
-                <Text style={styles.alsoKnownAsText}>{name}</Text>
+          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.aboutContainer}>
+            <Text
+              style={styles.aboutText}
+              numberOfLines={expandedBiography ? undefined : 4}
+            >
+              {biography}
+            </Text>
+            {hasBiographyToggle && (
+              <Pressable onPress={onBiographyToggle} style={styles.moreButton}>
+                <Text style={styles.moreButtonText}>
+                  {expandedBiography ? 'Less' : 'More'}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Information Section - Apple TV+ Style */}
+      {informationRows.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Information</Text>
+          <View style={styles.informationContainer}>
+            {informationRows.map((row, index) => (
+              <View key={index} style={styles.informationRow}>
+                <Text style={styles.informationLabel}>{row.label}</Text>
+                <Text style={styles.informationValue}>{row.value}</Text>
               </View>
             ))}
           </View>
         </View>
       )}
 
-      {/* Personal Details Section */}
-      {(personalDetails.length > 0 || isLoading) && (
+      {/* Loading State */}
+      {isLoading && !isFullyLoaded && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('person_detail.personal_details')}</Text>
-          
-          {personalDetails.length > 0 && (
-            <View style={styles.detailsGrid}>
-              {personalDetails.map((detail) => (
-                <View key={detail.key} style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>{detail.label}</Text>
-                  <Text style={styles.detailValue}>{detail.value}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-          
-          {isLoading && personalDetails.length === 0 && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.interactive.primary} />
-              <Text style={styles.loadingText}>
-                {t('person_detail.loading_details')}
-              </Text>
-            </View>
-          )}
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={theme.colors.interactive.primary} />
+            <Text style={styles.loadingText}>
+              {t('person_detail.loading_details')}
+            </Text>
+          </View>
         </View>
       )}
     </View>
@@ -248,99 +258,127 @@ export const PersonInfoSection: React.FC<PersonInfoSectionProps> = observer(({
 })
 
 const createStyles = (theme: Theme) => StyleSheet.create({
+  // Container - Apple TV+ Section Spacing
   container: {
-    paddingHorizontal: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.xl,
   },
+
+  // Section Structure - Clean Apple TV+ Layout
   section: {
-    marginBottom: theme.spacing.xl,
+    gap: theme.spacing.md,
   },
   sectionTitle: {
     color: theme.colors.text.primary,
-    fontSize: theme.typography.heading2.fontSize,
-    fontWeight: theme.typography.heading2.fontWeight as any,
-    marginBottom: theme.spacing.md,
+    fontSize: moderateScale(24), // Large section headers
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    marginBottom: theme.spacing.xs,
   },
-  biographyContainer: {
+
+  // Career Highlights - "How to Watch" Style
+  highlightsContainer: {
     backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
   },
-  biographyText: {
-    color: theme.colors.text.primary,
-    fontSize: theme.typography.body.fontSize,
-    lineHeight: theme.typography.body.lineHeight,
-    marginBottom: theme.spacing.sm,
-  },
-  expandButton: {
+  highlightItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.xs,
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.primary,
   },
-  expandButtonText: {
-    color: theme.colors.interactive.primary,
-    fontSize: moderateScale(14),
+  highlightContent: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+  highlightTitle: {
+    color: theme.colors.text.primary,
+    fontSize: moderateScale(16),
     fontWeight: '600',
-    marginRight: theme.spacing.xs,
+    lineHeight: moderateScale(20),
   },
-  alsoKnownAsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  highlightYear: {
+    color: theme.colors.text.secondary,
+    fontSize: moderateScale(14),
+    fontWeight: '500',
+  },
+  highlightCharacter: {
+    color: theme.colors.text.secondary,
+    fontSize: moderateScale(13),
+    fontWeight: '400',
+    fontStyle: 'italic',
+  },
+
+  // About Section - Apple TV+ Style
+  aboutContainer: {
     gap: theme.spacing.sm,
   },
-  alsoKnownAsItem: {
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border.primary,
-  },
-  alsoKnownAsText: {
+  aboutText: {
     color: theme.colors.text.primary,
-    fontSize: moderateScale(14),
-    fontWeight: '500',
+    fontSize: moderateScale(16),
+    fontWeight: '400',
+    lineHeight: moderateScale(24),
+    letterSpacing: -0.1,
   },
-  detailsGrid: {
+  moreButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: theme.spacing.xs,
+  },
+  moreButtonText: {
+    color: theme.colors.interactive.primary,
+    fontSize: moderateScale(16),
+    fontWeight: '600',
+  },
+
+  // Information Section - Apple TV+ Clean Rows
+  informationContainer: {
     backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
   },
-  detailItem: {
+  informationRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.secondary,
+    borderBottomColor: theme.colors.border.primary,
   },
-  detailLabel: {
+  informationLabel: {
     color: theme.colors.text.secondary,
-    fontSize: theme.typography.body.fontSize,
+    fontSize: moderateScale(16),
     fontWeight: '500',
     flex: 1,
+    marginRight: theme.spacing.md,
   },
-  detailValue: {
+  informationValue: {
     color: theme.colors.text.primary,
-    fontSize: theme.typography.body.fontSize,
+    fontSize: moderateScale(16),
     fontWeight: '600',
     textAlign: 'right',
-    flex: 1,
+    flex: 2,
   },
+
+  // Loading State
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: theme.spacing.xl,
     backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
+    gap: theme.spacing.sm,
   },
   loadingText: {
     color: theme.colors.text.secondary,
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(16),
     fontWeight: '500',
-    marginLeft: theme.spacing.xs,
   },
 })
 

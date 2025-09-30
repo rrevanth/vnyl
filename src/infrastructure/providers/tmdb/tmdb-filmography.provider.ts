@@ -6,14 +6,15 @@
  * Organizes credits into semantic catalogs following clean architecture principles
  */
 
-import { 
+import {
   IFilmographyProvider
 } from '@/src/domain/providers/filmography/filmography-provider.interface'
 import { PaginationOptions } from '@/src/domain/providers/base/pagination-options.interface'
 import { CatalogItem, MovieCatalogItem, TVCatalogItem, PersonCatalogItem, CatalogItemUtils } from '@/src/domain/entities/media/catalog-item.entity'
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
-import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
+import { CatalogContext } from '@/src/domain/entities/context/catalog-context.entity'
+import { ContentContext, ContentContextUtils, ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
 import { ITMDBService, TMDBUtils } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
 import type { PersonCombinedCreditsResponse, CombinedCredit } from '@/src/infrastructure/api/tmdb/endpoints/types/person.endpoints'
@@ -413,29 +414,30 @@ export class TMDBFilmographyProvider implements IFilmographyProvider {
    */
   private transformToCatalogItems(credits: CombinedCredit[], person: PersonCatalogItem): CatalogItem[] {
     return credits.map((credit, index) => {
-      const contentContext = {
-        catalogContext: {
-          catalogId: 'filmography',
-          catalogName: 'Filmography',
-          catalogType: 'filmography',
-          providerId: this.id,
-          providerName: this.name,
-          pageInfo: {
-            currentPage: 1,
-            pageSize: 20,
-            hasMorePages: false
-          },
-          lastFetchAt: new Date(),
-          requestId: `item-${credit.id}-${Date.now()}`
-        },
-        originalMediaType: credit.media_type === 'movie' ? MediaType.MOVIE : MediaType.TV_SERIES,
-        originalMediaId: credit.id,
+      // Create proper catalogContext first (following catalog provider pattern)
+      const catalogContext: CatalogContext = {
         providerId: this.id,
         providerName: this.name,
-        positionInCatalog: index,
-        fetchedAt: new Date(),
-        requestId: `item-${credit.id}-${Date.now()}`
+        catalogId: 'filmography',
+        catalogName: 'Filmography',
+        catalogType: 'filmography',
+        pageInfo: {
+          currentPage: 1,
+          pageSize: 20,
+          hasMorePages: false
+        },
+        lastFetchAt: new Date(),
+        requestId: `filmography-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }
+
+      // Use ContentContextUtils (exactly like catalog provider)
+      const contentContext: ContentContext = ContentContextUtils.createContentContext(
+        catalogContext,
+        credit.media_type === 'movie' ? MediaType.MOVIE : MediaType.TV_SERIES,
+        credit.id,
+        index,
+        credit as unknown as Record<string, unknown>
+      )
 
       if (credit.media_type === 'movie') {
         return {

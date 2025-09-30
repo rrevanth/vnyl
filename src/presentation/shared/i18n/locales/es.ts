@@ -317,24 +317,29 @@ export const es: TranslationKey = {
 
   person_detail: {
     // Loading states
+    loading_person: 'Cargando persona...',
     loading_details: 'Cargando detalles de la persona...',
     loading_filmography: 'Cargando filmografía...',
     loading_biography: 'Cargando biografía...',
-    
+
     // Error states
     error_title: 'No se pueden cargar los detalles de la persona',
-    error_message: 'Algo salió mal al cargar la información de la persona. Inténtalo de nuevo.',
-    
+    error_message: 'Algo salió mal al cargar la información de la persona. Por favor, inténtalo de nuevo.',
+
     // Hero section
     age: '{{age}} años',
     age_at_death: 'Murió a los {{age}} años',
     born: 'Nacido {{date}}',
+    died: 'Murió',
     life_dates: '{{birth}} - {{death}}',
-    
+    place_of_birth: 'Lugar de nacimiento',
+    known_for_works: 'Conocido por',
+
     // Personal information
     biography: 'Biografía',
     also_known_as: 'También conocido como',
     personal_details: 'Detalles personales',
+    personal_info: 'Información personal',
     known_for_department: 'Conocido por',
     gender: 'Género',
     popularity: 'Popularidad',
@@ -342,25 +347,95 @@ export const es: TranslationKey = {
     years_old: 'años',
     show_more: 'Mostrar más',
     show_less: 'Mostrar menos',
-    
+    read_more: 'Leer más',
+
+    // Apple TV+ style sections
+    about: 'Acerca de',
+    information: 'Información',
+    career_highlights: 'Momentos destacados de la carrera',
+
+    // Action buttons
+    share: 'Compartir',
+    share_title: 'Compartir Persona',
+    share_message: 'Echa un vistazo a {{name}} en VNYL',
+
     // Filmography section
     filmography: {
       title: 'Filmografía',
       loading: 'Cargando filmografía...',
       loading_more: 'Cargando más...',
-      total_works: '{{count}} trabajos totales',
+      total_works: '{{count}} trabajos en total',
+      see_all: 'Ver Todo',
+      load_more: 'Cargar Más',
       movies: 'Películas',
       tv_shows: 'Series de TV',
       acting: 'Actuación',
       crew: 'Equipo técnico',
       directing: 'Dirección',
-      writing: 'Escritura',
+      writing: 'Guión',
       producing: 'Producción'
     },
-    
+
     // Load more functionality
     load_more_error_title: 'No se puede cargar más',
-    load_more_error_message: 'Algo salió mal al cargar más filmografía. Inténtalo de nuevo.'
+    load_more_error_message: 'Algo salió mal al cargar más filmografía. Por favor, inténtalo de nuevo.',
+
+    // Awards section
+    awards_nominations: 'Premios y Nominaciones',
+    wins: 'Victorias',
+    nominations: 'Nominaciones',
+    major_awards: 'Premios Principales',
+    win: 'Victoria',
+    nomination: 'Nominación',
+    loading_awards: 'Cargando premios...',
+    loading_more_awards: 'Cargando más premios...',
+
+    // Career timeline section
+    career_timeline: 'Cronología de Carrera',
+    major_milestones: 'Hitos Principales',
+    breakthroughs: 'Avances Importantes',
+    award_milestones: 'Hitos de Premios',
+    early_career: 'Carrera Temprana',
+    established_career: 'Carrera Establecida',
+    mature_career: 'Carrera Madura',
+    loading_timeline: 'Cargando cronología...',
+    loading_more_timeline: 'Cargando más cronología...',
+
+    // Trivia section
+    trivia_facts: 'Curiosidades y Datos',
+    trivia_summary: 'Datos Interesantes',
+    show_more_trivia: 'Mostrar Más Curiosidades',
+    loading_trivia: 'Cargando curiosidades...',
+    loading_more_trivia: 'Cargando más curiosidades...',
+
+    // Related people section
+    related_people: 'Personas Relacionadas',
+    collaborations: 'Colaboraciones',
+    connections_summary: 'Conexiones',
+    related_to: 'Relacionado con',
+    for_work: 'por trabajo',
+    in_work: 'en trabajo',
+    notable: 'Notable',
+    loading_related_people: 'Cargando personas relacionadas...',
+    loading_more_relations: 'Cargando más relaciones...',
+
+    // Social media section
+    social_media: 'Redes Sociales',
+    social_profiles: 'Perfiles Sociales',
+    professional_links: 'Enlaces Profesionales',
+    followers: 'Seguidores',
+    source: 'Fuente',
+    loading_social_media: 'Cargando redes sociales...',
+    loading_more_social: 'Cargando más redes sociales...',
+    external_link_title: 'Enlace Externo',
+    external_link_message: 'Esto se abrirá en tu navegador web.',
+    link_error_title: 'No se puede abrir el enlace',
+    link_error_message: 'Hubo un error al abrir este enlace.',
+    invalid_url_title: 'Enlace Inválido',
+    invalid_url_message: 'Este enlace parece ser inválido.',
+    unsupported_url_title: 'Enlace No Soportado',
+    unsupported_url_message: 'Este tipo de enlace no es compatible.',
+    external_links_security: 'Los enlaces externos se verifican por seguridad antes de abrirse.'
   },
 
   search: {

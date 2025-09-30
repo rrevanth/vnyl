@@ -13,7 +13,7 @@
 
 /* @jsxImportSource react */
 
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import {
   View,
   Text,
@@ -34,12 +34,13 @@ import { useTranslation } from '@/src/presentation/shared/i18n'
 import { useTheme } from '@/src/presentation/shared/theme'
 import type { Theme } from '@/src/presentation/shared/theme/types'
 import { useLogging } from '@/src/infrastructure/di'
-import type { PersonCatalogItem, CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
+import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { usePersonDetailComplete } from '@/src/presentation/features/person-detail/hooks/usePersonDetail'
-import { homescreenSelectors } from '@/src/presentation/shared/stores/homescreen-store'
+import { useSelectedPerson } from '@/src/presentation/features/person-detail/hooks/useSelectedPerson'
 import { PersonHeroSection } from '@/src/presentation/features/person-detail/components/PersonHeroSection'
 import { PersonInfoSection } from '@/src/presentation/features/person-detail/components/PersonInfoSection'
 import { FilmographySection } from '@/src/presentation/features/person-detail/components/FilmographySection'
+import { SkeletonLoader } from '@/src/presentation/shared/components/atoms/SkeletonLoader'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Placeholder for future extensibility
 interface PersonDetailScreenProps {
@@ -48,56 +49,23 @@ interface PersonDetailScreenProps {
 
 const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
   const { id, person } = useLocalSearchParams<{ id: string; person?: any }>()
-  const { t } = useTranslation()
+  const { t, formatMessage } = useTranslation()
   const theme = useTheme()
   const styles = createStyles(theme)
   const router = useRouter()
   const logger = useLogging()
 
-  // Get the selected person item from the homescreen store
-  const selectedItem = homescreenSelectors.selectedItem.get()
+  // Use CLEAN architecture pattern for person selection
+  const selectedPersonQuery = useSelectedPerson(id, person)
+  const personItem = selectedPersonQuery.data
 
-  // Ensure we have a person item - try param first, then fall back to store
-  const personItem = useMemo(() => {
-    // Debug logging to understand what's in the person param
-    if (person) {
-      logger?.info('Person param received', {
-        context: 'person_detail_screen',
-        personType: typeof person,
-        personKeys: Object.keys(person || {}),
-        personMediaType: (person as any)?.mediaType,
-        personId: (person as any)?.id,
-        personTitle: (person as any)?.title
-      })
-    }
-    
-    // Try param first, then fall back to store
-    const paramPerson = person as PersonCatalogItem
-    if (paramPerson && paramPerson.mediaType === 'person') {
-      logger?.info('Using person from params', {
-        context: 'person_detail_screen',
-        personId: paramPerson.id,
-        personTitle: paramPerson.title
-      })
-      return paramPerson
-    }
-    
-    if (!selectedItem || selectedItem.mediaType !== 'person') {
-      return null
-    }
-    
-    logger?.info('Using person from store fallback', {
+  // Ensure we have a person item for detail screens
+  if (!personItem && !selectedPersonQuery.isLoading) {
+    logger?.warn('No selected person item found', new Error('Missing person item'), {
       context: 'person_detail_screen',
-      personId: selectedItem.id,
-      personTitle: selectedItem.title
-    })
-    return selectedItem as PersonCatalogItem
-  }, [person, selectedItem, logger])
-
-  if (!personItem) {
-    logger?.warn('No selected person item found in store', new Error('Missing person item'), {
-      context: 'person_detail_screen',
-      routeId: id
+      routeId: id,
+      hasPersonParam: !!person,
+      queryError: selectedPersonQuery.error?.message
     })
   }
 
@@ -112,7 +80,7 @@ const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
     filmographyCatalogs,
     expandedBiography,
     actions
-  } = usePersonDetailComplete(personItem, {
+  } = usePersonDetailComplete(personItem || null, {
     autoEnrich: true,
     autoLoadFilmography: true
   })
@@ -122,6 +90,7 @@ const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
   const isEnrichingPerson = enrichQuery.isLoading && !enrichQuery.data
   const isLoadingFilmography = filmographyQuery.isLoading && !filmographyQuery.data
   const isFullyLoaded = !!enrichQuery.data && !!filmographyQuery.data
+  const isLoadingPersonSelection = selectedPersonQuery.isLoading
 
   // Final person for display - always start with initial person
   const displayPerson = enrichedPerson || personItem
@@ -193,6 +162,40 @@ const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
     actions.setExpandedBiography(!expandedBiography)
   }, [actions, expandedBiography])
 
+  const handleShare = useCallback(() => {
+    if (!displayPerson) return
+
+    logger.info('Person share action triggered', {
+      context: 'person_detail_screen',
+      personId: displayPerson.id,
+      personName: displayPerson.title
+    })
+
+    Alert.alert(
+      t('person_detail.share_title'),
+      formatMessage('person_detail.share_message', { name: displayPerson.title }),
+      [{ text: t('common.ok'), style: 'default' }]
+    )
+  }, [displayPerson, logger, t, formatMessage])
+
+  const handleKnownForPress = useCallback((work: any) => {
+    logger.info('Known work pressed', {
+      context: 'person_detail_screen',
+      workId: work.id,
+      workTitle: work.title,
+      mediaType: work.mediaType
+    })
+
+    // Navigate to media detail with work object
+    router.push({
+      pathname: '/media/[id]' as any,
+      params: {
+        id: work.id,
+        item: work as any
+      }
+    } as any)
+  }, [logger, router])
+
   // Error handling - only show errors if we have no data to display
   const criticalError = isError && !hasInitialData
   useEffect(() => {
@@ -211,15 +214,14 @@ const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
     }
   }, [combinedError, logger, id, hasInitialData])
 
-  // Show full loading screen if we have no data at all
-  if (!hasInitialData) {
+  // Show full loading screen if we have no data at all or still loading person selection
+  if (!hasInitialData || isLoadingPersonSelection) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.interactive.primary} />
-          <Text style={styles.loadingText}>
-            {t('person_detail.loading_details')}
-          </Text>
+        <View style={styles.contentContainer}>
+          <SkeletonLoader variant="hero" />
+          <SkeletonLoader variant="info" />
+          <SkeletonLoader variant="filmography" itemCount={6} />
         </View>
       </SafeAreaView>
     )
@@ -260,7 +262,7 @@ const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
             <View style={styles.progressContent}>
               <ActivityIndicator size="small" color={theme.colors.interactive.primary} />
               <Text style={styles.progressText}>
-                {isEnrichingPerson 
+                {isEnrichingPerson
                   ? t('person_detail.loading_details')
                   : t('person_detail.loading_filmography')
                 }
@@ -269,45 +271,41 @@ const PersonDetailScreenImpl: React.FC<PersonDetailScreenProps> = () => {
           </View>
         )}
 
-        {/* Navigation Header */}
-        <View style={styles.header}>
-          <Pressable
-            style={styles.backButton}
-            onPress={handleBack}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.go_back')}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
-          </Pressable>
-        </View>
-
-        {/* Hero Section */}
+        {/* Hero Section with Profile Image */}
         <PersonHeroSection
           person={displayPerson}
           isLoading={isEnrichingPerson}
           isFullyLoaded={isFullyLoaded}
-        />
-
-        {/* Information Section */}
-        <PersonInfoSection
-          person={displayPerson}
           expandedBiography={expandedBiography}
           onBiographyToggle={handleBiographyToggle}
-          isLoading={isEnrichingPerson}
-          isFullyLoaded={isFullyLoaded}
+          onBack={handleBack}
+          onShare={handleShare}
         />
 
-        {/* Filmography Section */}
-        {(filmographyCatalogs.length > 0 || isLoadingFilmography) && (
-          <FilmographySection
+        {/* Content Sections */}
+        <View style={styles.contentSections}>
+          {/* Personal Information Section */}
+          <PersonInfoSection
             person={displayPerson}
-            catalogs={filmographyCatalogs}
-            onItemPress={handleFilmographyItemPress}
-            onLoadMore={handleLoadMoreFilmography}
-            isLoading={isLoadingFilmography}
+            expandedBiography={expandedBiography}
+            onBiographyToggle={handleBiographyToggle}
+            onKnownForPress={handleKnownForPress}
+            isLoading={isEnrichingPerson}
             isFullyLoaded={isFullyLoaded}
           />
-        )}
+
+          {/* Filmography Section */}
+          {(filmographyCatalogs.length > 0 || isLoadingFilmography) && (
+            <FilmographySection
+              person={displayPerson}
+              catalogs={filmographyCatalogs}
+              onItemPress={handleFilmographyItemPress}
+              onLoadMore={handleLoadMoreFilmography}
+              isLoading={isLoadingFilmography}
+              isFullyLoaded={isFullyLoaded}
+            />
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -331,6 +329,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.lg,
+  },
+  contentContainer: {
+    flex: 1,
   },
   loadingText: {
     color: theme.colors.text.secondary,
@@ -369,18 +370,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: theme.typography.button.fontSize,
     fontWeight: theme.typography.button.fontWeight as any,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-  },
-  backButton: {
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.background.secondary,
-    ...theme.shadows.sm,
+  contentSections: {
+    padding: theme.spacing.md,
   },
   // Progressive loading indicator styles
   progressIndicator: {

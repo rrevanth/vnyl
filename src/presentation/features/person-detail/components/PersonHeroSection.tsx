@@ -1,13 +1,13 @@
 /**
  * PersonHeroSection Component
- * 
- * Hero section for person detail screen featuring:
- * - Large profile image with fallback handling
- * - Person name and primary department
- * - Birth/death dates and place of birth
- * - Known for department badge
- * - Progressive loading states
- * - Native React Native components with theme integration
+ *
+ * Apple TV+ inspired hero section for person detail screen featuring:
+ * - Immersive full-width backdrop with professional overlay
+ * - Clean navigation header with iOS-style controls
+ * - Sophisticated person name and metadata display
+ * - Smart content organization with "About" and service integration
+ * - Premium visual hierarchy matching Apple TV+ design language
+ * - Enhanced accessibility and responsive design
  */
 
 import React, { useMemo } from 'react'
@@ -15,8 +15,11 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
-  ActivityIndicator
+  ImageBackground,
+  Pressable,
+  Dimensions,
+  ActivityIndicator,
+  Image
 } from 'react-native'
 import { observer } from '@legendapp/state/react'
 import { scale, moderateScale } from 'react-native-size-matters'
@@ -28,7 +31,7 @@ import type { PersonCatalogItem } from '@/src/domain/entities/media/catalog-item
 import { Ionicons } from '@expo/vector-icons'
 
 // Screen dimensions for responsive design
-// const { width: screenWidth } = Dimensions.get('window')
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
 interface PersonHeroSectionProps {
   /** Person data to display */
@@ -37,324 +40,335 @@ interface PersonHeroSectionProps {
   isLoading?: boolean
   /** Whether enrichment is complete */
   isFullyLoaded?: boolean
+  /** Whether biography is expanded */
+  expandedBiography?: boolean
+  /** Handler for biography expand/collapse */
+  onBiographyToggle?: () => void
+  /** Handler for navigation back */
+  onBack?: () => void
+  /** Handler for share action */
+  onShare?: () => void
 }
 
 /**
- * Format person's age or age at death
+ * Format person's professional information for Apple TV+ style display
  */
-const formatAge = (birthday?: Date, deathday?: Date): string | null => {
-  if (!birthday) return null
-  
-  const endDate = deathday || new Date()
-  const birthYear = birthday.getFullYear()
-  const endYear = endDate.getFullYear()
-  const age = endYear - birthYear
-  
-  // Check if birthday has passed this year (for living people)
-  if (!deathday) {
-    const birthdayThisYear = new Date(endYear, birthday.getMonth(), birthday.getDate())
-    if (endDate < birthdayThisYear) {
-      return `${age - 1}`
+const formatPersonMetadata = (person: PersonCatalogItem, t: (key: string) => string): string[] => {
+  const metadata: string[] = []
+
+  // Primary profession/department
+  if (person.knownForDepartment) {
+    metadata.push(person.knownForDepartment)
+  }
+
+  // Age and life dates in Apple TV+ format
+  if (person.birthday) {
+    const birthYear = person.birthday.getFullYear()
+    if (person.deathday) {
+      const deathYear = person.deathday.getFullYear()
+      metadata.push(`${birthYear} - ${deathYear}`)
+    } else {
+      const currentYear = new Date().getFullYear()
+      const age = currentYear - birthYear
+      metadata.push(`${age} years old`)
     }
   }
-  
-  return `${age}`
+
+  // Place of birth for context
+  if (person.placeOfBirth) {
+    metadata.push(person.placeOfBirth)
+  }
+
+  return metadata
 }
 
 /**
- * Format date for display
+ * Get optimized person image for hero display
  */
-const formatDate = (date: Date, locale: string = 'en-US'): string => {
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(date)
-}
-
-/**
- * Get appropriate placeholder icon based on gender or department
- */
-// const getPlaceholderIcon = (person: PersonCatalogItem): string => {
-//   // Use gender-neutral person icon as default
-//   return 'person-outline'
-// }
-
-/**
- * Get department color based on known department
- */
-const getDepartmentColor = (theme: Theme, knownForDepartment?: string): string => {
-  if (!knownForDepartment) return theme.colors.interactive.secondary
-  
-  const department = knownForDepartment.toLowerCase()
-  
-  switch (department) {
-    case 'acting':
-      return '#FF6B6B' // Red for actors
-    case 'directing':
-      return '#4ECDC4' // Teal for directors
-    case 'writing':
-      return '#45B7D1' // Blue for writers
-    case 'production':
-      return '#96CEB4' // Green for producers
-    case 'camera':
-      return '#FFEAA7' // Yellow for cinematography
-    case 'editing':
-      return '#DDA0DD' // Purple for editors
-    case 'sound':
-      return '#F39C12' // Orange for sound
-    default:
-      return theme.colors.interactive.secondary
+const getOptimizedPersonImage = (person: PersonCatalogItem): { backdrop?: string; profile?: string } => {
+  return {
+    backdrop: person.backdropUrl || undefined,
+    profile: person.profileUrl || undefined
   }
 }
 
 export const PersonHeroSection: React.FC<PersonHeroSectionProps> = observer(({
   person,
   isLoading = false,
-  isFullyLoaded = false
+  isFullyLoaded = false,
+  expandedBiography = false,
+  onBiographyToggle,
+  onBack,
+  onShare
 }) => {
   const { t } = useTranslation()
   const theme = useTheme()
   const styles = createStyles(theme)
 
-  // Extract person data
-  const {
-    title: name,
-    profileUrl,
-    knownForDepartment,
-    birthday,
-    deathday,
-    placeOfBirth,
-    popularity
-  } = person
+  // Extract person data with Apple TV+ formatting
+  const { title: name, overview: biography } = person
+  const metadata = useMemo(() => formatPersonMetadata(person, t), [person, t])
+  const images = useMemo(() => getOptimizedPersonImage(person), [person])
 
-  // Calculate age
-  const age = useMemo(() => {
-    return formatAge(birthday, deathday)
-  }, [birthday, deathday])
+  // Determine hero layout based on available images
+  const hasBackdrop = !!images.backdrop
+  const hasProfile = !!images.profile
 
-  // Format dates for display
-  const formattedBirthday = useMemo(() => {
-    return birthday ? formatDate(birthday) : null
-  }, [birthday])
+  // Handle actions
+  const handleBack = () => onBack?.()
+  const handleShare = () => onShare?.()
+  const handleBiographyToggle = () => onBiographyToggle?.()
 
-  const formattedDeathday = useMemo(() => {
-    return deathday ? formatDate(deathday) : null
-  }, [deathday])
-
-  // Department color
-  const departmentColor = useMemo(() => {
-    return getDepartmentColor(theme, knownForDepartment)
-  }, [theme, knownForDepartment])
-
-  // Profile image source
-  const imageSource = useMemo(() => {
-    if (profileUrl) {
-      return { uri: profileUrl }
-    }
-    return null
-  }, [profileUrl])
+  // Biography display logic
+  const shouldShowBiography = biography && biography.trim().length > 0 && biography !== name
+  const hasBiographyToggle = shouldShowBiography && biography.length > 200
 
   return (
-    <View style={styles.container}>
-      {/* Profile Image Section */}
-      <View style={styles.imageSection}>
-        <View style={styles.imageContainer}>
-          {imageSource ? (
-            <Image
-              source={imageSource}
-              style={styles.profileImage}
-              resizeMode="cover"
-              accessibilityLabel={`${name} profile photo`}
-            />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons 
-                name="person-outline"
-                size={scale(80)} 
-                color={theme.colors.text.secondary} 
-              />
+    <View style={styles.heroContainer}>
+      {/* Hero Background - Apple TV+ Style */}
+      <ImageBackground
+        source={hasBackdrop ? { uri: images.backdrop } : undefined}
+        style={styles.heroBackground}
+        resizeMode="cover"
+      >
+        {/* Premium Gradient Overlay */}
+        <View style={styles.heroOverlay}>
+          {/* Navigation Header - iOS Style */}
+          <View style={styles.navigationHeader}>
+            <Pressable
+              style={styles.navButton}
+              onPress={handleBack}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.go_back')}
+            >
+              <Ionicons name="chevron-back" size={28} color={theme.colors.text.onColor} />
+            </Pressable>
+
+            <Pressable
+              style={styles.navButton}
+              onPress={handleShare}
+              accessibilityRole="button"
+              accessibilityLabel={t('person_detail.share')}
+            >
+              <Ionicons name="square-outline" size={24} color={theme.colors.text.onColor} />
+            </Pressable>
+          </View>
+
+          {/* Hero Content Area - Apple TV+ Layout */}
+          <View style={styles.heroContentContainer}>
+            <View style={styles.heroContent}>
+              {/* Profile Image Section */}
+              {hasProfile && (
+                <View style={styles.profileImageContainer}>
+                  <Image
+                    source={{ uri: images.profile }}
+                    style={styles.profileImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+
+              {/* Person Information */}
+              <View style={styles.personInfo}>
+                {/* Person Name - Apple TV+ Typography */}
+                <Text style={styles.personName} numberOfLines={2}>
+                  {name}
+                </Text>
+
+                {/* Professional Metadata */}
+                {metadata.length > 0 && (
+                  <View style={styles.metadataContainer}>
+                    {metadata.map((item, index, array) => (
+                      <React.Fragment key={index}>
+                        <Text style={styles.metadataText}>{item}</Text>
+                        {index < array.length - 1 && (
+                          <Text style={styles.metadataSeparator}> • </Text>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                )}
+
+                {/* About Section - Apple TV+ Style */}
+                {shouldShowBiography && (
+                  <View style={styles.aboutSection}>
+                    <Text style={styles.aboutTitle}>About</Text>
+                    <Text
+                      style={styles.aboutText}
+                      numberOfLines={expandedBiography ? undefined : 3}
+                    >
+                      {biography}
+                    </Text>
+                    {hasBiographyToggle && (
+                      <Pressable onPress={handleBiographyToggle} style={styles.moreButton}>
+                        <Text style={styles.moreButtonText}>
+                          {expandedBiography ? 'Less' : 'More'}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+                )}
+
+                {/* Loading State */}
+                {isLoading && !isFullyLoaded && (
+                  <View style={styles.loadingIndicator}>
+                    <ActivityIndicator size="small" color={theme.colors.text.onColor} />
+                  </View>
+                )}
+              </View>
             </View>
-          )}
-          
-          {/* Popularity indicator for very popular people */}
-          {popularity && popularity > 80 && (
-            <View style={styles.popularityBadge}>
-              <Ionicons name="star" size={scale(16)} color="#FFD700" />
-            </View>
-          )}
+          </View>
         </View>
-
-        {/* Known For Department Badge */}
-        {knownForDepartment && (
-          <View style={[styles.departmentBadge, { backgroundColor: departmentColor }]}>
-            <Text style={styles.departmentText}>
-              {knownForDepartment}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Person Information */}
-      <View style={styles.infoSection}>
-        {/* Name */}
-        <Text style={styles.name} numberOfLines={2}>
-          {name}
-        </Text>
-
-        {/* Age and Life Dates */}
-        {(age || formattedBirthday || formattedDeathday) && (
-          <View style={styles.lifeDates}>
-            {age && (
-              <Text style={styles.ageText}>
-                {deathday ? `Died at ${age} years old` : `${age} years old`}
-              </Text>
-            )}
-            
-            {formattedBirthday && (
-              <Text style={styles.dateText}>
-                {deathday 
-                  ? `${formattedBirthday} - ${formattedDeathday}`
-                  : `Born ${formattedBirthday}`
-                }
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Place of Birth */}
-        {placeOfBirth && (
-          <View style={styles.birthPlaceContainer}>
-            <Ionicons name="location-outline" size={scale(16)} color={theme.colors.text.secondary} />
-            <Text style={styles.birthPlaceText}>
-              {placeOfBirth}
-            </Text>
-          </View>
-        )}
-
-        {/* Loading States */}
-        {isLoading && !isFullyLoaded && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={theme.colors.interactive.primary} />
-            <Text style={styles.loadingText}>
-              {t('person_detail.loading_details')}
-            </Text>
-          </View>
-        )}
-      </View>
+      </ImageBackground>
     </View>
   )
 })
 
 const createStyles = (theme: Theme) => {
-  const imageSize = scale(160)
-  
   return StyleSheet.create({
-    container: {
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.lg,
-      alignItems: 'center',
+    // Hero Container - Apple TV+ Full Screen Design
+    heroContainer: {
+      height: screenHeight * 0.85, // Taller for immersive experience
+      width: screenWidth,
+      backgroundColor: theme.colors.background.primary,
     },
-    imageSection: {
-      alignItems: 'center',
-      marginBottom: theme.spacing.lg,
+    heroBackground: {
+      flex: 1,
+      width: '100%',
     },
-    imageContainer: {
-      position: 'relative',
-      width: imageSize,
-      height: imageSize,
-      borderRadius: imageSize / 2,
+    heroOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.4)', // Premium dark overlay
+      paddingTop: theme.spacing.xl,
+    },
+
+    // Navigation Header - iOS Style
+    navigationHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.lg,
+      zIndex: 100,
+    },
+    navButton: {
+      width: scale(44),
+      height: scale(44),
+      borderRadius: scale(22),
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backdropFilter: 'blur(10px)',
+    },
+
+    // Hero Content Container - Apple TV+ Layout
+    heroContentContainer: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+    },
+    heroContent: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: theme.spacing.lg,
+    },
+
+    // Profile Image - Clean Circle Design
+    profileImageContainer: {
+      width: scale(120),
+      height: scale(120),
+      borderRadius: scale(60),
+      backgroundColor: theme.colors.background.secondary,
       overflow: 'hidden',
-      backgroundColor: theme.colors.background.tertiary,
+      borderWidth: 3,
+      borderColor: 'rgba(255, 255, 255, 0.2)',
       ...theme.shadows.lg,
     },
     profileImage: {
       width: '100%',
       height: '100%',
     },
-    imagePlaceholder: {
-      width: '100%',
-      height: '100%',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.background.tertiary,
+
+    // Person Information - Apple TV+ Typography
+    personInfo: {
+      flex: 1,
+      gap: theme.spacing.sm,
     },
-    popularityBadge: {
-      position: 'absolute',
-      top: theme.spacing.sm,
-      right: theme.spacing.sm,
-      width: scale(28),
-      height: scale(28),
-      borderRadius: scale(14),
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    departmentBadge: {
-      marginTop: theme.spacing.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.xs,
-      borderRadius: theme.radius.full,
-      ...theme.shadows.sm,
-    },
-    departmentText: {
+    personName: {
       color: theme.colors.text.onColor,
-      fontSize: moderateScale(12),
+      fontSize: moderateScale(36), // Large, bold title
+      fontWeight: '700',
+      lineHeight: moderateScale(42),
+      letterSpacing: -0.5,
+      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
+    },
+
+    // Metadata - Professional Information
+    metadataContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      marginBottom: theme.spacing.sm,
+    },
+    metadataText: {
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontSize: moderateScale(16),
+      fontWeight: '500',
+      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
+    metadataSeparator: {
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: moderateScale(16),
+      fontWeight: '400',
+    },
+
+    // About Section - Apple TV+ Style
+    aboutSection: {
+      maxWidth: '85%', // Constrain width for readability
+      gap: theme.spacing.xs,
+    },
+    aboutTitle: {
+      color: theme.colors.text.onColor,
+      fontSize: moderateScale(18),
       fontWeight: '600',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: -0.2,
+      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
     },
-    infoSection: {
+    aboutText: {
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontSize: moderateScale(15),
+      fontWeight: '400',
+      lineHeight: moderateScale(22),
+      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
+    moreButton: {
+      alignSelf: 'flex-start',
+      paddingVertical: theme.spacing.xs,
+      marginTop: theme.spacing.xs,
+    },
+    moreButtonText: {
+      color: theme.colors.interactive.primary,
+      fontSize: moderateScale(15),
+      fontWeight: '600',
+      textShadowColor: 'rgba(0, 0, 0, 0.5)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
+
+    // Loading State
+    loadingIndicator: {
       alignItems: 'center',
-      width: '100%',
-    },
-    name: {
-      color: theme.colors.text.primary,
-      fontSize: theme.typography.display.fontSize,
-      fontWeight: theme.typography.display.fontWeight as any,
-      lineHeight: theme.typography.display.lineHeight,
-      textAlign: 'center',
-      marginBottom: theme.spacing.sm,
-    },
-    lifeDates: {
-      alignItems: 'center',
-      marginBottom: theme.spacing.sm,
-    },
-    ageText: {
-      color: theme.colors.text.primary,
-      fontSize: theme.typography.heading2.fontSize,
-      fontWeight: '500',
-      marginBottom: theme.spacing.xs,
-    },
-    dateText: {
-      color: theme.colors.text.secondary,
-      fontSize: theme.typography.body.fontSize,
-      textAlign: 'center',
-      lineHeight: theme.typography.body.lineHeight,
-    },
-    birthPlaceContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: theme.spacing.sm,
-    },
-    birthPlaceText: {
-      color: theme.colors.text.secondary,
-      fontSize: theme.typography.body.fontSize,
-      marginLeft: theme.spacing.xs,
-      textAlign: 'center',
-    },
-    loadingContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
-    },
-    loadingText: {
-      color: theme.colors.text.secondary,
-      fontSize: moderateScale(12),
-      fontWeight: '500',
-      marginLeft: theme.spacing.xs,
     },
   })
 }
