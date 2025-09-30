@@ -11,7 +11,7 @@ import {
 } from '@/src/domain/providers/seasons/seasons-episodes-provider.interface'
 import { EpisodeInfo, CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
-import { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
+import { ITMDBService, TMDBUtils } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
 
 export class TMDBSeasonsProvider implements ISeasonsProvider {
@@ -170,11 +170,11 @@ export class TMDBSeasonsProvider implements ISeasonsProvider {
       voteAverage: seasonDetails.vote_average,
       episodes: this.transformEpisodes(seasonDetails.episodes || []),
       images: seasonDetails.poster_path ? {
-        thumbnail: `https://image.tmdb.org/t/p/w185${seasonDetails.poster_path}`,
-        small: `https://image.tmdb.org/t/p/w300${seasonDetails.poster_path}`,
-        medium: `https://image.tmdb.org/t/p/w500${seasonDetails.poster_path}`,
-        large: `https://image.tmdb.org/t/p/w780${seasonDetails.poster_path}`,
-        original: `https://image.tmdb.org/t/p/original${seasonDetails.poster_path}`
+        thumbnail: this.getImageUrl(seasonDetails.poster_path, 'poster'),
+        small: this.getImageUrl(seasonDetails.poster_path, 'poster'),
+        medium: this.getImageUrl(seasonDetails.poster_path, 'poster'),
+        large: this.getImageUrl(seasonDetails.poster_path, 'poster'),
+        original: this.getImageUrl(seasonDetails.poster_path, 'poster')
       } : undefined
     }
   }
@@ -194,11 +194,11 @@ export class TMDBSeasonsProvider implements ISeasonsProvider {
       voteAverage: episode.vote_average,
       voteCount: episode.vote_count,
       images: episode.still_path ? {
-        thumbnail: `https://image.tmdb.org/t/p/w185${episode.still_path}`,
-        small: `https://image.tmdb.org/t/p/w300${episode.still_path}`,
-        medium: `https://image.tmdb.org/t/p/w500${episode.still_path}`,
-        large: `https://image.tmdb.org/t/p/w1280${episode.still_path}`,
-        original: `https://image.tmdb.org/t/p/original${episode.still_path}`
+        thumbnail: this.getImageUrl(episode.still_path, 'still'),
+        small: this.getImageUrl(episode.still_path, 'still'),
+        medium: this.getImageUrl(episode.still_path, 'still'),
+        large: this.getImageUrl(episode.still_path, 'still'),
+        original: this.getImageUrl(episode.still_path, 'still')
       } : undefined
     }))
   }
@@ -225,5 +225,12 @@ export class TMDBSeasonsProvider implements ISeasonsProvider {
       throw new Error(`Invalid TMDB ID in catalog item: ${catalogItemId}`)
     }
     return tmdbId
+  }
+
+  /**
+   * Get properly formatted image URL using TMDB service configuration
+   */
+  private getImageUrl(path: string | null, type: 'poster' | 'backdrop' | 'profile' | 'still'): string | null {
+    return TMDBUtils.getImageUrl(this.tmdbService.config, path, type)
   }
 }

@@ -37,16 +37,14 @@ import type { CatalogItem, PersonCatalogItem } from '@/src/domain/entities/media
  * Helper function to check if catalog item is a person
  */
 const isPersonCatalogItem = (item: CatalogItem): item is PersonCatalogItem => {
-  return 'personData' in item && item.personData !== undefined
+  return item.mediaType === 'person'
 }
 
 /**
  * Get person display name from catalog item
  */
 const getPersonDisplayName = (item: CatalogItem): string => {
-  if (isPersonCatalogItem(item) && item.personData?.name) {
-    return item.personData.name
-  }
+  // PersonCatalogItem uses title for the person's name
   return item.title || 'Unknown Person'
 }
 
@@ -54,15 +52,13 @@ const getPersonDisplayName = (item: CatalogItem): string => {
  * Get person role/character from catalog item
  */
 const getPersonRole = (item: CatalogItem): string => {
-  if (isPersonCatalogItem(item) && item.personData) {
-    if (item.personData.character) {
-      return item.personData.character
+  if (isPersonCatalogItem(item)) {
+    // Role information is stored in the overview field
+    if (item.overview && item.overview !== item.title) {
+      return item.overview
     }
-    if (item.personData.job) {
-      return item.personData.job
-    }
-    if (item.personData.knownForDepartment) {
-      return item.personData.knownForDepartment
+    if (item.knownForDepartment) {
+      return item.knownForDepartment
     }
   }
   return 'Person'
@@ -72,8 +68,8 @@ const getPersonRole = (item: CatalogItem): string => {
  * Get person profile image URL from catalog item
  */
 const getPersonProfileUrl = (item: CatalogItem): string | undefined => {
-  if (isPersonCatalogItem(item) && item.personData?.profilePath) {
-    return item.personData.profilePath
+  if (isPersonCatalogItem(item) && item.profileUrl) {
+    return item.profileUrl
   }
   return item.posterUrl
 }
@@ -147,12 +143,12 @@ const PersonCard: React.FC<PersonCardProps> = observer(({
   const personName = getPersonDisplayName(person)
   const personRole = getPersonRole(person)
   const profileUrl = getPersonProfileUrl(person)
-  const characterName = isPersonCatalogItem(person) ? person.personData?.character : undefined
-  const popularity = isPersonCatalogItem(person) ? person.personData?.popularity : undefined
+  const characterName = isPersonCatalogItem(person) ? person.overview : undefined
+  const popularity = isPersonCatalogItem(person) ? person.popularity : undefined
   
   const imageSource = profileUrl 
     ? { uri: profileUrl }
-    : { uri: getPlaceholderImage(isPersonCatalogItem(person) ? person.personData?.knownForDepartment : undefined) }
+    : { uri: getPlaceholderImage(isPersonCatalogItem(person) ? person.knownForDepartment : undefined) }
 
   return (
     <Pressable

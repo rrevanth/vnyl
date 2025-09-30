@@ -13,7 +13,7 @@ import { CatalogItem, MovieCatalogItem, TVCatalogItem, CatalogItemUtils } from '
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
-import { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
+import { ITMDBService, TMDBUtils } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
 import type { TMDBMovieDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
 import type { TMDBTVShowDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
@@ -381,12 +381,8 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
           originalTitle: item.original_title,
           overview: item.overview,
           releaseDate: item.release_date ? new Date(item.release_date) : undefined,
-          posterUrl: item.poster_path 
-            ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
-            : undefined,
-          backdropUrl: item.backdrop_path 
-            ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` 
-            : undefined,
+          posterUrl: this.getImageUrl(item.poster_path, 'poster'),
+          backdropUrl: this.getImageUrl(item.backdrop_path, 'backdrop'),
           voteAverage: item.vote_average,
           voteCount: item.vote_count,
           popularity: item.popularity,
@@ -409,12 +405,8 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
           overview: item.overview,
           releaseDate: item.first_air_date ? new Date(item.first_air_date) : undefined,
           firstAirDate: item.first_air_date ? new Date(item.first_air_date) : undefined,
-          posterUrl: item.poster_path 
-            ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
-            : undefined,
-          backdropUrl: item.backdrop_path 
-            ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` 
-            : undefined,
+          posterUrl: this.getImageUrl(item.poster_path, 'poster'),
+          backdropUrl: this.getImageUrl(item.backdrop_path, 'backdrop'),
           voteAverage: item.vote_average,
           voteCount: item.vote_count,
           popularity: item.popularity,
@@ -459,5 +451,12 @@ export class TMDBRecommendationsProvider implements IRecommendationsProvider {
       throw new Error(`Invalid TMDB ID in catalog item: ${catalogItemId}`)
     }
     return tmdbId
+  }
+
+  /**
+   * Get properly formatted image URL using TMDB service configuration
+   */
+  private getImageUrl(path: string | null, type: 'poster' | 'backdrop' | 'profile'): string | null {
+    return TMDBUtils.getImageUrl(this.tmdbService.config, path, type)
   }
 }

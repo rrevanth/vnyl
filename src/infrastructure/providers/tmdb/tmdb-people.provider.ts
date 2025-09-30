@@ -11,7 +11,7 @@ import { CatalogItem, PersonCatalogItem, PersonGender } from '@/src/domain/entit
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { MediaType } from '@/src/domain/entities/media/content-types'
 import { ProviderCapability } from '@/src/domain/entities/context/content-context.entity'
-import { ITMDBService } from '@/src/infrastructure/api/tmdb/tmdb.service'
+import { ITMDBService, TMDBUtils } from '@/src/infrastructure/api/tmdb/tmdb.service'
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
 import type { TMDBMovieDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
 import type { TMDBTVShowDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
@@ -349,9 +349,7 @@ export class TMDBPeopleProvider implements IPeopleProvider {
       title: person.name,
       originalTitle: person.name,
       overview: person.character || person.job || `Known for ${person.known_for_department}`,
-      profileUrl: person.profile_path 
-        ? `https://image.tmdb.org/t/p/w500${person.profile_path}` 
-        : undefined,
+      profileUrl: this.getImageUrl(person.profile_path, 'profile'),
       popularity: person.popularity,
       knownForDepartment: person.known_for_department || 'Acting',
       gender: this.convertTmdbGenderToPersonGender(person.gender),
@@ -422,5 +420,12 @@ export class TMDBPeopleProvider implements IPeopleProvider {
       default:
         return PersonGender.NOT_SPECIFIED
     }
+  }
+
+  /**
+   * Get properly formatted image URL using TMDB service configuration
+   */
+  private getImageUrl(path: string | null, type: 'poster' | 'backdrop' | 'profile'): string | null {
+    return TMDBUtils.getImageUrl(this.tmdbService.config, path, type)
   }
 }
