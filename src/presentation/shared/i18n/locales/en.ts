@@ -219,6 +219,7 @@ export const en: TranslationKey = {
   media: {
     movie: 'Movie',
     tv: 'TV Show',
+    person: 'Person',
     title: 'Title',
     description: 'Description',
     cast: 'Cast',
@@ -312,6 +313,54 @@ export const en: TranslationKey = {
     
     // Navigation
     go_back: 'Go Back'
+  },
+
+  person_detail: {
+    // Loading states
+    loading_details: 'Loading person details...',
+    loading_filmography: 'Loading filmography...',
+    loading_biography: 'Loading biography...',
+    
+    // Error states
+    error_title: 'Unable to Load Person Details',
+    error_message: 'Something went wrong while loading person information. Please try again.',
+    
+    // Hero section
+    age: '{{age}} years old',
+    age_at_death: 'Died at {{age}} years old',
+    born: 'Born {{date}}',
+    life_dates: '{{birth}} - {{death}}',
+    
+    // Personal information
+    biography: 'Biography',
+    also_known_as: 'Also Known As',
+    personal_details: 'Personal Details',
+    known_for_department: 'Known For',
+    gender: 'Gender',
+    popularity: 'Popularity',
+    age_label: 'Age',
+    years_old: 'years old',
+    show_more: 'Show more',
+    show_less: 'Show less',
+    
+    // Filmography section
+    filmography: {
+      title: 'Filmography',
+      loading: 'Loading filmography...',
+      loading_more: 'Loading more...',
+      total_works: '{{count}} total works',
+      movies: 'Movies',
+      tv_shows: 'TV Shows',
+      acting: 'Acting',
+      crew: 'Crew',
+      directing: 'Directing',
+      writing: 'Writing',
+      producing: 'Producing'
+    },
+    
+    // Load more functionality
+    load_more_error_title: 'Unable to Load More',
+    load_more_error_message: 'Something went wrong while loading more filmography. Please try again.'
   },
 
   search: {

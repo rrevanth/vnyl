@@ -16,7 +16,10 @@ import {
   LoadMorePeopleUseCase,
   ResolveExternalIdsUseCase,
   EnrichCatalogItemUseCase,
-  LoadSeasonEpisodesUseCase
+  LoadSeasonEpisodesUseCase,
+  EnrichPersonUseCase,
+  GetPersonFilmographyUseCase,
+  LoadMoreFilmographyUseCase
 } from '@/src/domain/usecases'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
@@ -31,6 +34,7 @@ import { TMDBProviderSource } from '@/src/infrastructure/providers/tmdb-provider
 import { ICatalogProvider } from '@/src/domain/providers/catalog/catalog-provider.interface'
 import { IRecommendationsProvider } from '@/src/domain/providers/recommendations/recommendations-provider.interface'
 import { IPeopleProvider } from '@/src/domain/providers/people/people-provider.interface'
+import { IFilmographyProvider } from '@/src/domain/providers/filmography/filmography-provider.interface'
 import { homescreenStateService } from '@/src/presentation/shared/services/homescreen-state.service'
 
 const container = new DIContainer()
@@ -323,6 +327,47 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     }
   )
 
+  // Register Person Use Cases
+  container.registerSingleton<EnrichPersonUseCase>(
+    TOKENS.ENRICH_PERSON_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      return new EnrichPersonUseCase(registry, logger)
+    }
+  )
+
+  container.registerSingleton<GetPersonFilmographyUseCase>(
+    TOKENS.GET_PERSON_FILMOGRAPHY_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      return new GetPersonFilmographyUseCase(registry, logger)
+    }
+  )
+
+  container.registerSingleton<LoadMoreFilmographyUseCase>(
+    TOKENS.LOAD_MORE_FILMOGRAPHY_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      // Get all filmography providers from registry
+      const filmographyProviders = registry.getAllProviders().filter(
+        provider => provider.capabilities.includes(ProviderCapability.FILMOGRAPHY)
+      ) as IFilmographyProvider[]
+      
+      logger.debug('DI Container: Registering LoadMoreFilmographyUseCase', undefined, {
+        context: 'di_container_setup',
+        filmographyProvidersCount: filmographyProviders.length
+      })
+      
+      return new LoadMoreFilmographyUseCase(filmographyProviders, logger)
+    }
+  )
+
   // Log successful initialization
   logger.info('DI Container initialized successfully', {
     services: [
@@ -348,6 +393,9 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       'ResolveExternalIdsUseCase',
       'EnrichCatalogItemUseCase',
       'LoadSeasonEpisodesUseCase',
+      'EnrichPersonUseCase',
+      'GetPersonFilmographyUseCase',
+      'LoadMoreFilmographyUseCase',
       'ImageCacheService'
     ]
   })

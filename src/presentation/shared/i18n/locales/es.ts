@@ -219,6 +219,7 @@ export const es: TranslationKey = {
   media: {
     movie: 'Película',
     tv: 'Serie de TV',
+    person: 'Persona',
     title: 'Título',
     description: 'Descripción',
     cast: 'Reparto',
@@ -312,6 +313,54 @@ export const es: TranslationKey = {
     
     // Navigation
     go_back: 'Volver'
+  },
+
+  person_detail: {
+    // Loading states
+    loading_details: 'Cargando detalles de la persona...',
+    loading_filmography: 'Cargando filmografía...',
+    loading_biography: 'Cargando biografía...',
+    
+    // Error states
+    error_title: 'No se pueden cargar los detalles de la persona',
+    error_message: 'Algo salió mal al cargar la información de la persona. Inténtalo de nuevo.',
+    
+    // Hero section
+    age: '{{age}} años',
+    age_at_death: 'Murió a los {{age}} años',
+    born: 'Nacido {{date}}',
+    life_dates: '{{birth}} - {{death}}',
+    
+    // Personal information
+    biography: 'Biografía',
+    also_known_as: 'También conocido como',
+    personal_details: 'Detalles personales',
+    known_for_department: 'Conocido por',
+    gender: 'Género',
+    popularity: 'Popularidad',
+    age_label: 'Edad',
+    years_old: 'años',
+    show_more: 'Mostrar más',
+    show_less: 'Mostrar menos',
+    
+    // Filmography section
+    filmography: {
+      title: 'Filmografía',
+      loading: 'Cargando filmografía...',
+      loading_more: 'Cargando más...',
+      total_works: '{{count}} trabajos totales',
+      movies: 'Películas',
+      tv_shows: 'Series de TV',
+      acting: 'Actuación',
+      crew: 'Equipo técnico',
+      directing: 'Dirección',
+      writing: 'Escritura',
+      producing: 'Producción'
+    },
+    
+    // Load more functionality
+    load_more_error_title: 'No se puede cargar más',
+    load_more_error_message: 'Algo salió mal al cargar más filmografía. Inténtalo de nuevo.'
   },
 
   search: {

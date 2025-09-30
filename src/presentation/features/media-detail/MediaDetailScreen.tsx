@@ -87,7 +87,7 @@ interface MediaDetailScreenProps {
 }
 
 const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, item } = useLocalSearchParams<{ id: string; item?: any }>()
   const { t, formatMessage } = useTranslation()
   const theme = useTheme()
   const styles = createStyles(theme)
@@ -104,8 +104,8 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
   // We still need this as the entry point, but we'll manage the enriched item in MediaDetail store
   const selectedItem = homescreenSelectors.selectedItem.get()
 
-  // Use the selected item as initial item - this is the complete CatalogItem object
-  const initialItem = selectedItem
+  // Use item from params as fallback to store - this allows direct navigation with object
+  const initialItem = (item as CatalogItem) || selectedItem
 
   if (!initialItem) {
     logger?.warn('No selected catalog item found in store', new Error('Missing catalog item'), {
@@ -351,8 +351,16 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
       personId: person.id,
       personTitle: person.title
     })
-    // Navigate to person detail screen
-  }, [logger])
+    
+    // Navigate to person detail with object in params
+    router.push({
+      pathname: '/person/[id]' as any,
+      params: { 
+        id: person.id,
+        person: person as any
+      }
+    } as any)
+  }, [logger, router])
 
   const handleRecommendationPress = useCallback((item: CatalogItem) => {
     logger.info('Recommendation pressed', {

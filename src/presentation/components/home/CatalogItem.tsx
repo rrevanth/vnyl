@@ -17,7 +17,6 @@ import type { Theme } from '@/src/presentation/shared/theme/types'
 import type { CatalogItem as CatalogItemEntity } from '@/src/domain/entities/media/catalog-item.entity'
 import { useLazyLoadingPerformance, useProgressiveImageLoading } from '@/src/presentation/shared/hooks/useLazyLoading'
 import { scale, moderateScale } from 'react-native-size-matters'
-import { stringifyCatalogItemForParams } from '@/src/presentation/shared/utils/catalog-item-serialization'
 
 interface CatalogItemProps {
   item: CatalogItemEntity
@@ -102,20 +101,23 @@ const CatalogItemImpl: React.FC<CatalogItemProps> = ({
       return
     }
 
-    // Navigate to MediaDetail screen with item data
+    // Navigate to appropriate detail screen with item data
     if (item.mediaType === 'person') {
-      router.push(`/person/${item.id}` as any)
+      router.push({
+        pathname: '/person/[id]' as any,
+        params: { 
+          id: item.id,
+          person: item as any
+        }
+      } as any)
     } else {
       router.push({
         pathname: '/media/[id]' as any,
         params: { 
           id: item.id,
-          // Pass complete serialized CatalogItem data for the detail screen
-          // This includes all fields: externalIds, contentContext, hasDetailedInfo, enrichedData, etc.
-          // MediaDetailScreen will deserialize this back to a complete CatalogItem object
-          itemData: stringifyCatalogItemForParams(item)
+          item: item as any
         }
-      })
+      } as any)
     }
   }, [onPress, item, router])
 

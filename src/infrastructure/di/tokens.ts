@@ -39,6 +39,11 @@ export const TOKENS = {
   ENRICH_CATALOG_ITEM_USE_CASE: Symbol('EnrichCatalogItemUseCase'),
   LOAD_SEASON_EPISODES_USE_CASE: Symbol('LoadSeasonEpisodesUseCase'),
 
+  // Person Use Cases
+  ENRICH_PERSON_USE_CASE: Symbol('EnrichPersonUseCase'),
+  GET_PERSON_FILMOGRAPHY_USE_CASE: Symbol('GetPersonFilmographyUseCase'),
+  LOAD_MORE_FILMOGRAPHY_USE_CASE: Symbol('LoadMoreFilmographyUseCase'),
+
   // State Management Services (Domain Layer Interfaces)
   CATALOG_STATE_MANAGEMENT_SERVICE: Symbol('ICatalogStateManagementService'),
 

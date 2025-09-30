@@ -13,6 +13,7 @@ import { TMDBExternalIdsProvider } from './tmdb/tmdb-external-ids.provider'
 import { TMDBPeopleProvider } from './tmdb/tmdb-people.provider'
 import { TMDBRecommendationsProvider } from './tmdb/tmdb-recommendations.provider'
 import { TMDBSeasonsProvider } from './tmdb/tmdb-seasons.provider'
+import { TMDBFilmographyProvider } from './tmdb/tmdb-filmography.provider'
 
 /**
  * TMDB Provider Source
@@ -29,7 +30,8 @@ export class TMDBProviderSource implements IProviderSource {
     ProviderCapability.IMAGES,
     ProviderCapability.PEOPLE,
     ProviderCapability.RECOMMENDATIONS,
-    ProviderCapability.SEASONS_EPISODES
+    ProviderCapability.SEASONS_EPISODES,
+    ProviderCapability.FILMOGRAPHY
   ]
 
   public readonly config: ProviderSourceConfig
@@ -133,6 +135,7 @@ export class TMDBProviderSource implements IProviderSource {
       const peopleProvider = new TMDBPeopleProvider(tmdbService, this.logger, this.id)
       const recommendationsProvider = new TMDBRecommendationsProvider(tmdbService, this.logger, this.id)
       const seasonsProvider = new TMDBSeasonsProvider(tmdbService, this.logger, this.id)
+      const filmographyProvider = new TMDBFilmographyProvider(tmdbService, this.logger, this.id)
 
       // Register each provider
       await this.registerSingleProvider(registry, catalogProvider, 'catalog')
@@ -144,6 +147,7 @@ export class TMDBProviderSource implements IProviderSource {
       await this.registerSingleProvider(registry, peopleProvider, 'people')
       await this.registerSingleProvider(registry, recommendationsProvider, 'recommendations')
       await this.registerSingleProvider(registry, seasonsProvider, 'seasons-episodes')
+      await this.registerSingleProvider(registry, filmographyProvider, 'filmography')
 
       const registrationTime = Date.now() - startTime
 

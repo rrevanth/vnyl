@@ -67,3 +67,29 @@ export type {
   LoadSeasonEpisodesMetrics,
   LoadSeasonEpisodesProviderError
 } from '@/src/domain/usecases/media/load-season-episodes.usecase'
+
+// =============================================================================
+// Person Detail Workflow Use Cases
+// =============================================================================
+
+export { EnrichPersonUseCase } from '@/src/domain/usecases/person/enrich-person.usecase'
+export type {
+  EnrichPersonRequest,
+  EnrichPersonResult,
+  PersonEnrichmentMetrics,
+  PersonEnrichmentProviderError
+} from '@/src/domain/usecases/person/enrich-person.usecase'
+
+export { GetPersonFilmographyUseCase } from '@/src/domain/usecases/person/get-person-filmography.usecase'
+export type {
+  GetPersonFilmographyRequest,
+  GetPersonFilmographyResult,
+  FilmographyMetrics,
+  FilmographyProviderError
+} from '@/src/domain/usecases/person/get-person-filmography.usecase'
+
+export { LoadMoreFilmographyUseCase } from '@/src/domain/usecases/person/load-more-filmography.usecase'
+export type {
+  LoadMoreFilmographyRequest,
+  LoadMoreFilmographyResult
+} from '@/src/domain/usecases/person/load-more-filmography.usecase'

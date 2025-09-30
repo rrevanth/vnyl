@@ -66,6 +66,7 @@ export enum ProviderCapability {
   ACTIVITY = 'activity',
   CATALOG = 'catalog',
   EXTERNAL_IDS = 'external_ids',
+  FILMOGRAPHY = 'filmography',
   IMAGES = 'images',
   METADATA = 'metadata',
   PEOPLE = 'people',

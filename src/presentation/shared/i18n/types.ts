@@ -229,6 +229,7 @@ export interface TranslationKey {
   media: {
     movie: string
     tv: string
+    person: string
     title: string
     description: string
     cast: string
@@ -323,6 +324,55 @@ export interface TranslationKey {
     
     // Navigation
     go_back: string
+  }
+
+  // Person Detail
+  person_detail: {
+    // Loading states
+    loading_details: string
+    loading_filmography: string
+    loading_biography: string
+    
+    // Error states
+    error_title: string
+    error_message: string
+    
+    // Hero section
+    age: string
+    age_at_death: string
+    born: string
+    life_dates: string
+    
+    // Personal information
+    biography: string
+    also_known_as: string
+    personal_details: string
+    known_for_department: string
+    gender: string
+    popularity: string
+    age_label: string
+    years_old: string
+    show_more: string
+    show_less: string
+    
+    // Filmography section
+    filmography: {
+      title: string
+      loading: string
+      loading_more: string
+      total_works: string
+      movies: string
+      tv_shows: string
+      acting: string
+      crew: string
+      directing: string
+      writing: string
+      producing: string
+    }
+    
+    // Load more functionality
+    load_more_error_title: string
+    load_more_error_message: string
   }
 
   // Search

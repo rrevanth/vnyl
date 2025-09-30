@@ -1,5 +1,5 @@
 import { IProvider } from '@/src/domain/providers/base/provider.interface'
-import { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
+import { CatalogItem, PersonCatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
 import { Catalog } from '@/src/domain/entities/media/catalog.entity'
 import { PaginationOptions } from '@/src/domain/providers/base/pagination-options.interface'
 
@@ -64,4 +64,23 @@ export interface IPeopleProvider extends IProvider {
     page: number,
     limit?: number
   ): Promise<CatalogItem[]>
+
+  /**
+   * Get detailed information for a specific person
+   * Fetches comprehensive person details including biography, filmography summary, and metadata
+   * Used for person detail views requiring enriched information beyond basic catalog item data
+   * 
+   * @param personId - The unique identifier for the person
+   * @returns Promise that resolves to enriched person catalog item
+   * 
+   * @example
+   * ```typescript
+   * // Get detailed person information
+   * const personDetails = await provider.getPersonDetails('12345')
+   * console.log(`${personDetails.title} - ${personDetails.knownForDepartment}`)
+   * console.log(`Biography: ${personDetails.overview}`)
+   * console.log(`Known for: ${personDetails.knownFor?.length} items`)
+   * ```
+   */
+  getPersonDetails(personId: string): Promise<PersonCatalogItem>
 }

@@ -15,6 +15,7 @@ import { ITMDBService, TMDBUtils } from '@/src/infrastructure/api/tmdb/tmdb.serv
 import { ILoggingService } from '@/src/domain/services/logging.service.interface'
 import type { TMDBMovieDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/movie.endpoints'
 import type { TMDBTVShowDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/tv.endpoints'
+import type { PersonDetails } from '@/src/infrastructure/api/tmdb/endpoints/types/person.endpoints'
 
 export class TMDBPeopleProvider implements IPeopleProvider {
   public readonly id = 'tmdb-people'
@@ -230,6 +231,86 @@ export class TMDBPeopleProvider implements IPeopleProvider {
     return result.people
   }
 
+  /**
+   * Get detailed information for a specific person
+   * Fetches comprehensive person details from TMDB
+   */
+  async getPersonDetails(personId: string): Promise<PersonCatalogItem> {
+    const startTime = Date.now()
+    
+    try {
+      this.logger.info('Fetching person details', {
+        provider: 'tmdb_people',
+        personId
+      })
+
+      // Convert string ID to number for TMDB API
+      const tmdbPersonId = parseInt(personId, 10)
+      if (isNaN(tmdbPersonId)) {
+        throw new Error(`Invalid person ID: ${personId}`)
+      }
+
+      // Fetch detailed person information from TMDB
+      const personDetails = await this.tmdbService.client.people.getDetails(tmdbPersonId, {
+        append_to_response: 'movie_credits,tv_credits,external_ids,images'
+      }) as PersonDetails & {
+        movie_credits?: { cast: any[]; crew: any[] }
+        tv_credits?: { cast: any[]; crew: any[] }
+        external_ids?: any
+        images?: any
+      }
+
+      // Transform the detailed person data to PersonCatalogItem
+      const personCatalogItem: PersonCatalogItem = {
+        id: `${MediaType.PERSON}_tmdb_${personDetails.id}`,
+        mediaType: MediaType.PERSON,
+        title: personDetails.name,
+        originalTitle: personDetails.name,
+        overview: personDetails.biography || `Known for ${personDetails.known_for_department}`,
+        releaseDate: personDetails.birthday ? new Date(personDetails.birthday) : undefined,
+        profileUrl: this.getImageUrl(personDetails.profile_path, 'profile') ?? undefined,
+        posterUrl: this.getImageUrl(personDetails.profile_path, 'profile') ?? undefined,
+        popularity: personDetails.popularity,
+        knownForDepartment: personDetails.known_for_department || 'Acting',
+        birthday: personDetails.birthday ? new Date(personDetails.birthday) : undefined,
+        deathday: personDetails.deathday ? new Date(personDetails.deathday) : undefined,
+        placeOfBirth: personDetails.place_of_birth || undefined,
+        gender: this.convertTmdbGenderToPersonGender(personDetails.gender),
+        // Extract known for from combined credits
+        knownFor: this.extractKnownFor(personDetails.movie_credits, personDetails.tv_credits),
+        originalMediaType: MediaType.PERSON,
+        contentContext: this.createContentContext(personDetails.id),
+        externalIds: { 
+          tmdb: personDetails.id,
+          imdb: personDetails.external_ids?.imdb_id || undefined,
+          ...personDetails.external_ids
+        },
+        hasDetailedInfo: true,
+        isAdult: personDetails.adult || false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      this.logger.info('Successfully fetched person details', {
+        provider: 'tmdb_people',
+        personId,
+        name: personDetails.name,
+        knownFor: personDetails.known_for_department,
+        fetchTime: Date.now() - startTime
+      })
+
+      return personCatalogItem
+
+    } catch (error) {
+      const errorInstance = error instanceof Error ? error : new Error(String(error))
+      this.logger.error('Failed to fetch person details', errorInstance, {
+        provider: 'tmdb_people',
+        personId
+      })
+      throw errorInstance
+    }
+  }
+
 
   /**
    * Load more items for a specific catalog (pagination)
@@ -424,6 +505,58 @@ export class TMDBPeopleProvider implements IPeopleProvider {
       default:
         return PersonGender.NOT_SPECIFIED
     }
+  }
+
+  /**
+   * Extract known for items from movie and TV credits
+   */
+  private extractKnownFor(movieCredits?: any, tvCredits?: any): any[] | undefined {
+    const knownForItems: any[] = []
+    
+    // Get top movies from cast
+    if (movieCredits?.cast) {
+      const topMovies = movieCredits.cast
+        .filter((movie: any) => movie.popularity && movie.popularity > 5)
+        .sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0))
+        .slice(0, 3)
+        .map((movie: any) => ({
+          id: movie.id,
+          mediaType: MediaType.MOVIE,
+          title: movie.title,
+          originalTitle: movie.original_title,
+          releaseDate: movie.release_date ? new Date(movie.release_date) : undefined,
+          posterUrl: this.getImageUrl(movie.poster_path, 'poster'),
+          voteAverage: movie.vote_average,
+          overview: movie.overview
+        }))
+      
+      knownForItems.push(...topMovies)
+    }
+    
+    // Get top TV shows from cast
+    if (tvCredits?.cast) {
+      const topTV = tvCredits.cast
+        .filter((show: any) => show.popularity && show.popularity > 5)
+        .sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0))
+        .slice(0, 2)
+        .map((show: any) => ({
+          id: show.id,
+          mediaType: MediaType.TV_SERIES,
+          title: show.name,
+          originalTitle: show.original_name,
+          releaseDate: show.first_air_date ? new Date(show.first_air_date) : undefined,
+          posterUrl: this.getImageUrl(show.poster_path, 'poster'),
+          voteAverage: show.vote_average,
+          overview: show.overview
+        }))
+      
+      knownForItems.push(...topTV)
+    }
+    
+    // Sort by popularity and take top 5
+    return knownForItems
+      .sort((a, b) => (b.voteAverage || 0) - (a.voteAverage || 0))
+      .slice(0, 5)
   }
 
   /**
