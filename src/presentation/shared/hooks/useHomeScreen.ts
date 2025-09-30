@@ -237,11 +237,12 @@ const useHomeScreenImpl = (): UseHomeScreenResult => {
       mediaType: item.mediaType 
     })
     
+    // Store the selected item in the homescreen store for direct access (for both person and media)
+    homescreenActions.setSelectedItem(item)
+    
     if (item.mediaType === 'person') {
       router.push(`/person/${item.id}` as any)
     } else {
-      // Store the selected item in the homescreen store for direct access
-      homescreenActions.setSelectedItem(item)
       router.push(`/media/${item.id}` as any)
     }
   }, [logger])
