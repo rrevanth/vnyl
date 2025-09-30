@@ -7,6 +7,7 @@ export interface TranslationKey {
   common: {
     loading: string
     loading_more: string
+    load_more: string
     error: string
     success: string
     retry: string

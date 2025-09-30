@@ -435,8 +435,8 @@ class MediaDetailStore {
     const catalog = this.findPeopleCatalog(catalogId)
     if (!catalog?.pagination) return false
     
-    const { currentPage, totalPages } = catalog.pagination
-    return currentPage < totalPages && !this.state.isLoadingMorePeople.get()
+    const { page, totalPages } = catalog.pagination
+    return page < (totalPages ?? Infinity) && !this.state.isLoadingMorePeople.get()
   }
 
   /**
@@ -448,8 +448,8 @@ class MediaDetailStore {
     const catalog = this.findRecommendationCatalog(catalogId)
     if (!catalog?.pagination) return false
     
-    const { currentPage, totalPages } = catalog.pagination
-    return currentPage < totalPages && !this.state.isLoadingMoreRecommendations.get()
+    const { page, totalPages } = catalog.pagination
+    return page < (totalPages ?? Infinity) && !this.state.isLoadingMoreRecommendations.get()
   }
 
   // DEBUGGING UTILITIES

@@ -369,8 +369,19 @@ const RecommendationCatalogRow: React.FC<RecommendationCatalogRowProps> = observ
                 posterUrl: '',
                 backdropUrl: '',
                 mediaType: catalog.mediaType,
+                originalMediaType: catalog.mediaType,
+                hasDetailedInfo: false,
                 externalIds: {},
-                contentContext: catalog.catalogContext,
+                contentContext: {
+                  catalogContext: catalog.catalogContext,
+                  originalMediaType: catalog.mediaType,
+                  originalMediaId: 'show-more',
+                  providerId: catalog.catalogContext.providerId,
+                  providerName: catalog.catalogContext.providerName,
+                  positionInCatalog: 0,
+                  fetchedAt: new Date(),
+                  requestId: `show-more-${Date.now()}`
+                },
                 createdAt: new Date(),
                 updatedAt: new Date()
               }

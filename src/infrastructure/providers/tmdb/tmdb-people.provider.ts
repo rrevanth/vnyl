@@ -349,7 +349,7 @@ export class TMDBPeopleProvider implements IPeopleProvider {
       title: person.name,
       originalTitle: person.name,
       overview: person.character || person.job || `Known for ${person.known_for_department}`,
-      profileUrl: this.getImageUrl(person.profile_path, 'profile'),
+      profileUrl: this.getImageUrl(person.profile_path, 'profile') ?? undefined,
       popularity: person.popularity,
       knownForDepartment: person.known_for_department || 'Acting',
       gender: this.convertTmdbGenderToPersonGender(person.gender),

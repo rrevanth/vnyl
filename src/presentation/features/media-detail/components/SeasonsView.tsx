@@ -191,7 +191,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = observer(({
         {/* Episode thumbnail */}
         <View style={styles.thumbnailContainer}>
           <Image
-            source={{ uri: episode.stillPath || '' }}
+            source={{ uri: episode.stillUrl || '' }}
             style={styles.thumbnail}
             resizeMode="cover"
             accessibilityIgnoresInvertColors
@@ -304,8 +304,8 @@ export const SeasonsView: React.FC<SeasonsViewProps> = observer(({
         season={selectedSeason}
         onPress={onEpisodePress}
         theme={theme}
-        isExpanded={expandedEpisodes.has(episode.id)}
-        onToggleExpanded={() => handleToggleExpanded(episode.id)}
+        isExpanded={expandedEpisodes.has(String(episode.id))}
+        onToggleExpanded={() => handleToggleExpanded(String(episode.id))}
       />
     )
   }, [selectedSeason, onEpisodePress, theme, expandedEpisodes, handleToggleExpanded])
@@ -344,7 +344,7 @@ export const SeasonsView: React.FC<SeasonsViewProps> = observer(({
         <FlatList
           data={selectedSeason.episodes}
           renderItem={renderEpisode}
-          keyExtractor={(episode) => episode.id || `episode-${episode.episodeNumber}`}
+          keyExtractor={(episode) => String(episode.id || `episode-${episode.episodeNumber}`)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.episodesList}
           accessibilityLabel={`${selectedSeason.name} episodes list`}

@@ -168,14 +168,7 @@ export class TMDBSeasonsProvider implements ISeasonsProvider {
       episodeCount: seasonDetails.episodes?.length || 0,
       airDate: seasonDetails.air_date ? new Date(seasonDetails.air_date) : undefined,
       voteAverage: seasonDetails.vote_average,
-      episodes: this.transformEpisodes(seasonDetails.episodes || []),
-      images: seasonDetails.poster_path ? {
-        thumbnail: this.getImageUrl(seasonDetails.poster_path, 'poster'),
-        small: this.getImageUrl(seasonDetails.poster_path, 'poster'),
-        medium: this.getImageUrl(seasonDetails.poster_path, 'poster'),
-        large: this.getImageUrl(seasonDetails.poster_path, 'poster'),
-        original: this.getImageUrl(seasonDetails.poster_path, 'poster')
-      } : undefined
+      episodes: this.transformEpisodes(seasonDetails.episodes || [])
     }
   }
 
