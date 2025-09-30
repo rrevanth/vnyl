@@ -1,7 +1,8 @@
 import { observable, batch } from '@legendapp/state'
 import type { Observable } from '@legendapp/state'
-import type { CatalogItem } from '@/src/domain/entities/media/catalog-item.entity'
+import type { CatalogItem, EpisodeInfo } from '@/src/domain/entities/media/catalog-item.entity'
 import type { Catalog } from '@/src/domain/entities/media/catalog.entity'
+import type { Season, SeasonMetadata } from '@/src/domain/providers/seasons/seasons-episodes-provider.interface'
 
 /**
  * Interface for MediaDetail store state
@@ -19,7 +20,25 @@ interface MediaDetailStoreState {
   recommendationCatalogs: Catalog[]
   
   /** Seasons data (not catalogs - just season details) */
-  seasonDetails: any | null // Use any for now, can be typed later
+  seasonDetails: { seasons: Season[] } | null
+  
+  /** Progressive season loading state - All seasons info without episodes */
+  seasonMetadata: SeasonMetadata[] | null
+  
+  /** Progressive season loading state - Loaded seasons with episodes mapped by season number */
+  loadedSeasonsMap: Map<number, Season>
+  
+  /** Progressive season loading state - Flat list of all loaded episodes for efficient access */
+  allLoadedEpisodes: EpisodeInfo[]
+  
+  /** Progressive season loading state - Currently visible season number */
+  currentSeasonNumber: number
+  
+  /** Progressive season loading state - Which season is currently loading (null if none) */
+  isLoadingSeasonNumber: number | null
+  
+  /** Progressive season loading state - Track last loaded season for infinite scroll */
+  lastLoadedSeasonNumber: number
   
   /** Loading state for loading more people items */
   isLoadingMorePeople: boolean
@@ -51,6 +70,12 @@ const initialState: MediaDetailStoreState = {
   peopleCatalogs: [],
   recommendationCatalogs: [],
   seasonDetails: null,
+  seasonMetadata: null,
+  loadedSeasonsMap: new Map<number, Season>(),
+  allLoadedEpisodes: [],
+  currentSeasonNumber: 1,
+  isLoadingSeasonNumber: null,
+  lastLoadedSeasonNumber: 0,
   isLoadingMorePeople: false,
   isLoadingMoreRecommendations: false,
   isEnriching: false,
@@ -126,12 +151,114 @@ class MediaDetailStore {
    * Set seasons data for TV shows
    * @param details - Season details data
    */
-  setSeasonDetails = (details: any): void => {
+  setSeasonDetails = (details: { seasons: Season[] } | null): void => {
     batch(() => {
       this.state.seasonDetails.set(details)
       this.state.lastUpdated.set(new Date())
       this.state.error.set(null)
     })
+  }
+
+  // PROGRESSIVE SEASON LOADING ACTIONS
+
+  /**
+   * Set season metadata for progressive loading (seasons without episodes)
+   * This is typically called first to show season overview before loading episodes
+   * @param metadata - Array of season metadata without episodes
+   */
+  setSeasonMetadata = (metadata: SeasonMetadata[]): void => {
+    batch(() => {
+      this.state.seasonMetadata.set(metadata)
+      this.state.lastUpdated.set(new Date())
+      this.state.error.set(null)
+    })
+  }
+
+  /**
+   * Add a loaded season with episodes to the progressive loading state
+   * Updates both the loaded seasons map and the flat episodes list
+   * @param season - Complete season with episodes to add
+   */
+  addLoadedSeason = (season: Season): void => {
+    batch(() => {
+      // Update loaded seasons map
+      const currentMap = new Map(this.state.loadedSeasonsMap.get())
+      currentMap.set(season.seasonNumber, season)
+      this.state.loadedSeasonsMap.set(currentMap)
+      
+      // Update flat episodes list for efficient access
+      const currentEpisodes = this.state.allLoadedEpisodes.get()
+      const newEpisodes = [...currentEpisodes, ...season.episodes]
+      this.state.allLoadedEpisodes.set(newEpisodes)
+      
+      // Update last loaded season number
+      this.state.lastLoadedSeasonNumber.set(season.seasonNumber)
+      
+      // Clear loading state
+      this.state.isLoadingSeasonNumber.set(null)
+      
+      this.state.lastUpdated.set(new Date())
+      this.state.error.set(null)
+    })
+  }
+
+  /**
+   * Set the currently visible season number
+   * Used for tracking which season the user is viewing
+   * @param seasonNumber - Season number currently visible
+   */
+  setCurrentSeasonNumber = (seasonNumber: number): void => {
+    this.state.currentSeasonNumber.set(seasonNumber)
+  }
+
+  /**
+   * Set which season is currently loading episodes
+   * Used to show loading indicators for specific seasons
+   * @param seasonNumber - Season number being loaded, or null if none loading
+   */
+  setLoadingSeasonNumber = (seasonNumber: number | null): void => {
+    this.state.isLoadingSeasonNumber.set(seasonNumber)
+  }
+
+  /**
+   * Get the next unloaded season number for progressive loading
+   * Returns the next season that hasn't been loaded yet, or null if all are loaded
+   * @returns Next unloaded season number or null
+   */
+  getNextUnloadedSeasonNumber = (): number | null => {
+    const metadata = this.state.seasonMetadata.get()
+    const loadedMap = this.state.loadedSeasonsMap.get()
+    
+    if (!metadata) return null
+    
+    // Find first season that isn't loaded yet
+    for (const season of metadata) {
+      if (!loadedMap.has(season.seasonNumber)) {
+        return season.seasonNumber
+      }
+    }
+    
+    return null
+  }
+
+  /**
+   * Check if a specific season has been loaded with episodes
+   * @param seasonNumber - Season number to check
+   * @returns True if season is loaded with episodes
+   */
+  isSeasonLoaded = (seasonNumber: number): boolean => {
+    return this.state.loadedSeasonsMap.get().has(seasonNumber)
+  }
+
+  /**
+   * Find the first episode index for a given season in the flat episodes list
+   * Useful for scrolling to specific seasons in a combined episodes view
+   * @param seasonNumber - Season number to find first episode for
+   * @returns Index of first episode for season, or -1 if not found
+   */
+  findFirstEpisodeIndexForSeason = (seasonNumber: number): number => {
+    const allEpisodes = this.state.allLoadedEpisodes.get()
+    return allEpisodes.findIndex(episode => episode.seasonNumber === seasonNumber)
   }
 
   // INFINITE SCROLLING ACTIONS
@@ -277,6 +404,21 @@ class MediaDetailStore {
   }
 
   /**
+   * Get progressive season loading state
+   * @returns Object with all progressive season loading data
+   */
+  get progressiveSeasonState() {
+    return {
+      seasonMetadata: this.state.seasonMetadata.get(),
+      loadedSeasonsMap: this.state.loadedSeasonsMap.get(),
+      allLoadedEpisodes: this.state.allLoadedEpisodes.get(),
+      currentSeasonNumber: this.state.currentSeasonNumber.get(),
+      isLoadingSeasonNumber: this.state.isLoadingSeasonNumber.get(),
+      lastLoadedSeasonNumber: this.state.lastLoadedSeasonNumber.get()
+    }
+  }
+
+  /**
    * Get combined loading states
    * @returns Object with all loading states
    */
@@ -285,9 +427,11 @@ class MediaDetailStore {
       isLoadingMorePeople: this.state.isLoadingMorePeople.get(),
       isLoadingMoreRecommendations: this.state.isLoadingMoreRecommendations.get(),
       isEnriching: this.state.isEnriching.get(),
+      isLoadingSeasonNumber: this.state.isLoadingSeasonNumber.get(),
       isAnyLoading: this.state.isLoadingMorePeople.get() || 
                    this.state.isLoadingMoreRecommendations.get() || 
-                   this.state.isEnriching.get()
+                   this.state.isEnriching.get() ||
+                   this.state.isLoadingSeasonNumber.get() !== null
     }
   }
 
@@ -362,6 +506,48 @@ class MediaDetailStore {
    */
   get seasonDetails$() {
     return this.state.seasonDetails
+  }
+
+  /**
+   * Get season metadata observable for component subscription
+   */
+  get seasonMetadata$() {
+    return this.state.seasonMetadata
+  }
+
+  /**
+   * Get loaded seasons map observable for component subscription
+   */
+  get loadedSeasonsMap$() {
+    return this.state.loadedSeasonsMap
+  }
+
+  /**
+   * Get all loaded episodes observable for component subscription
+   */
+  get allLoadedEpisodes$() {
+    return this.state.allLoadedEpisodes
+  }
+
+  /**
+   * Get current season number observable for component subscription
+   */
+  get currentSeasonNumber$() {
+    return this.state.currentSeasonNumber
+  }
+
+  /**
+   * Get loading season number observable for component subscription
+   */
+  get isLoadingSeasonNumber$() {
+    return this.state.isLoadingSeasonNumber
+  }
+
+  /**
+   * Get last loaded season number observable for component subscription
+   */
+  get lastLoadedSeasonNumber$() {
+    return this.state.lastLoadedSeasonNumber
   }
 
   /**
@@ -525,6 +711,15 @@ export const mediaDetailActions = {
   setRecommendationCatalogs: mediaDetailStore.setRecommendationCatalogs,
   setSeasonDetails: mediaDetailStore.setSeasonDetails,
   
+  // Progressive season loading actions
+  setSeasonMetadata: mediaDetailStore.setSeasonMetadata,
+  addLoadedSeason: mediaDetailStore.addLoadedSeason,
+  setCurrentSeasonNumber: mediaDetailStore.setCurrentSeasonNumber,
+  setLoadingSeasonNumber: mediaDetailStore.setLoadingSeasonNumber,
+  getNextUnloadedSeasonNumber: mediaDetailStore.getNextUnloadedSeasonNumber,
+  isSeasonLoaded: mediaDetailStore.isSeasonLoaded,
+  findFirstEpisodeIndexForSeason: mediaDetailStore.findFirstEpisodeIndexForSeason,
+  
   // Infinite scrolling actions
   addMorePeopleItems: mediaDetailStore.addMorePeopleItems,
   addMoreRecommendationItems: mediaDetailStore.addMoreRecommendationItems,
@@ -555,6 +750,7 @@ export const mediaDetailSelectors = {
   loadingState: mediaDetailStore.loadingState,
   errorState: mediaDetailStore.errorState,
   uiState: mediaDetailStore.uiState,
+  progressiveSeasonState: mediaDetailStore.progressiveSeasonState,
   
   // Specific data selectors
   peopleState: mediaDetailStore.peopleState,
@@ -572,6 +768,24 @@ export const mediaDetailSelectors = {
   },
   seasonDetails: {
     get: () => mediaDetailStore.seasonDetails$.get()
+  },
+  seasonMetadata: {
+    get: () => mediaDetailStore.seasonMetadata$.get()
+  },
+  loadedSeasonsMap: {
+    get: () => mediaDetailStore.loadedSeasonsMap$.get()
+  },
+  allLoadedEpisodes: {
+    get: () => mediaDetailStore.allLoadedEpisodes$.get()
+  },
+  currentSeasonNumber: {
+    get: () => mediaDetailStore.currentSeasonNumber$.get()
+  },
+  isLoadingSeasonNumber: {
+    get: () => mediaDetailStore.isLoadingSeasonNumber$.get()
+  },
+  lastLoadedSeasonNumber: {
+    get: () => mediaDetailStore.lastLoadedSeasonNumber$.get()
   },
   selectedSeason: {
     get: () => mediaDetailStore.selectedSeason$.get()

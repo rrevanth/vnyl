@@ -65,19 +65,17 @@ import type {
   LoadMorePeopleRequest
 } from '@/src/domain/usecases/load-more-people.usecase'
 import { CatalogRow } from '@/src/presentation/components/home/CatalogRow'
-import { SeasonsView } from '@/src/presentation/features/media-detail/components/SeasonsView'
+import { ProgressiveSeasonsView } from '@/src/presentation/features/media-detail/components/ProgressiveSeasonsView'
 
 // Screen dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
 // Local UI state management with Legend State
 const mediaDetailState = observable<{
-  selectedSeason: number
   expandedOverview: boolean
   showShareMenu: boolean
   isInWatchlist: boolean
 }>({
-  selectedSeason: 1,
   expandedOverview: false,
   showShareMenu: false,
   isInWatchlist: false
@@ -227,19 +225,18 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
     return recommendationsResult?.recommendations || (Array.isArray(recommendationsResult) ? recommendationsResult : [])
   }, [recommendationsResult])
   
-  const extractedSeasonsData = useMemo(() => {
-    return seasonsResult?.seasons ? seasonsResult : (seasonsResult && typeof seasonsResult === 'object' && 'seasons' in seasonsResult ? seasonsResult : null)
+  const extractedSeasonMetadata = useMemo(() => {
+    return Array.isArray(seasonsResult) ? seasonsResult : (seasonsResult?.seasons || null)
   }, [seasonsResult])
 
   // Get catalogs from MediaDetail store (preferred source after initial loading)
   const storedPeopleCatalogs = mediaDetailSelectors.peopleCatalogs.get()
   const storedRecommendationCatalogs = mediaDetailSelectors.recommendationCatalogs.get()
-  const storedSeasonsData = mediaDetailSelectors.seasonDetails.get()
   
   // Use store data if available, otherwise fall back to extracted data
   const peopleCatalogs = storedPeopleCatalogs.length > 0 ? storedPeopleCatalogs : extractedPeopleCatalogs
   const recommendationCatalogs = storedRecommendationCatalogs.length > 0 ? storedRecommendationCatalogs : extractedRecommendationCatalogs
-  const seasonsData = storedSeasonsData || extractedSeasonsData
+  const seasonMetadata = extractedSeasonMetadata
 
   // Store enriched data in MediaDetail store when enrichment data is available
   useEffect(() => {
@@ -257,20 +254,17 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
         mediaDetailActions.setRecommendationCatalogs(extractedRecommendationCatalogs)
       }
       
-      // Store seasons data (use extracted data, not store data)
-      if (extractedSeasonsData) {
-        mediaDetailActions.setSeasonDetails(extractedSeasonsData)
-      }
+      // Note: Season metadata is now handled progressively, not stored in MediaDetail store
       
       logger.info('Stored enriched data in MediaDetail store', {
         context: 'media_detail_screen',
         enrichedItemId: enrichedItem.id,
         peopleCount: extractedPeopleCatalogs.length,
         recommendationsCount: extractedRecommendationCatalogs.length,
-        hasSeasons: !!extractedSeasonsData
+        hasSeasonMetadata: !!seasonMetadata && Array.isArray(seasonMetadata) && seasonMetadata.length > 0
       })
     }
-  }, [isFullyLoaded, enrichedItem, extractedPeopleCatalogs, extractedRecommendationCatalogs, extractedSeasonsData, logger])
+  }, [isFullyLoaded, enrichedItem, extractedPeopleCatalogs, extractedRecommendationCatalogs, seasonMetadata, logger])
 
   // Error handling - only show errors if we have no data to display
   const criticalError = (resolveIdsError || enrichmentError) && !hasInitialData
@@ -350,10 +344,6 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
     mediaDetailState.expandedOverview.set(!mediaDetailState.expandedOverview.get())
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- May be used in future season navigation
-  const handleSeasonChange = useCallback((seasonNumber: number) => {
-    mediaDetailState.selectedSeason.set(seasonNumber)
-  }, [])
 
   const handlePersonPress = useCallback((person: CatalogItem) => {
     logger.info('Person pressed', {
@@ -545,7 +535,7 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
   const hasVideos = metadata && typeof metadata === 'object' && 'videos' in metadata && Array.isArray(metadata.videos) && metadata.videos.length > 0
   const hasPeopleCatalogs = Array.isArray(peopleCatalogs) && peopleCatalogs.length > 0
   const hasRecommendationCatalogs = Array.isArray(recommendationCatalogs) && recommendationCatalogs.length > 0
-  const hasSeasonsData = seasonsData && ((Array.isArray(seasonsData) && seasonsData.length > 0) || (typeof seasonsData === 'object' && 'seasons' in seasonsData && Array.isArray(seasonsData.seasons) && seasonsData.seasons.length > 0))
+  const hasSeasonMetadata = seasonMetadata && Array.isArray(seasonMetadata) && seasonMetadata.length > 0
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -733,15 +723,13 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
             </View>
           )}
 
-          {/* Seasons Section (TV Series only) - only show when fully enriched */}
-          {CatalogItemUtils.isTVItem(enrichedItem) && hasSeasonsData && isFullyLoaded && (
-            <SeasonsView
-              seasons={Array.isArray(seasonsData) ? seasonsData : seasonsData.seasons}
-              selectedSeasonId={mediaDetailState.selectedSeason.get().toString()}
-              onSeasonSelect={(seasonId) => mediaDetailState.selectedSeason.set(parseInt(seasonId))}
+          {/* Seasons Section (TV Series only) - Progressive Loading */}
+          {CatalogItemUtils.isTVItem(enrichedItem) && hasSeasonMetadata && isFullyLoaded && (
+            <ProgressiveSeasonsView
+              catalogItem={enrichedItem}
+              seasonMetadata={seasonMetadata}
               onEpisodePress={handleEpisodePress}
               title={t('mediaDetail.seasons')}
-              showSeasonSelector={(Array.isArray(seasonsData) ? seasonsData : seasonsData.seasons).length > 1}
             />
           )}
 
@@ -751,7 +739,7 @@ const MediaDetailScreenImpl: React.FC<MediaDetailScreenProps> = () => {
               <Text style={styles.sectionTitle}>{t('mediaDetail.seasons')}</Text>
               <View style={styles.sectionLoading}>
                 <ActivityIndicator size="small" color={theme.colors.interactive.primary} />
-                <Text style={styles.sectionLoadingText}>Loading seasons...</Text>
+                <Text style={styles.sectionLoadingText}>Loading season metadata...</Text>
               </View>
             </View>
           )}
@@ -1049,38 +1037,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: moderateScale(14),
     fontWeight: '500',
     lineHeight: moderateScale(18),
-  },
-  seasonsContainer: {
-    flexDirection: 'row',
-  },
-  seasonCard: {
-    width: scale(120),
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.radius.md,
-    marginRight: theme.spacing.sm,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  selectedSeasonCard: {
-    borderColor: theme.colors.interactive.primary,
-  },
-  seasonNumber: {
-    color: theme.colors.interactive.primary,
-    fontSize: moderateScale(16),
-    fontWeight: '700',
-    marginBottom: theme.spacing.xs,
-  },
-  seasonName: {
-    color: theme.colors.text.primary,
-    fontSize: moderateScale(14),
-    fontWeight: '600',
-    marginBottom: theme.spacing.xs,
-  },
-  episodeCount: {
-    color: theme.colors.text.secondary,
-    fontSize: moderateScale(12),
-    fontWeight: '500',
   },
   peopleContainer: {
     flexDirection: 'row',

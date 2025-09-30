@@ -15,7 +15,8 @@ import {
   LoadMoreRecommendationsUseCase,
   LoadMorePeopleUseCase,
   ResolveExternalIdsUseCase,
-  EnrichCatalogItemUseCase
+  EnrichCatalogItemUseCase,
+  LoadSeasonEpisodesUseCase
 } from '@/src/domain/usecases'
 import { ConsoleLoggingService } from '@/src/infrastructure/logging'
 import { AsyncStorageService } from '@/src/infrastructure/storage'
@@ -312,6 +313,16 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
     }
   )
 
+  container.registerSingleton<LoadSeasonEpisodesUseCase>(
+    TOKENS.LOAD_SEASON_EPISODES_USE_CASE,
+    () => {
+      const registry = container.resolve<IProviderRegistry>(TOKENS.PROVIDER_REGISTRY)
+      const logger = container.resolve<ILoggingService>(TOKENS.LOGGING_SERVICE)
+      
+      return new LoadSeasonEpisodesUseCase(registry, logger)
+    }
+  )
+
   // Log successful initialization
   logger.info('DI Container initialized successfully', {
     services: [
@@ -336,6 +347,7 @@ export const initializeDI = async (apiConfig: ApiConfig): Promise<void> => {
       'LoadMorePeopleUseCase',
       'ResolveExternalIdsUseCase',
       'EnrichCatalogItemUseCase',
+      'LoadSeasonEpisodesUseCase',
       'ImageCacheService'
     ]
   })

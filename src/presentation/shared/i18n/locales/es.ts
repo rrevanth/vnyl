@@ -283,6 +283,33 @@ export const es: TranslationKey = {
     // Season details
     episode_count: '{{count}} episodios',
     
+    // Episodes section
+    episodes: {
+      title: 'Episodios',
+      loading_season: 'Cargando episodios...',
+      play_hint: 'Toca dos veces para reproducir episodio',
+      show_more: 'Mostrar más',
+      show_less: 'Mostrar menos',
+      expand: 'Mostrar detalles del episodio',
+      collapse: 'Ocultar detalles del episodio',
+      episode_title: 'Episodio {{number}}',
+      no_air_date: 'Fecha de emisión no disponible',
+      no_runtime: 'Duración no disponible',
+      no_rating: 'Calificación no disponible',
+      minutes_short: 'm',
+      hours_short: 'h',
+      season_episode_format: 'T{{season}}E{{episode}}'
+    },
+    
+    // Seasons subsection
+    seasonsDetail: {
+      title: 'Temporadas y Episodios',
+      loading_text: 'Cargando...',
+      episode_singular: 'episodio',
+      episode_plural: 'episodios',
+      season_selector_hint: 'Toca dos veces para abrir selector de temporada'
+    },
+    
     // Navigation
     go_back: 'Volver'
   },

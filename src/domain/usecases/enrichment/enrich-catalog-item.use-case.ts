@@ -627,19 +627,16 @@ export class EnrichCatalogItemUseCase {
           throw new Error('Seasons/episodes only available for TV series')
         }
         
-        const seasonsResult = await seasonsProvider.getSeasons(catalogItem as any)
+        const seasonsResult = await seasonsProvider.getSeasonsMetadata(catalogItem as any)
         
-        // Handle both direct SeasonsEpisodesResult return and wrapped { seasons: Season[] } return
+        // Handle metadata return format { seasons: SeasonMetadata[] }
         if (seasonsResult && typeof seasonsResult === 'object') {
           if ('seasons' in seasonsResult && Array.isArray((seasonsResult as any).seasons)) {
-            // Check if it's wrapped { seasons: Season[] } format
+            // This is the wrapped { seasons: SeasonMetadata[] } format
             const wrapped = seasonsResult as { seasons: any[] }
-            if (!('tvSeries' in seasonsResult)) {
-              // This is the wrapped format, extract seasons array
-              return wrapped.seasons
-            }
+            return wrapped.seasons
           }
-          // This is the full SeasonsEpisodesResult format
+          // Return the result as-is if it's in a different format
           return seasonsResult
         } else {
           this.logger.warn('Unexpected seasons provider return structure', undefined, {

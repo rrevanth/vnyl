@@ -37,6 +37,7 @@ export const TOKENS = {
   // Media Detail Use Cases
   RESOLVE_EXTERNAL_IDS_USE_CASE: Symbol('ResolveExternalIdsUseCase'),
   ENRICH_CATALOG_ITEM_USE_CASE: Symbol('EnrichCatalogItemUseCase'),
+  LOAD_SEASON_EPISODES_USE_CASE: Symbol('LoadSeasonEpisodesUseCase'),
 
   // State Management Services (Domain Layer Interfaces)
   CATALOG_STATE_MANAGEMENT_SERVICE: Symbol('ICatalogStateManagementService'),

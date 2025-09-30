@@ -59,3 +59,11 @@ export type {
   EnrichmentMetrics,
   EnrichmentProviderError
 } from '@/src/domain/usecases/enrichment/enrich-catalog-item.use-case'
+
+export { LoadSeasonEpisodesUseCase } from '@/src/domain/usecases/media/load-season-episodes.usecase'
+export type {
+  LoadSeasonEpisodesRequest,
+  LoadSeasonEpisodesResponse,
+  LoadSeasonEpisodesMetrics,
+  LoadSeasonEpisodesProviderError
+} from '@/src/domain/usecases/media/load-season-episodes.usecase'

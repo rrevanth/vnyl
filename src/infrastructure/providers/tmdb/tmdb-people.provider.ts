@@ -343,13 +343,17 @@ export class TMDBPeopleProvider implements IPeopleProvider {
     const sanitizedRole = specificRole.toLowerCase().replace(/[^a-z0-9]/g, '_')
     const uniqueId = `${MediaType.PERSON}_tmdb_${person.id}_${roleType}_${sanitizedRole}`
     
+    // Get the profile image URL once for consistency
+    const profileImageUrl = this.getImageUrl(person.profile_path, 'profile') ?? undefined
+    
     return {
       id: uniqueId,
       mediaType: MediaType.PERSON,
       title: person.name,
       originalTitle: person.name,
       overview: person.character || person.job || `Known for ${person.known_for_department}`,
-      profileUrl: this.getImageUrl(person.profile_path, 'profile') ?? undefined,
+      profileUrl: profileImageUrl,
+      posterUrl: profileImageUrl, // UI component expects posterUrl field for image display
       popularity: person.popularity,
       knownForDepartment: person.known_for_department || 'Acting',
       gender: this.convertTmdbGenderToPersonGender(person.gender),

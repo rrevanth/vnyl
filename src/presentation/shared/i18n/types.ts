@@ -294,6 +294,33 @@ export interface TranslationKey {
     // Season details
     episode_count: string
     
+    // Episodes section
+    episodes: {
+      title: string
+      loading_season: string
+      play_hint: string
+      show_more: string
+      show_less: string
+      expand: string
+      collapse: string
+      episode_title: string
+      no_air_date: string
+      no_runtime: string
+      no_rating: string
+      minutes_short: string
+      hours_short: string
+      season_episode_format: string
+    }
+    
+    // Seasons subsection
+    seasonsDetail: {
+      title: string
+      loading_text: string
+      episode_singular: string
+      episode_plural: string
+      season_selector_hint: string
+    }
+    
     // Navigation
     go_back: string
   }
