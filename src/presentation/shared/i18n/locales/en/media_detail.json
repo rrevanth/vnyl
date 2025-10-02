@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "rating": "Rating",
+    "duration": "Duration",
+    "release_date": "Release Date",
+    "genre": "Genre",
+    "director": "Director",
+    "cast": "Cast",
+    "studio": "Studio",
+    "languages": "Languages",
+    "subtitles": "Subtitles",
+    "country": "Country",
+    "runtime": "{{hours}}h {{minutes}}m",
+    "seasons": "{{count}} Season",
+    "seasons_plural": "{{count}} Seasons",
+    "episodes": "{{count}} Episode",
+    "episodes_plural": "{{count}} Episodes"
+  },
+  "actions": {
+    "play": "Play",
+    "download": "Download",
+    "add_to_watchlist": "Add to Watchlist",
+    "share": "Share",
+    "rate": "Rate",
+    "review": "Write Review",
+    "report": "Report",
+    "trailer": "Watch Trailer",
+    "resume": "Resume",
+    "restart": "Start Over"
+  },
+  "sections": {
+    "overview": "Overview",
+    "cast_crew": "Cast & Crew",
+    "episodes": "Episodes",
+    "trailers": "Trailers & More",
+    "reviews": "Reviews",
+    "recommendations": "More Like This",
+    "details": "Details",
+    "synopsis": "Synopsis"
+  },
+  "episodes": {
+    "season": "Season {{number}}",
+    "episode": "Episode {{number}}",
+    "all_episodes": "All Episodes",
+    "next_episode": "Next Episode",
+    "previous_episode": "Previous Episode",
+    "episode_title": "S{{season}}:E{{episode}} - {{title}}",
+    "episode_duration": "{{duration}} min",
+    "air_date": "Aired {{date}}"
+  },
+  "status": {
+    "coming_soon": "Coming Soon",
+    "now_playing": "Now Playing",
+    "new_episode": "New Episode",
+    "season_finale": "Season Finale",
+    "series_finale": "Series Finale",
+    "limited_time": "Limited Time"
+  },
+  "quality": {
+    "hd": "HD",
+    "ultra_hd": "4K",
+    "hdr": "HDR",
+    "dolby_vision": "Dolby Vision",
+    "dolby_atmos": "Dolby Atmos"
+  }
+}

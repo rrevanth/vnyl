@@ -1,4 +1,4 @@
-// Data Layer Barrel Exports
-export * from './repositories'
+// Data layer barrel export
 export * from './datasources'
 export * from './mappers'
+export * from './repositories'

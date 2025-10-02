@@ -1,0 +1,25 @@
+{
+  "placeholder": "Buscar películas, series y personas",
+  "recent_searches": "Búsquedas Recientes",
+  "suggestions": "Sugerencias",
+  "no_results": "No se encontraron resultados",
+  "filters": {
+    "all": "Todo",
+    "movies": "Películas",
+    "tv_shows": "Series de TV",
+    "people": "Personas",
+    "genre": "Género",
+    "year": "Año",
+    "rating": "Calificación",
+    "duration": "Duración",
+    "language": "Idioma",
+    "country": "País"
+  },
+  "results": {
+    "found_results": "Se encontró {{count}} resultado",
+    "found_results_plural": "Se encontraron {{count}} resultados",
+    "no_results_found": "No se encontraron resultados para \"{{query}}\"",
+    "try_different_terms": "Prueba con términos diferentes o quita los filtros",
+    "clear_filters": "Limpiar todos los filtros"
+  }
+}

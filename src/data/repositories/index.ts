@@ -1,1 +1,2 @@
-export * from './implementations/user.repository'
+// Data repositories barrel export
+// TODO: Add repository implementations as needed

@@ -1,4 +1,6 @@
-export * from './useSettingsActions'
-export * from './useTMDBSettings'
-export * from './useHomeScreen'
-export * from './useScrollTabBar'
+/**
+ * Shared Hooks Barrel Export
+ * Centralized exports for all shared presentation hooks
+ */
+
+// TODO: Add shared hooks when needed

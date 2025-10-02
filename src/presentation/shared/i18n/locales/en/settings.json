@@ -1,0 +1,60 @@
+{
+  "account": {
+    "profile": "Profile",
+    "subscription": "Subscription",
+    "billing": "Billing",
+    "privacy": "Privacy",
+    "parental_controls": "Parental Controls",
+    "sign_out": "Sign Out",
+    "manage_account": "Manage Account",
+    "account_settings": "Account Settings"
+  },
+  "preferences": {
+    "language": "Language",
+    "region": "Region",
+    "notifications": "Notifications",
+    "autoplay": "Autoplay",
+    "data_usage": "Data Usage",
+    "download_quality": "Download Quality",
+    "streaming_quality": "Streaming Quality",
+    "cellular_data": "Use Cellular Data",
+    "wifi_only": "Wi-Fi Only"
+  },
+  "display": {
+    "theme": "Theme",
+    "dark_mode": "Dark Mode",
+    "light_mode": "Light Mode",
+    "system_default": "System Default",
+    "font_size": "Font Size",
+    "high_contrast": "High Contrast",
+    "reduce_motion": "Reduce Motion",
+    "appearance": "Appearance"
+  },
+  "accessibility": {
+    "title": "Accessibility",
+    "subtitles": "Subtitles",
+    "audio_descriptions": "Audio Descriptions",
+    "screen_reader": "Screen Reader",
+    "voice_over": "VoiceOver",
+    "closed_captions": "Closed Captions",
+    "subtitle_appearance": "Subtitle Appearance",
+    "accessibility_settings": "Accessibility Settings"
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "terms_of_service": "Terms of Service",
+    "privacy_policy": "Privacy Policy",
+    "help_center": "Help Center",
+    "contact_support": "Contact Support",
+    "rate_app": "Rate App",
+    "send_feedback": "Send Feedback",
+    "app_info": "App Information"
+  },
+  "notifications": {
+    "new_releases": "New Releases",
+    "recommendations": "Recommendations",
+    "download_complete": "Download Complete",
+    "watchlist_updates": "Watchlist Updates",
+    "system_updates": "System Updates"
+  }
+}

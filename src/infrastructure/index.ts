@@ -1,6 +1,22 @@
-// Infrastructure Layer Barrel Exports
+/**
+ * Infrastructure layer barrel exports
+ * Provides access to all infrastructure implementations
+ */
+
+// API Layer
 export * from './api'
+
+// Storage Layer
 export * from './storage'
-export * from './di'
+
+// Logging Layer
 export * from './logging'
-export * from './navigation'
+
+// i18n Layer
+export * from './i18n'
+
+// Theme Layer
+export * from './theme'
+
+// Dependency Injection
+export * from './di'

@@ -1,0 +1,61 @@
+{
+  "controls": {
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "rewind": "Rewind 10 seconds",
+    "fast_forward": "Fast forward 10 seconds",
+    "skip_intro": "Skip Intro",
+    "skip_credits": "Skip Credits",
+    "next_episode": "Next Episode",
+    "previous_episode": "Previous Episode",
+    "fullscreen": "Enter Fullscreen",
+    "exit_fullscreen": "Exit Fullscreen",
+    "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "seek": "Seek",
+    "replay": "Replay"
+  },
+  "settings": {
+    "playback_speed": "Playback Speed",
+    "audio_track": "Audio Track",
+    "subtitle_track": "Subtitles",
+    "video_quality": "Video Quality",
+    "picture_in_picture": "Picture in Picture",
+    "player_settings": "Player Settings"
+  },
+  "status": {
+    "buffering": "Buffering...",
+    "connecting": "Connecting...",
+    "error": "Playback Error",
+    "paused": "Paused",
+    "playing": "Playing",
+    "ended": "Playback Ended",
+    "live": "LIVE",
+    "loading": "Loading video..."
+  },
+  "errors": {
+    "network_error": "Network connection error",
+    "playback_error": "Unable to play this video",
+    "format_error": "Video format not supported",
+    "access_error": "Access denied",
+    "generic_error": "An error occurred during playback",
+    "retry": "Tap to retry"
+  },
+  "time": {
+    "remaining": "{{time}} remaining",
+    "elapsed": "{{time}} elapsed",
+    "duration": "Duration: {{duration}}",
+    "current_time": "{{current}} / {{duration}}"
+  },
+  "accessibility": {
+    "play_button": "Play button",
+    "pause_button": "Pause button",
+    "volume_slider": "Volume slider",
+    "progress_bar": "Video progress bar",
+    "fullscreen_button": "Fullscreen toggle button",
+    "settings_button": "Player settings button",
+    "closed_captions": "Closed captions toggle"
+  }
+}

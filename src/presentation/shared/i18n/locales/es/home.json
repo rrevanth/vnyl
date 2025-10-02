@@ -1,0 +1,30 @@
+{
+  "hero": {
+    "title": "Bienvenido a VNYL",
+    "subtitle": "Transmite miles de películas y series",
+    "featured_content": "Contenido Destacado",
+    "trending_now": "Tendencias Ahora"
+  },
+  "categories": {
+    "movies": "Películas",
+    "tv_shows": "Series de TV",
+    "documentaries": "Documentales",
+    "kids": "Niños y Familia",
+    "sports": "Deportes",
+    "news": "Noticias",
+    "music": "Música",
+    "trending": "Tendencias",
+    "new_releases": "Nuevos Lanzamientos",
+    "popular": "Popular",
+    "recommended": "Recomendado para Ti",
+    "continue_watching": "Continuar Viendo"
+  },
+  "recommendations": {
+    "title": "Recomendado para Ti",
+    "based_on_viewing": "Basado en tu historial de visualización",
+    "because_you_watched": "Porque viste {{title}}",
+    "similar_content": "Más como esto",
+    "top_picks": "Mejores Selecciones",
+    "staff_picks": "Selecciones del Personal"
+  }
+}

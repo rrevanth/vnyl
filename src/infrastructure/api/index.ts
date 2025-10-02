@@ -1,2 +1,6 @@
-export * from './implementations/axios-api-client.service'
-export * from './implementations/config-client.service'
+/**
+ * Infrastructure API layer barrel exports
+ */
+
+export * from './axios'
+export * from './clients'

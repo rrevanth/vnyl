@@ -1,0 +1,25 @@
+{
+  "placeholder": "Search movies, shows, and people",
+  "recent_searches": "Recent Searches",
+  "suggestions": "Suggestions",
+  "no_results": "No results found",
+  "filters": {
+    "all": "All",
+    "movies": "Movies",
+    "tv_shows": "TV Shows",
+    "people": "People",
+    "genre": "Genre",
+    "year": "Year",
+    "rating": "Rating",
+    "duration": "Duration",
+    "language": "Language",
+    "country": "Country"
+  },
+  "results": {
+    "found_results": "Found {{count}} result",
+    "found_results_plural": "Found {{count}} results",
+    "no_results_found": "No results found for \"{{query}}\"",
+    "try_different_terms": "Try different search terms or remove filters",
+    "clear_filters": "Clear all filters"
+  }
+}

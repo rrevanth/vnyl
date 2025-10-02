@@ -1,0 +1,41 @@
+{
+  "tabs": {
+    "downloads": "Downloads",
+    "watchlist": "Watchlist",
+    "history": "History",
+    "favorites": "Favorites"
+  },
+  "downloads": {
+    "title": "Downloads",
+    "subtitle": "Watch offline anytime",
+    "available_offline": "Available Offline",
+    "download_quality": "Download Quality",
+    "manage_storage": "Manage Storage",
+    "auto_download": "Auto Download",
+    "wifi_only": "Wi-Fi Only",
+    "storage_used": "{{used}} of {{total}} used",
+    "download_pending": "Download pending",
+    "download_progress": "Downloading... {{progress}}%",
+    "download_complete": "Download complete",
+    "download_failed": "Download failed"
+  },
+  "watchlist": {
+    "title": "My Watchlist",
+    "subtitle": "Your saved content",
+    "add_to_watchlist": "Add to Watchlist",
+    "remove_from_watchlist": "Remove from Watchlist",
+    "empty_state": "Your watchlist is empty. Add movies and shows you want to watch later.",
+    "added_to_watchlist": "Added to watchlist",
+    "removed_from_watchlist": "Removed from watchlist"
+  },
+  "history": {
+    "title": "Watch History",
+    "subtitle": "Your recently watched content",
+    "continue_watching": "Continue Watching",
+    "recently_watched": "Recently Watched",
+    "clear_history": "Clear History",
+    "empty_state": "No watch history yet. Start watching to see your content here.",
+    "resume_watching": "Resume from {{time}}",
+    "watched_on": "Watched on {{date}}"
+  }
+}

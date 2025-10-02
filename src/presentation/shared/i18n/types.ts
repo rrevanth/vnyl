@@ -1,485 +1,439 @@
-import type { Locale } from '@/src/domain/entities/locale.entity'
+/**
+ * TypeScript types for i18n in the presentation layer
+ * Provides type safety for translation keys and parameters
+ */
 
-export type { Locale } from '@/src/domain/entities/locale.entity'
+import { SupportedLanguage, InterpolationOptions } from '@/src/domain/services/i18n.service.interface'
 
-export interface TranslationKey {
-  // Common
+// Re-export types from utils
+export type { PluralForm, PluralRuleFunction } from './utils/pluralization'
+
+// Feature-based namespaces matching app architecture
+export type TranslationNamespace = 
+  | 'common'
+  | 'home'
+  | 'search'
+  | 'library'
+  | 'settings'
+  | 'media_detail'
+  | 'person_detail'
+  | 'stream_selection'
+  | 'player'
+
+// Translation key patterns for type safety
+export interface TranslationKeys {
   common: {
-    loading: string
-    loading_more: string
-    load_more: string
-    error: string
-    success: string
-    retry: string
-    cancel: string
-    confirm: string
-    save: string
-    delete: string
-    edit: string
-    done: string
-    close: string
-    ok: string
-    go_back: string
-  }
-
-  // Navigation
-  navigation: {
-    home: string
-    search: string
-    library: string
-    settings: string
-  }
-
-  // Home
-  home: {
-    welcome: string
-    discover_content: string
-    providers_active: string
-    total_items: string
-    top_ten: string
-    top_ten_description: string
-    award_winners: string
-    award_winners_description: string
-    no_catalogs: string
-    no_catalogs_description: string
-    error: string
-    generic_error: string
-  }
-
-  // Catalog
-  catalog: {
-    item_count: string
-    last_updated: string
-    see_all: string
-    load_more_items: string
-    show_more: string
-    loading_more: string
-  }
-
-  // Settings
-  settings: {
-    title: string
-    theme: {
-      title: string
-      description: string
-      dark_mode: string
-      light_mode: string
-      system_mode: string
-      accent_color: string
-      high_contrast: string
-      adapt_to_content: string
-      appearance: string
-      appearance_description: string
-      accent_color_description: string
-      preview: string
-      preview_description: string
-      preview_title: string
-      preview_subtitle: string
-      preview_body: string
-      preview_button: string
-    }
-    language: {
-      title: string
-      english: string
-      spanish: string
-    }
-    locale: {
-      title: string
-      description: string
-      language: string
-      region: string
-      date_format: string
-      time_format: string
-      currency: string
-    }
-    display: {
-      title: string
-      description: string
-      font_size: string
-      font_family: string
-      line_height: string
-      line_height_description: string
-      compact_mode: string
-      compact_mode_description: string
-      animation_scale: string
-      typography: string
-      typography_description: string
-      layout: string
-      spacing: string
-      spacing_description: string
-      preview: string
-      preview_description: string
-      preview_heading: string
-      preview_body: string
-      preview_caption: string
-    }
-    providers: {
-      title: string
-      description: string
-      status: {
-        configured: string
-        notConfigured: string
-      }
-      sections: {
-        database: string
-        streaming: string
-        tracking: string
-        info: string
-      }
-      info: {
-        title: string
-        description: string
-      }
-      tmdb: {
-        title: string
-        description: string
-        status: {
-          connected_bearer_token: string
-          connected_api_key: string
-          connected_default: string
-          hierarchy_description: string
-          custom_bearer_token: string
-          custom_api_key: string
-          default_api_key: string
-        }
-        authentication: string
-        authentication_description: string
-        api_key: string
-        api_key_description: string
-        api_key_placeholder: string
-        bearer_token: string
-        bearer_token_description: string
-        bearer_token_placeholder: string
-        regional_settings: string
-        regional_description: string
-        preferences: string
-        preferences_description: string
-        content_settings: string
-        content_description: string
-        language: string
-        language_description: string
-        language_placeholder: string
-        country: string
-        country_description: string
-        country_placeholder: string
-        region: string
-        region_description: string
-        include_adult: string
-        include_adult_description: string
-        image_quality: string
-        image_quality_description: string
-        image_quality_placeholder: string
-        save_settings: string
-        reset_settings: string
-        test_connection: string
-        validate_connection: string
-        validate_and_save: string
-        setup_guide: string
-        setup_guide_description: string
-        setup_steps: {
-          title: string
-          step_1: string
-          step_2: string
-          step_3: string
-          step_4: string
-          step_5: string
-        }
-        validation: {
-          api_key_required: string
-          api_key_invalid: string
-          bearer_token_invalid: string
-          connection_failed: string
-          connection_success: string
-          settings_saved: string
-          settings_reset: string
-          no_custom_credentials: string
-          invalid_credentials: string
-        }
-      }
-    }
-    about: {
-      title: string
-      description: string
-      version: string
-      build: string
-      license: string
-      privacy_policy: string
-      terms_of_service: string
-    }
-  }
-
-  // Colors
-  colors: {
-    blue: string
-    green: string
-    purple: string
-    red: string
-    orange: string
-  }
-
-  // Sizes
-  sizes: {
-    small: string
-    medium: string
-    large: string
-    extra_large: string
-  }
-
-  // Media
-  media: {
-    movie: string
-    tv: string
-    person: string
-    title: string
-    description: string
-    cast: string
-    director: string
-    rating: string
-    releaseDate: string
-    genre: string
-    duration: string
-    watchNow: string
-    addToLibrary: string
-  }
-
-  // Media Detail
-  mediaDetail: {
-    title: string
-    id_placeholder: string
-    coming_soon: string
-    
-    // Loading states
-    loading_details: string
-    loading_content: string
-    
-    // Error states
-    error_title: string
-    error_message: string
-    
-    // Hero section
-    runtime_minutes: string
-    show_more: string
-    show_less: string
-    
-    // Action buttons
-    play: string
-    play_title: string
-    play_message: string
-    watchlist: string
-    add_to_watchlist: string
-    remove_from_watchlist: string
-    in_watchlist: string
-    added_to_watchlist: string
-    removed_from_watchlist: string
-    share: string
-    share_title: string
-    share_message: string
-    
-    // External services
-    watch_on: string
-    
-    // Content sections
-    trailers: string
-    seasons: string
-    cast_crew: string
-    you_might_like: string
-    recommended: string
-    similar: string
-    
-    // Load more functionality
-    load_more_title: string
-    load_more_message: string
-    load_more_error_title: string
-    load_more_error_message: string
-    
-    // Season details
-    episode_count: string
-    
-    // Episodes section
-    episodes: {
-      title: string
-      loading_season: string
-      play_hint: string
-      show_more: string
-      show_less: string
-      expand: string
-      collapse: string
-      episode_title: string
-      no_air_date: string
-      no_runtime: string
-      no_rating: string
-      minutes_short: string
-      hours_short: string
-      season_episode_format: string
-    }
-    
-    // Seasons subsection
-    seasonsDetail: {
-      title: string
-      loading_text: string
-      episode_singular: string
-      episode_plural: string
-      season_selector_hint: string
-    }
-    
-    // Navigation
-    go_back: string
-  }
-
-  // Person Detail
-  person_detail: {
-    // Loading states
-    loading_person: string
-    loading_details: string
-    loading_filmography: string
-    loading_biography: string
-
-    // Error states
-    error_title: string
-    error_message: string
-
-    // Hero section
-    age: string
-    age_at_death: string
-    born: string
-    died: string
-    life_dates: string
-    place_of_birth: string
-    known_for_works: string
-
-    // Personal information
-    biography: string
-    also_known_as: string
-    personal_details: string
-    personal_info: string
-    known_for_department: string
-    gender: string
-    popularity: string
-    age_label: string
-    years_old: string
-    show_more: string
-    show_less: string
-    read_more: string
-
-    // Apple TV+ style sections
-    about: string
-    information: string
-    career_highlights: string
-
-    // Action buttons
-    share: string
-    share_title: string
-    share_message: string
-
-    // Filmography section
-    filmography: {
-      title: string
+    actions: {
+      save: string
+      cancel: string
+      delete: string
+      edit: string
+      share: string
+      download: string
+      play: string
+      pause: string
+      stop: string
+      next: string
+      previous: string
+      back: string
+      close: string
+      open: string
+      retry: string
+      refresh: string
       loading: string
-      loading_more: string
-      total_works: string
-      see_all: string
-      load_more: string
+      search: string
+      filter: string
+      sort: string
+      clear: string
+      select: string
+      confirm: string
+      view_all: string
+      add_to_list: string
+      remove_from_list: string
+    }
+    status: {
+      loading: string
+      error: string
+      success: string
+      empty: string
+      offline: string
+      connecting: string
+      connected: string
+      disconnected: string
+      syncing: string
+      synced: string
+      failed: string
+      completed: string
+      pending: string
+      in_progress: string
+    }
+    navigation: {
+      home: string
+      search: string
+      library: string
+      settings: string
+      profile: string
+      back: string
+      close: string
+      menu: string
+    }
+    time: {
+      now: string
+      today: string
+      yesterday: string
+      tomorrow: string
+      this_week: string
+      last_week: string
+      this_month: string
+      last_month: string
+      this_year: string
+      last_year: string
+      minutes_ago: string
+      hours_ago: string
+      days_ago: string
+      weeks_ago: string
+      months_ago: string
+      years_ago: string
+    }
+  }
+  home: {
+    hero: {
+      title: string
+      subtitle: string
+      featured_content: string
+      trending_now: string
+    }
+    categories: {
       movies: string
       tv_shows: string
-      acting: string
-      crew: string
-      directing: string
-      writing: string
-      producing: string
+      documentaries: string
+      kids: string
+      sports: string
+      news: string
+      music: string
+      trending: string
+      new_releases: string
+      popular: string
+      recommended: string
+      continue_watching: string
     }
-
-    // Load more functionality
-    load_more_error_title: string
-    load_more_error_message: string
-
-    // Awards section
-    awards_nominations: string
-    wins: string
-    nominations: string
-    major_awards: string
-    win: string
-    nomination: string
-    loading_awards: string
-    loading_more_awards: string
-
-    // Career timeline section
-    career_timeline: string
-    major_milestones: string
-    breakthroughs: string
-    award_milestones: string
-    early_career: string
-    established_career: string
-    mature_career: string
-    loading_timeline: string
-    loading_more_timeline: string
-
-    // Trivia section
-    trivia_facts: string
-    trivia_summary: string
-    show_more_trivia: string
-    loading_trivia: string
-    loading_more_trivia: string
-
-    // Related people section
-    related_people: string
-    collaborations: string
-    connections_summary: string
-    related_to: string
-    for_work: string
-    in_work: string
-    notable: string
-    loading_related_people: string
-    loading_more_relations: string
-
-    // Social media section
-    social_media: string
-    social_profiles: string
-    professional_links: string
-    followers: string
-    source: string
-    loading_social_media: string
-    loading_more_social: string
-    external_link_title: string
-    external_link_message: string
-    link_error_title: string
-    link_error_message: string
-    invalid_url_title: string
-    invalid_url_message: string
-    unsupported_url_title: string
-    unsupported_url_message: string
-    external_links_security: string
+    recommendations: {
+      title: string
+      based_on_viewing: string
+      because_you_watched: string
+      similar_content: string
+      top_picks: string
+      staff_picks: string
+    }
   }
-
-  // Search
   search: {
     placeholder: string
-    noResults: string
-    recentSearches: string
-    clearHistory: string
+    recent_searches: string
+    suggestions: string
+    no_results: string
+    filters: {
+      all: string
+      movies: string
+      tv_shows: string
+      people: string
+      genre: string
+      year: string
+      rating: string
+      duration: string
+      language: string
+      country: string
+    }
+    results: {
+      found_results: string
+      no_results_found: string
+      try_different_terms: string
+      clear_filters: string
+    }
   }
-
-  // Library
   library: {
-    title: string
-    empty: string
-    favorites: string
-    watchlist: string
-    history: string
+    tabs: {
+      downloads: string
+      watchlist: string
+      history: string
+      favorites: string
+    }
+    downloads: {
+      title: string
+      subtitle: string
+      available_offline: string
+      download_quality: string
+      manage_storage: string
+      auto_download: string
+      wifi_only: string
+    }
+    watchlist: {
+      title: string
+      subtitle: string
+      add_to_watchlist: string
+      remove_from_watchlist: string
+      empty_state: string
+    }
+    history: {
+      title: string
+      subtitle: string
+      continue_watching: string
+      recently_watched: string
+      clear_history: string
+      empty_state: string
+    }
   }
-
-  // Errors
-  errors: {
-    networkError: string
-    serverError: string
-    notFound: string
-    unauthorized: string
-    generic: string
+  settings: {
+    account: {
+      profile: string
+      subscription: string
+      billing: string
+      privacy: string
+      parental_controls: string
+      sign_out: string
+    }
+    preferences: {
+      language: string
+      region: string
+      notifications: string
+      autoplay: string
+      data_usage: string
+      download_quality: string
+      streaming_quality: string
+    }
+    display: {
+      theme: string
+      dark_mode: string
+      light_mode: string
+      system_default: string
+      font_size: string
+      high_contrast: string
+      reduce_motion: string
+    }
+    accessibility: {
+      title: string
+      subtitles: string
+      audio_descriptions: string
+      screen_reader: string
+      voice_over: string
+      closed_captions: string
+    }
+    about: {
+      version: string
+      terms_of_service: string
+      privacy_policy: string
+      help_center: string
+      contact_support: string
+      rate_app: string
+    }
+  }
+  media_detail: {
+    metadata: {
+      rating: string
+      duration: string
+      release_date: string
+      genre: string
+      director: string
+      cast: string
+      studio: string
+      languages: string
+      subtitles: string
+      country: string
+    }
+    actions: {
+      play: string
+      download: string
+      add_to_watchlist: string
+      share: string
+      rate: string
+      review: string
+      report: string
+    }
+    sections: {
+      overview: string
+      cast_crew: string
+      episodes: string
+      trailers: string
+      reviews: string
+      recommendations: string
+      details: string
+    }
+    episodes: {
+      season: string
+      episode: string
+      all_episodes: string
+      next_episode: string
+      previous_episode: string
+    }
+  }
+  person_detail: {
+    biography: string
+    filmography: string
+    known_for: string
+    personal_info: {
+      born: string
+      birthplace: string
+      height: string
+      spouse: string
+      children: string
+      awards: string
+    }
+    career: {
+      acting: string
+      directing: string
+      producing: string
+      writing: string
+      other_roles: string
+    }
+  }
+  stream_selection: {
+    quality: {
+      auto: string
+      low: string
+      medium: string
+      high: string
+      ultra_hd: string
+      hdr: string
+    }
+    audio: {
+      original: string
+      dubbed: string
+      commentary: string
+      descriptive: string
+    }
+    subtitles: {
+      off: string
+      auto: string
+      forced: string
+      full: string
+    }
+    playback: {
+      resume: string
+      start_over: string
+      start_from_beginning: string
+      continue_from: string
+    }
+  }
+  player: {
+    controls: {
+      play: string
+      pause: string
+      stop: string
+      rewind: string
+      fast_forward: string
+      skip_intro: string
+      skip_credits: string
+      next_episode: string
+      previous_episode: string
+      fullscreen: string
+      exit_fullscreen: string
+      volume: string
+      mute: string
+      unmute: string
+    }
+    settings: {
+      playback_speed: string
+      audio_track: string
+      subtitle_track: string
+      video_quality: string
+      picture_in_picture: string
+    }
+    status: {
+      buffering: string
+      connecting: string
+      error: string
+      paused: string
+      playing: string
+      ended: string
+    }
   }
 }
 
-export interface I18nContextValue {
-  locale: Locale
-  setLocale: (locale: Locale) => void
-  t: (key: keyof TranslationKey | string) => string
-  formatMessage: (key: keyof TranslationKey | string, values?: Record<string, string | number>) => string
+// Hook types
+export interface UseTranslationReturn {
+  t: (key: string, options?: InterpolationOptions, namespace?: TranslationNamespace) => string
+  plural: (key: string, count: number, options?: InterpolationOptions, namespace?: TranslationNamespace) => string
+  tWithContext: (key: string, context: string, options?: InterpolationOptions, namespace?: TranslationNamespace) => string
+  tWithGender: (key: string, gender: 'male' | 'female' | 'neutral', options?: InterpolationOptions, namespace?: TranslationNamespace) => string
+  hasTranslation: (key: string, namespace?: TranslationNamespace) => boolean
+  loadNamespace: (namespace: TranslationNamespace) => Promise<void>
+  language: SupportedLanguage
+  setLanguage: (language: SupportedLanguage) => Promise<void>
+  isLoading: boolean
+  error: string | null
 }
+
+export interface UseLocaleReturn {
+  locale: SupportedLanguage
+  setLocale: (locale: SupportedLanguage) => Promise<void>
+  supportedLocales: SupportedLanguage[]
+  systemLocale: SupportedLanguage
+  textDirection: 'ltr' | 'rtl'
+  formatDate: (date: Date | string, options?: Intl.DateTimeFormatOptions) => string
+  formatTime: (date: Date | string, options?: Intl.DateTimeFormatOptions) => string
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string
+  formatCurrency: (value: number, currency: string, options?: Intl.NumberFormatOptions) => string
+  formatRelativeTime: (date: Date | string, baseDate?: Date) => string
+  formatList: (items: string[], type?: 'conjunction' | 'disjunction') => string
+  formatPercentage: (value: number, options?: Intl.NumberFormatOptions) => string
+  formatCompactNumber: (value: number, options?: Intl.NumberFormatOptions) => string
+  formatDuration: (seconds: number, format?: 'short' | 'long') => string
+  formatFileSize: (bytes: number, decimals?: number) => string
+  getLocaleConfig: (locale?: SupportedLanguage) => LocaleConfig
+  isRTL: (locale?: SupportedLanguage) => boolean
+}
+
+// Translation parameter types for interpolation
+export interface TranslationParams {
+  [key: string]: string | number | boolean
+}
+
+// Plural form types
+export interface PluralOptions extends TranslationParams {
+  count: number
+}
+
+// Context types for conditional translations
+export type ContextType = 'formal' | 'informal' | 'technical' | 'casual'
+export type GenderType = 'male' | 'female' | 'neutral'
+
+// Translation validation types
+export interface ValidationResult {
+  valid: boolean
+  missingKeys: string[]
+  emptyTranslations: string[]
+  invalidInterpolations: string[]
+}
+
+// Locale configuration
+export interface LocaleConfig {
+  code: SupportedLanguage
+  name: string
+  nativeName: string
+  direction: 'ltr' | 'rtl'
+  region?: string
+  currency?: string
+  dateFormat?: string
+  timeFormat?: string
+  numberFormat?: Intl.NumberFormatOptions
+}
+
+// Translation loading state
+export interface TranslationState {
+  isLoading: boolean
+  isLoaded: boolean
+  error: string | null
+  loadedNamespaces: Set<TranslationNamespace>
+}
+
+// Export utility types
+export type DeepKeyOf<T> = T extends object 
+  ? {
+      [K in keyof T]: K extends string
+        ? T[K] extends object
+          ? `${K}.${DeepKeyOf<T[K]>}`
+          : K
+        : never
+    }[keyof T]
+  : never
+
+export type TranslationKey = DeepKeyOf<TranslationKeys>

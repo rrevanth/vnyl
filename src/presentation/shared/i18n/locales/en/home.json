@@ -1,0 +1,30 @@
+{
+  "hero": {
+    "title": "Welcome to VNYL",
+    "subtitle": "Stream thousands of movies and TV shows",
+    "featured_content": "Featured Content",
+    "trending_now": "Trending Now"
+  },
+  "categories": {
+    "movies": "Movies",
+    "tv_shows": "TV Shows",
+    "documentaries": "Documentaries",
+    "kids": "Kids & Family",
+    "sports": "Sports",
+    "news": "News",
+    "music": "Music",
+    "trending": "Trending",
+    "new_releases": "New Releases",
+    "popular": "Popular",
+    "recommended": "Recommended for You",
+    "continue_watching": "Continue Watching"
+  },
+  "recommendations": {
+    "title": "Recommended for You",
+    "based_on_viewing": "Based on your viewing history",
+    "because_you_watched": "Because you watched {{title}}",
+    "similar_content": "More like this",
+    "top_picks": "Top Picks",
+    "staff_picks": "Staff Picks"
+  }
+}

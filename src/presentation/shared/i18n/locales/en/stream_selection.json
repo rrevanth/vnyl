@@ -1,0 +1,48 @@
+{
+  "quality": {
+    "auto": "Auto",
+    "low": "Low (480p)",
+    "medium": "Medium (720p)",
+    "high": "High (1080p)",
+    "ultra_hd": "Ultra HD (4K)",
+    "hdr": "HDR",
+    "quality_settings": "Quality Settings"
+  },
+  "audio": {
+    "original": "Original",
+    "dubbed": "Dubbed",
+    "commentary": "Commentary",
+    "descriptive": "Audio Description",
+    "audio_track": "Audio Track",
+    "select_language": "Select Language"
+  },
+  "subtitles": {
+    "off": "Off",
+    "auto": "Auto",
+    "forced": "Forced Only",
+    "full": "Full Subtitles",
+    "subtitle_track": "Subtitle Track",
+    "select_language": "Select Subtitle Language"
+  },
+  "playback": {
+    "resume": "Resume",
+    "start_over": "Start Over",
+    "start_from_beginning": "Start from Beginning",
+    "continue_from": "Continue from {{time}}",
+    "play_options": "Play Options"
+  },
+  "download": {
+    "quality": "Download Quality",
+    "size_estimate": "Estimated size: {{size}}",
+    "wifi_required": "Wi-Fi required for this quality",
+    "storage_warning": "Not enough storage space"
+  },
+  "stream_info": {
+    "bitrate": "Bitrate: {{bitrate}} Mbps",
+    "codec": "Codec: {{codec}}",
+    "resolution": "Resolution: {{resolution}}",
+    "frame_rate": "Frame Rate: {{fps}} fps",
+    "audio_codec": "Audio: {{codec}}",
+    "channels": "{{channels}} channels"
+  }
+}

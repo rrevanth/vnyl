@@ -1,53 +1,155 @@
+/**
+ * Dependency injection tokens for type-safe service registration
+ * Provides unique symbols for service identification
+ */
+
+// Service tokens
 export const TOKENS = {
-  // Infrastructure Services
-  LOGGING_SERVICE: Symbol('ILoggingService'),
-  STORAGE_SERVICE: Symbol('IStorageService'),
-  API_CLIENT: Symbol('IApiClient'),
-  CONFIG_CLIENT: Symbol('IConfigClient'),
-  USER_PREFERENCE_SERVICE: Symbol('IUserPreferenceService'),
-  ENVIRONMENT_SERVICE: Symbol('IEnvironmentService'),
-  IMAGE_CACHE_SERVICE: Symbol('ImageCacheService'),
+  // Core services
+  ApiService: Symbol('ApiService'),
+  StorageService: Symbol('StorageService'),
+  LoggingService: Symbol('LoggingService'),
+  I18nService: Symbol('I18nService'),
+  ThemeService: Symbol('ThemeService'),
 
-  // API Configuration
-  API_CONFIG: Symbol('ApiConfig'),
+  // API clients
+  TMDBApiClient: Symbol('TMDBApiClient'),
+  StremioApiClient: Symbol('StremioApiClient'),
 
-  // TMDB Services
-  TMDB_SERVICE: Symbol('ITMDBService'),
-  TMDB_CONFIG_SERVICE: Symbol('ITMDBConfigService'),
-  TMDB_API_CLIENT: Symbol('ITMDBApiClient'),
+  // Configuration
+  ApiConfig: Symbol('ApiConfig'),
+  TMDBConfig: Symbol('TMDBConfig'),
+  StremioConfig: Symbol('StremioConfig'),
+  SentryConfig: Symbol('SentryConfig'),
+  I18nConfig: Symbol('I18nConfig'),
+  ThemeConfig: Symbol('ThemeConfig'),
 
-  // User Services
-  USER_REPOSITORY: Symbol('IUserRepository'),
-  GET_OR_CREATE_USER_USE_CASE: Symbol('GetOrCreateUserUseCase'),
-  UPDATE_USER_PREFERENCES_USE_CASE: Symbol('UpdateUserPreferencesUseCase'),
-  RESET_USER_PREFERENCES_USE_CASE: Symbol('ResetUserPreferencesUseCase'),
-  UPDATE_USER_THEME_USE_CASE: Symbol('UpdateUserThemeUseCase'),
-  UPDATE_USER_LOCALE_USE_CASE: Symbol('UpdateUserLocaleUseCase'),
+  // Environment configuration
+  Environment: Symbol('Environment'),
+  ApiKeys: Symbol('ApiKeys'),
+  AppConfig: Symbol('AppConfig'),
 
-  // Provider Registry System
-  PROVIDER_REGISTRY: Symbol('IProviderRegistry'),
-  TMDB_PROVIDER_SOURCE: Symbol('TMDBProviderSource'),
-  
-  // Catalog Use Cases
-  GET_ALL_CATALOGS_USE_CASE: Symbol('GetAllCatalogsUseCase'),
-  LOAD_MORE_CATALOG_ITEMS_USE_CASE: Symbol('LoadMoreCatalogItemsUseCase'),
-  LOAD_MORE_RECOMMENDATIONS_USE_CASE: Symbol('LoadMoreRecommendationsUseCase'),
-  LOAD_MORE_PEOPLE_USE_CASE: Symbol('LoadMorePeopleUseCase'),
+  // Repository interfaces (from domain)
+  MediaRepository: Symbol('MediaRepository'),
+  PersonRepository: Symbol('PersonRepository'),
+  PlaylistRepository: Symbol('PlaylistRepository'),
+  StreamRepository: Symbol('StreamRepository'),
+  UserRepository: Symbol('UserRepository'),
 
-  // Media Detail Use Cases
-  RESOLVE_EXTERNAL_IDS_USE_CASE: Symbol('ResolveExternalIdsUseCase'),
-  ENRICH_CATALOG_ITEM_USE_CASE: Symbol('EnrichCatalogItemUseCase'),
-  LOAD_SEASON_EPISODES_USE_CASE: Symbol('LoadSeasonEpisodesUseCase'),
+  // Use cases (from domain)
+  GetMediaDetailsUseCase: Symbol('GetMediaDetailsUseCase'),
+  SearchMediaUseCase: Symbol('SearchMediaUseCase'),
+  GetPersonDetailsUseCase: Symbol('GetPersonDetailsUseCase'),
+  GetStreamSourcesUseCase: Symbol('GetStreamSourcesUseCase'),
+  ManagePlaylistUseCase: Symbol('ManagePlaylistUseCase'),
+  UserPreferencesUseCase: Symbol('UserPreferencesUseCase'),
 
-  // Person Use Cases
-  ENRICH_PERSON_USE_CASE: Symbol('EnrichPersonUseCase'),
-  GET_PERSON_FILMOGRAPHY_USE_CASE: Symbol('GetPersonFilmographyUseCase'),
-  LOAD_MORE_FILMOGRAPHY_USE_CASE: Symbol('LoadMoreFilmographyUseCase'),
-  GET_SELECTED_PERSON_USE_CASE: Symbol('GetSelectedPersonUseCase'),
+  // Presentation services
+  NavigationService: Symbol('NavigationService'),
+  StateManagementService: Symbol('StateManagementService'),
+  AnalyticsService: Symbol('AnalyticsService'),
+  NotificationService: Symbol('NotificationService'),
 
-  // State Management Services (Domain Layer Interfaces)
-  CATALOG_STATE_MANAGEMENT_SERVICE: Symbol('ICatalogStateManagementService'),
+  // External services
+  ImageCacheService: Symbol('ImageCacheService'),
+  DownloadService: Symbol('DownloadService'),
+  PlayerService: Symbol('PlayerService'),
 
+  // Factory tokens
+  ApiClientFactory: Symbol('ApiClientFactory'),
+  RepositoryFactory: Symbol('RepositoryFactory'),
+  UseCaseFactory: Symbol('UseCaseFactory'),
 } as const
 
+/**
+ * Type definitions for service tokens
+ */
 export type ServiceToken = typeof TOKENS[keyof typeof TOKENS]
+
+/**
+ * Token categories for organizational purposes
+ */
+export const TOKEN_CATEGORIES = {
+  CORE_SERVICES: [
+    TOKENS.ApiService,
+    TOKENS.StorageService,
+    TOKENS.LoggingService,
+    TOKENS.I18nService,
+    TOKENS.ThemeService,
+  ] as ServiceToken[],
+  
+  API_CLIENTS: [
+    TOKENS.TMDBApiClient,
+    TOKENS.StremioApiClient,
+  ] as ServiceToken[],
+  
+  CONFIGURATION: [
+    TOKENS.ApiConfig,
+    TOKENS.TMDBConfig,
+    TOKENS.StremioConfig,
+    TOKENS.SentryConfig,
+    TOKENS.I18nConfig,
+    TOKENS.ThemeConfig,
+    TOKENS.Environment,
+    TOKENS.ApiKeys,
+    TOKENS.AppConfig,
+  ] as ServiceToken[],
+  
+  REPOSITORIES: [
+    TOKENS.MediaRepository,
+    TOKENS.PersonRepository,
+    TOKENS.PlaylistRepository,
+    TOKENS.StreamRepository,
+    TOKENS.UserRepository,
+  ] as ServiceToken[],
+  
+  USE_CASES: [
+    TOKENS.GetMediaDetailsUseCase,
+    TOKENS.SearchMediaUseCase,
+    TOKENS.GetPersonDetailsUseCase,
+    TOKENS.GetStreamSourcesUseCase,
+    TOKENS.ManagePlaylistUseCase,
+    TOKENS.UserPreferencesUseCase,
+  ] as ServiceToken[],
+  
+  PRESENTATION: [
+    TOKENS.NavigationService,
+    TOKENS.StateManagementService,
+    TOKENS.AnalyticsService,
+    TOKENS.NotificationService,
+  ] as ServiceToken[],
+  
+  EXTERNAL: [
+    TOKENS.ImageCacheService,
+    TOKENS.DownloadService,
+    TOKENS.PlayerService,
+  ] as ServiceToken[],
+  
+  FACTORIES: [
+    TOKENS.ApiClientFactory,
+    TOKENS.RepositoryFactory,
+    TOKENS.UseCaseFactory,
+  ] as ServiceToken[],
+} as const
+
+/**
+ * Helper function to get all tokens in a category
+ */
+export const getTokensInCategory = (category: keyof typeof TOKEN_CATEGORIES): ServiceToken[] => {
+  return TOKEN_CATEGORIES[category]
+}
+
+/**
+ * Helper function to check if a token belongs to a category
+ */
+export const isTokenInCategory = (token: ServiceToken, category: keyof typeof TOKEN_CATEGORIES): boolean => {
+  return TOKEN_CATEGORIES[category].includes(token)
+}
+
+/**
+ * Get token name for debugging purposes
+ */
+export const getTokenName = (token: ServiceToken): string => {
+  const entry = Object.entries(TOKENS).find(([_, value]) => value === token)
+  return entry ? entry[0] : token.toString()
+}

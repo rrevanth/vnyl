@@ -1,0 +1,52 @@
+{
+  "biography": "Biography",
+  "filmography": "Filmography",
+  "known_for": "Known For",
+  "personal_info": {
+    "born": "Born",
+    "birthplace": "Birthplace",
+    "height": "Height",
+    "spouse": "Spouse",
+    "children": "Children",
+    "awards": "Awards",
+    "age": "Age {{age}}",
+    "nationality": "Nationality"
+  },
+  "career": {
+    "acting": "Acting",
+    "directing": "Directing",
+    "producing": "Producing",
+    "writing": "Writing",
+    "other_roles": "Other Roles",
+    "years_active": "Years Active",
+    "debut": "Debut"
+  },
+  "sections": {
+    "overview": "Overview",
+    "movies": "Movies",
+    "tv_shows": "TV Shows",
+    "awards": "Awards & Nominations",
+    "photos": "Photos",
+    "news": "News",
+    "trivia": "Trivia"
+  },
+  "stats": {
+    "movies_count": "{{count}} Movie",
+    "movies_count_plural": "{{count}} Movies",
+    "shows_count": "{{count}} TV Show",
+    "shows_count_plural": "{{count}} TV Shows",
+    "awards_count": "{{count}} Award",
+    "awards_count_plural": "{{count}} Awards"
+  },
+  "filters": {
+    "all": "All",
+    "movies": "Movies",
+    "tv_shows": "TV Shows",
+    "as_actor": "As Actor",
+    "as_director": "As Director",
+    "as_producer": "As Producer",
+    "sort_by_year": "Sort by Year",
+    "sort_by_popularity": "Sort by Popularity",
+    "sort_by_rating": "Sort by Rating"
+  }
+}

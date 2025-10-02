@@ -1,10 +1,13 @@
-// Atoms
-export { MetadataChip } from './MetadataChip'
-export { ServiceBadge } from './ServiceBadge'
-export { ActionButton } from './ActionButton'
-export { ProgressIndicator } from './ProgressIndicator'
+/**
+ * Atoms Components Barrel Export
+ * Re-exports all atomic design components
+ */
 
-export type { MetadataChipProps } from './MetadataChip'
-export type { ServiceBadgeProps } from './ServiceBadge'
-export type { ActionButtonProps } from './ActionButton'
-export type { ProgressIndicatorProps } from './ProgressIndicator'
+// Core atoms
+export { Button } from './Button'
+export type { ButtonProps } from './Button'
+
+export { Card } from './Card'
+export type { CardProps } from './Card'
+
+// TODO: Add LoadingSpinner and ErrorMessage components when needed
